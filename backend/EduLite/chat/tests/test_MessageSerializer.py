@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -6,10 +8,17 @@ from chat.serializers import MessageSerializer
 from chat.models import ChatRoom, Message
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class MessageSerializerTest(TestCase):
     """ Test case for Message Serializer """
+    @classmethod
+    def setUpClass(cls): 
+        super().setUpClass()
+        logger.info(
+            "\n--- MessageSerializerTest.setUpClass() ---\n"
+        )
 
     def setUp(self):
         self.user1 = User.objects.create_user(
@@ -51,7 +60,15 @@ class MessageSerializerTest(TestCase):
         message = serializer.save()
         self.assertEqual(message.sender, self.user1)
         self.assertEqual(message.content, "Hello, World!")
-        print(message)
+        logger.debug(
+            "\ntest_create_message_uses_request_user_as_sender():\n"
+            "--\tmessage: %s\n"
+            "--\tsender: %s\n"
+            "--\tcontent: \"%s\"\n",
+            message,
+            message.sender,
+            message.content
+        )
 
     def test_message_serializer_with_sender_id(self):
         """Test that the serializer uses sender_id if provided in the payload"""
@@ -63,6 +80,15 @@ class MessageSerializerTest(TestCase):
         serializer = MessageSerializer(data=payload)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         message = serializer.save()
+        logger.debug(
+            "\ntest_message_serializer_with_sender_id():\n"
+            "--\tmessage: %s\n"
+            "--\tsender: %s\n"
+            "--\tcontent: \"%s\"\n",
+            message,
+            message.sender,
+            message.content
+        )
         self.assertEqual(message.sender, self.user2)
         self.assertEqual(message.content, "Message from user2!")
 
@@ -70,6 +96,13 @@ class MessageSerializerTest(TestCase):
         """Test that the serializer returns the correct fields on read"""
         serializer = MessageSerializer(self.message)
         data = serializer.data
+        logger.debug(
+            "\ntest_message_serializer_read_fields():\n"
+            "--\toriginal_message_object: %s\n"
+            "--\tserialized_data: %s\n",
+            self.message,
+            data
+        )
         self.assertIn('id', data)
         self.assertIn('chat_room', data)
         self.assertIn('sender', data)
@@ -91,6 +124,15 @@ class MessageSerializerTest(TestCase):
         serializer = MessageSerializer(data=payload)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         message = serializer.save()
+        logger.debug(
+            "\ntest_message_serializer_invalid_sender():\n"
+            "--\tmessage_created: '%s'\n"
+            "--\tsender: %s\n"
+            "--  !!  -- TODO --  !!  Serializer currently allows this sender as per test logic/comments.\n",
+            message,
+            message.sender
+        )
+        # TODO: Add logic to check and enforce participants to send messages in a chatroom
         # The serializer does not enforce participant check, but you may want to add this in the future
         self.assertEqual(message.sender, user3)
         self.assertEqual(message.content, "Should fail")
