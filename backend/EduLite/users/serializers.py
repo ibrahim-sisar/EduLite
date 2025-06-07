@@ -181,6 +181,8 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
     # Using SerializerMethodField to generate URLs
     sender_profile_url = serializers.SerializerMethodField()
     receiver_profile_url = serializers.SerializerMethodField()
+    accept_url = serializers.SerializerMethodField()
+    decline_url = serializers.SerializerMethodField()
 
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M:%S")
 
@@ -188,11 +190,13 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
         model = ProfileFriendRequest
         fields = [
             'id',
-            'sender',    # Uses __str__ of UserProfile
-            'receiver',  # Uses __str__ of UserProfile
+            'sender_id',   
+            'receiver_id',  
             'sender_profile_url',
             'receiver_profile_url',
-            'created_at'
+            'created_at',
+            'accept_url',
+            'decline_url',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -209,5 +213,21 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
         if request and obj.receiver:
             return request.build_absolute_uri(
                 reverse('userprofile-detail', kwargs={'pk': obj.receiver.pk})
+            )
+        return None
+    
+    def get_accept_url(self, obj: ProfileFriendRequest) -> str | None:
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(
+                reverse('friend-request-accept', kwargs={'request_pk': obj.pk})
+            )
+        return None
+    
+    def get_decline_url(self, obj: ProfileFriendRequest) -> str | None:
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(
+                reverse('friend-request-decline', kwargs={'request_pk': obj.pk})
             )
         return None

@@ -1,7 +1,7 @@
 # users/permissions.py
 
 from rest_framework import permissions
-from .models import UserProfile
+from .models import UserProfile, ProfileFriendRequest
 
 class IsProfileOwnerOrAdmin(permissions.BasePermission):
     """
@@ -72,3 +72,35 @@ class IsAdminUserOrReadOnly(permissions.BasePermission):
 
         # Write permissions (POST, PUT, PATCH, DELETE) are only allowed to admin users.
         return request.user.is_staff
+
+
+## -- Friend Request Permissions -- ##
+
+
+class IsFriendRequestReceiver(permissions.BasePermission):
+    """
+    Allows access only if the request.user.profile is the receiver of the ProfileFriendRequest.
+    """
+    def has_object_permission(self, request, view, obj: ProfileFriendRequest): 
+        if hasattr(request.user, 'profile'):
+            return obj.receiver == request.user.profile
+        return False
+
+
+class IsFriendRequestReceiverOrSender(permissions.BasePermission):
+    """
+    Custom permission to only allow the receiver or the sender of a friend request
+    to perform an action on it (e.g., decline or cancel).
+    """
+    message = "You do not have permission to perform this action on this friend request."
+
+    def has_object_permission(self, request, view, obj):
+        if not isinstance(obj, ProfileFriendRequest):
+            return False 
+
+        # Check if the request.user has a 'profile' attribute
+        if not hasattr(request.user, 'profile'):
+            return False
+
+        user_profile = request.user.profile
+        return obj.receiver == user_profile or obj.sender == user_profile

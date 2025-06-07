@@ -20,4 +20,9 @@ urlpatterns = [
     # Profile URLs
     path('users/<int:pk>/profile/', views.UserProfileRetrieveUpdateView.as_view(), name='userprofile-detail'),
 
+    # Friend Request URLs
+    path('friend-requests/<int:request_pk>/accept/', views.AcceptFriendRequestView.as_view(), name='friend-request-accept'),
+    path('friend-requests/<int:request_pk>/decline/', views.DeclineFriendRequestView.as_view(), name='friend-request-decline'),
+    path('friend-requests/pending/', views.PendingFriendRequestListView.as_view(), name='friend-request-pending-list'),
+    path('friend-requests/send/', views.SendFriendRequestView.as_view(), name='friend-request-send'), 
 ]

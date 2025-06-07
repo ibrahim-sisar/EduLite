@@ -1,20 +1,26 @@
-# views.py
+# users/views.py
 
 from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.pagination import PageNumberPagination # For list views
+from rest_framework.permissions import IsAuthenticated
 
-from .models import UserProfile
+from .models import UserProfile, ProfileFriendRequest
 from .serializers import (
     UserSerializer, GroupSerializer, UserRegistrationSerializer,
-    ProfileSerializer
+    ProfileSerializer, ProfileFriendRequestSerializer
 )
-from .permissions import IsProfileOwnerOrAdmin, IsUserOwnerOrAdmin, IsAdminUserOrReadOnly
+from .permissions import (
+    IsProfileOwnerOrAdmin, IsUserOwnerOrAdmin, IsAdminUserOrReadOnly,
+    IsFriendRequestReceiver, IsFriendRequestReceiverOrSender
+)
 
 # --- Base API View for users App ---
 class UsersAppBaseAPIView(APIView):
@@ -256,8 +262,8 @@ class GroupRetrieveUpdateDestroyView(UsersAppBaseAPIView):
         group = self.get_object(pk)
         group.delete()
         return Response({"message": "Group deleted successfully."}, status=status.HTTP_202_ACCEPTED)
-    
-    
+
+
 ## -- User Profile API Views -- ##
 
 
@@ -313,7 +319,8 @@ class UserProfileRetrieveUpdateView(UsersAppBaseAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class UserSearchView(UsersAppBaseAPIView):
     """
     API view to search for users by username, first name, or last name.
@@ -356,3 +363,186 @@ class UserSearchView(UsersAppBaseAPIView):
         # This part might not be reached if paginator always returns a page or raises an error for empty unpaginated list
         serializer = self.serializer_class_instance(queryset, many=True, context=self.get_serializer_context()) #
         return Response(serializer.data)
+
+
+## -- Friend Request API Views -- ##
+
+
+class AcceptFriendRequestView(UsersAppBaseAPIView):
+    """
+    API view to accept a friend request.
+    - POST: Accepts a friend request.
+    """
+    permission_classes = [IsAuthenticated, IsFriendRequestReceiver] 
+    
+    def post(self, request, request_pk, *args, **kwargs):
+        friend_request = get_object_or_404(ProfileFriendRequest, pk=request_pk)
+        
+        # Manually trigger object-level permission check for APIView
+        self.check_object_permissions(request, friend_request) 
+        
+        if friend_request.accept():
+            return Response({"detail": "Friend request accepted."}, status=status.HTTP_200_OK)
+        
+        else:
+            # This case might be hit if the request was deleted just before accept,
+            # or if accept() method itself had an internal issue and returned False.
+            return Response({"detail": "Failed to accept friend request. It might have been already processed or an error occurred."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeclineFriendRequestView(UsersAppBaseAPIView):
+    """
+    API view to decline or cancel a friend request.
+    - POST: Declines/Cancels a specific friend request identified by request_pk.
+    """
+    permission_classes = [IsAuthenticated, IsFriendRequestReceiverOrSender] 
+    
+    def post(self, request, request_pk, *args, **kwargs):
+        friend_request = get_object_or_404(ProfileFriendRequest, pk=request_pk)
+        
+        self.check_object_permissions(request, friend_request)
+        
+        # Determine if the user was the sender (canceling) or receiver (declining)
+        # for a more specific response message.
+        action_taken_by_sender = (friend_request.sender == request.user.profile)
+
+        if friend_request.decline(): # Calls the model's decline method which deletes it
+            if action_taken_by_sender:
+                message = "Friend request canceled successfully."
+            else:
+                message = "Friend request declined successfully."
+            return Response({"detail": message}, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"detail": "Failed to process the friend request. It might have been already actioned or an unexpected error occurred."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class PendingFriendRequestListView(UsersAppBaseAPIView):
+    """
+    API view to list pending friend requests for the authenticated user.
+    - GET: Returns a paginated list of received or sent friend requests.
+    """
+    serializer_class = ProfileFriendRequestSerializer # Specify the serializer
+    pagination_class = PageNumberPagination # Or your custom one, e.g., ChatRoomPagination if suitable
+
+    def get_queryset(self, request):
+        user_profile = request.user.profile # Assumes user.profile exists
+        direction = request.query_params.get('direction', 'received').lower()
+
+        if direction == 'sent':
+            # Get requests sent by the user
+            queryset = user_profile.sent_friend_requests.all()
+        elif direction == 'received':
+            # Get requests received by the user
+            queryset = user_profile.received_friend_requests.all()
+        else:
+            # Invalid direction parameter, return empty queryset or raise error
+            return ProfileFriendRequest.objects.none()
+        
+        # Pre-fetch related user details for sender/receiver to optimize
+        queryset = queryset.select_related('sender__user', 'receiver__user')
+        return queryset.order_by('-created_at') # Ensure consistent ordering
+
+    def get(self, request, *args, **kwargs):
+        if not hasattr(request.user, 'profile'):
+            return Response(
+                {"detail": "User profile not found."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        queryset = self.get_queryset(request)
+        
+        paginator = self.pagination_class() 
+
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        
+        if page is not None:
+            # Pass context to serializer for HyperlinkedRelatedFields or SerializerMethodFields
+            serializer = self.serializer_class(page, many=True, context=self.get_serializer_context())
+            return paginator.get_paginated_response(serializer.data)
+        
+        # Fallback if pagination is not applicable (e.g., queryset is empty and paginator returns None)
+        serializer = self.serializer_class(queryset, many=True, context=self.get_serializer_context())
+        return Response(serializer.data)
+
+
+class SendFriendRequestView(UsersAppBaseAPIView):
+    """
+    API view to send a new friend request.
+    - POST: Creates a new ProfileFriendRequest.
+    """
+    # permission_classes is inherited from UsersAppBaseAPIView ([IsAuthenticated])
+
+    def post(self, request, *args, **kwargs):
+        try:
+            sender_profile = request.user.profile
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "Sender profile not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate input: receiver_profile_id
+        receiver_profile_id = request.data.get('receiver_profile_id')
+        if not receiver_profile_id:
+            return Response(
+                {"detail": "receiver_profile_id is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not isinstance(receiver_profile_id, int):
+            return Response(
+                {"detail": "Invalid receiver_profile_id. Must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        receiver_profile = get_object_or_404(UserProfile, pk=receiver_profile_id)
+
+        # 1. Self-request check
+        if sender_profile == receiver_profile:
+            return Response(
+                {"detail": "You cannot send a friend request to yourself."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2. Already friends check (using the UserProfile.friends M2M to User)
+        if sender_profile.friends.filter(pk=receiver_profile.user.pk).exists():
+            return Response(
+                {"detail": "You are already friends with this user."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 3. Check for existing pending request (in either direction)
+        # This also covers the UniqueConstraint on the model but gives a nicer API error.
+        existing_request = ProfileFriendRequest.objects.filter(
+            (Q(sender=sender_profile) & Q(receiver=receiver_profile)) |
+            (Q(sender=receiver_profile) & Q(receiver=sender_profile))
+        ).first()
+
+        if existing_request:
+            if existing_request.sender == sender_profile:
+                message = "You have already sent a friend request to this user."
+            else:
+                message = "This user has already sent you a friend request. Check your pending requests."
+            return Response({"detail": message}, status=status.HTTP_400_BAD_REQUEST)
+
+        # If all checks pass, create the friend request
+        try:
+            friend_request = ProfileFriendRequest.objects.create(
+                sender=sender_profile,
+                receiver=receiver_profile
+            )
+
+            serializer = ProfileFriendRequestSerializer(friend_request, context=self.get_serializer_context())
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            # Handle different ValidationError formats
+            if hasattr(e, 'message_dict'):
+                return Response(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
+            elif hasattr(e, 'messages'):
+                return Response({"detail": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except IntegrityError: # Catch IntegrityError from UniqueConstraint
+            return Response(
+                {"detail": "A friend request between these users already exists or another integrity issue occurred."},
+                status=status.HTTP_400_BAD_REQUEST
+            )

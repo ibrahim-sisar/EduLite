@@ -50,11 +50,13 @@ class ProfileFriendRequestSerializerTests(TestCase):
         data = serializer.data
         expected_keys = [
             'id', 
-            'sender', 
-            'receiver', 
+            'sender_id', 
+            'receiver_id', 
             'sender_profile_url', 
             'receiver_profile_url', 
-            'created_at'
+            'created_at',
+            'accept_url',
+            'decline_url',
         ]
         self.assertEqual(set(data.keys()), set(expected_keys))
 
@@ -62,13 +64,13 @@ class ProfileFriendRequestSerializerTests(TestCase):
         """Test the 'sender' field uses UserProfile.__str__."""
         serializer = self._get_serializer_with_context(self.friend_request)
         # Based on your UserProfile.__str__(self): return f"{self.user.username}"
-        self.assertEqual(serializer.data['sender'], self.profile_sender.user.id)
+        self.assertEqual(serializer.data['sender_id'], self.profile_sender.user.id)
 
     def test_receiver_field_content(self):
         """Test the 'receiver' field uses UserProfile.__str__."""
         serializer = self._get_serializer_with_context(self.friend_request)
         # Based on your UserProfile.__str__(self): return f"{self.user.username}"
-        self.assertEqual(serializer.data['receiver'], self.profile_receiver.user.id)
+        self.assertEqual(serializer.data['receiver_id'], self.profile_receiver.user.id)
 
     def test_created_at_field_content_and_format(self):
         """Test the 'created_at' field content and format."""
