@@ -22,7 +22,7 @@ const AboutPage = () => {
     <div className="text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-900 min-h-screen overflow-hidden">
       {/* Animated Hero Section */}
       <section
-        className="relative h-screen flex items-center justify-center px-6 md:px-16 overflow-hidden"
+        className="relative h-screen pt-12 flex items-center justify-center px-6 md:px-16 overflow-hidden"
         style={{ height: "calc(100vh - 80px)" }}
       >
         {/* Animated Background Elements */}
@@ -67,9 +67,9 @@ const AboutPage = () => {
         </div>
 
         <div className="relative max-w-6xl mx-auto text-center z-10">
-          <div className="mb-8">
-            <div className="inline-block p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl shadow-2xl mb-8">
-              <FaGraduationCap className="text-4xl text-white" />
+          <div className="mb-4">
+            <div className="inline-block p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl shadow-2xl mb-4">
+              <FaGraduationCap className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white"  />
             </div>
           </div>
 

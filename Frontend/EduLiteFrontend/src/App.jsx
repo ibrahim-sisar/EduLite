@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <div className="pt-20 px-4">
+      <div className="pt-10 px-0">
         <Routes>
           <Route
             path="/"
