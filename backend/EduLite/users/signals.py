@@ -80,13 +80,19 @@ def create_notification_on_friend_request(sender, instance, created, **kwargs):
 
         # Import here to avoid circular imports
         from notifications.models import Notification
+        
+        # Prepare optional message content
+        description = ""
+        if instance.message:
+            description = f'Message: "{instance.message}"'
 
         Notification.objects.create(
             recipient=instance.receiver.user,
             actor=instance.sender.user,
             verb="sent you a friend request",
             notification_type="FRIEND_REQUEST",
-            target=instance
+            target=instance,
+            description=description
         )
 
         if logger.isEnabledFor(logging.DEBUG):

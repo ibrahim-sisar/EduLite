@@ -574,11 +574,21 @@ class SendFriendRequestView(UsersAppBaseAPIView):
             else:
                 message = "This user has already sent you a friend request. Check your pending requests."
             return Response({"detail": message}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # ✅ Get optional message
+        message = request.data.get("message", "").strip()
+        if len(message) > 500:
+            return Response(
+                {"detail": "Message must be 500 characters or fewer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # If all checks pass, create the friend request
         try:
             friend_request = ProfileFriendRequest.objects.create(
-                sender=sender_profile, receiver=receiver_profile
+                sender=sender_profile, 
+                receiver=receiver_profile, 
+                message=message if message else None
             )
             return Response(
                 {

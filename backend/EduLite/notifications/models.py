@@ -47,6 +47,8 @@ class Notification(models.Model):
     target_object_id = models.PositiveIntegerField(null=True, blank=True)
     target = GenericForeignKey("target_content_type", "target_object_id")
 
+    description = models.TextField(max_length=255, null=True, blank=True)
+
     class Meta:
         ordering = ["-created_at"]
 

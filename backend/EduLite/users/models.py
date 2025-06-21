@@ -55,7 +55,7 @@ class UserProfile(models.Model):
     website_url = models.URLField(max_length=200, blank=True, null=True)
 
     friends = models.ManyToManyField(User, related_name="friend_profiles", blank=True)
-
+    
 
     def clean(self):
         super().clean()  # Call parent clean()
@@ -276,6 +276,10 @@ class ProfileFriendRequest(models.Model):
     )
     receiver = models.ForeignKey(
         "UserProfile", on_delete=models.CASCADE, related_name="received_friend_requests"
+    )
+    message = models.TextField(
+        max_length=500, blank=True, null=True,
+        help_text="Optional message to include with the friend request."
     )
     created_at = models.DateTimeField(
         auto_now_add=True, help_text="Timestamp when the friend request was sent."

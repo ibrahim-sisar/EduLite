@@ -55,7 +55,8 @@ class CreateNotificationOnFriendRequestTests(TestCase):
             actor=self.sender_user,
             verb="sent you a friend request",
             notification_type="FRIEND_REQUEST",
-            target=friend_request
+            target=friend_request,
+            description="",
         )
 
     @patch("notifications.models.Notification")
