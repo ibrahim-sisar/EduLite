@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import BackToTopButton from "./components/common/BackToTopButton";
 import ButtonDemo from "./pages/ButtonDemo";
 import AboutPage from "./pages/AboutPage";
-import InputDemo from "./pages/InputDemo.tsx";
 
 function App() {
   return (
@@ -13,8 +12,14 @@ function App() {
       <Navbar />
       <div className="pt-20 px-4">
         <Routes>
-          <Route path="/" element={<h1 className="text-2xl font-bold"><Home /></h1>}/>
-            <Route path="/input" element={<InputDemo />} />
+          <Route
+            path="/"
+            element={
+              <h1 className="text-2xl font-bold">
+                <Home />
+              </h1>
+            }
+          />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/button-demo" element={<ButtonDemo />} />
         </Routes>

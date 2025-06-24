@@ -82,7 +82,7 @@ Our project is a monorepo containing a `backend` (Django) and a `Frontend` (Reac
     ```bash
     cd Frontend/EduLiteFrontend
     ```
-2.  Install dependencies:c
+2.  Install dependencies:
     ```bash
     npm install
     ```
