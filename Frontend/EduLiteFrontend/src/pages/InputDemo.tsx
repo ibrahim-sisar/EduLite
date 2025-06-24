@@ -1,4 +1,4 @@
-import Input from "../components/common/Input.tsx";
+import Input from "../components/common/Input";
 import {SubmitHandler, useForm} from "react-hook-form"
 
 interface IFormValues {
@@ -35,7 +35,9 @@ const InputDemo = () => {
                     required={true}
                     type="text"
                     placeholder="Type any thing"
-                    error={errors["form_Name"]?errors["form_Name"].message:undefined}
+                    hint="*type your name"
+                    disablePaste={true}
+                    error={errors["Name"]?errors["Name"].message.toString():undefined}
                 />
                 <Input
                     id="form_Email"
@@ -43,7 +45,7 @@ const InputDemo = () => {
                     register={register}
                     type="email"
                     placeholder="Type any email"
-                    error={errors["form_Email"]?errors["form_Email"].message:undefined}
+                    error={errors["Email"]?errors["Email"].message.toString():undefined}
                 />
                 <Input
                     id="form_Password"
@@ -52,7 +54,7 @@ const InputDemo = () => {
                     required
                     type="password"
                     placeholder="Type any math"
-                    error={errors["form_Password"]?errors["form_Password"].message:undefined}
+                    error={errors["password"]?errors["password"].message.toString():undefined}
                 />
                 <Input
                     id="form_phone"
@@ -61,7 +63,7 @@ const InputDemo = () => {
                     required
                     type="tel"
                     placeholder="Type any math"
-                    error={errors["form_phone"]?errors["form_phone"].message:undefined}
+                    error={errors["phone"]?errors["phone"].message.toString():undefined}
                     />
                 <Input
                     id="form_link"
@@ -71,7 +73,7 @@ const InputDemo = () => {
                     type="url"
                     placeholder="Type any math"
                     className="w-full"
-                    error={errors["form_link"]?errors["form_link"].message:undefined}
+                    error={errors["Link"]?errors["Link"].message.toString():undefined}
                 />
                 <Input
                     id="form_price"
@@ -80,7 +82,7 @@ const InputDemo = () => {
                     required
                     type="number"
                     placeholder="Type any math"
-                    error={errors["form_price"]?errors["form_price"].message:undefined}
+                    error={errors["price"]?errors["price"].message.toString():undefined}
                 />
 
                 <Input id="Btn-Submit" register={register} type="submit" value="Submit" />
