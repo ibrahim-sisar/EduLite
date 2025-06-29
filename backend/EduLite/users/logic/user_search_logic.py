@@ -65,10 +65,11 @@ def build_privacy_aware_search_queryset(search_query: str, requesting_user: Opti
     # Username is always searchable (it's the public identifier)
     search_conditions |= Q(username__icontains=search_query)
 
+    # Build conditions for users whose names can be searched
+    name_searchable_conditions = Q()
+
     # Only search by name if the requesting user can see names
     if requesting_user and requesting_user.is_authenticated:
-        # Build conditions for users whose names can be searched
-        name_searchable_conditions = Q()
 
         # Can always search own name
         name_searchable_conditions |= Q(id=requesting_user.id)
@@ -76,12 +77,12 @@ def build_privacy_aware_search_queryset(search_query: str, requesting_user: Opti
         # Can search names of users who show full name to this requesting user
         # This follows the same logic as UserSerializer._should_show_full_name
 
-        # Users with show_full_name=True (visible to authenticated users)
-        name_searchable_conditions |= Q(profile__privacy_settings__show_full_name=True)
+    # Users with show_full_name=True (visible to authenticated users)
+    name_searchable_conditions |= Q(profile__privacy_settings__show_full_name=True)
 
-        # Apply name search only to users whose names are visible
-        name_search = Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query)
-        search_conditions |= (name_searchable_conditions & name_search)
+    # Apply name search only to users whose names are visible
+    name_search = Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query)
+    search_conditions |= (name_searchable_conditions & name_search)
 
     # Apply the combined search conditions
     return queryset.filter(search_conditions).distinct().order_by("username")

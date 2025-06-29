@@ -309,7 +309,7 @@ class UserProfilePrivacySettingsRetrieveUpdateViewTests(APITestCase):
         update_data = {'search_visibility': 'friends_only'}
         self.client.patch(self.privacy_settings_url, update_data, format='json')
 
-        # Get updated timestamp
+        # Get updated timestampf
         updated_response = self.client.get(self.privacy_settings_url)
         updated_updated_at = updated_response.data['updated_at']
 

@@ -30,7 +30,7 @@ class CreateNotificationOnFriendRequestTests(TestCase):
 
         # Get their profiles (created automatically by signals)
         cls.sender_profile = UserProfile.objects.get(user=cls.sender_user)
-        cls.receiver_profile = UserProfile.objects.get(user=cls.receiver_userFixissues)
+        cls.receiver_profile = UserProfile.objects.get(user=cls.receiver_user)
 
     @patch("notifications.models.Notification")
     def test_creates_notification_on_friend_request_creation(self, mock_notification_model):

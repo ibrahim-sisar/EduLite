@@ -462,8 +462,10 @@ class UserProfilePrivacySettingsSerializer(serializers.ModelSerializer):
             "show_email",
             "allow_friend_requests",
             "allow_chat_invites",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id","updated_at"]
 
     def validate(self, attrs):
         """
