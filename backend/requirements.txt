@@ -1,12 +1,16 @@
 asgiref==3.8.1
+channels==4.2.2
+channels_redis==4.2.1
 Django==5.2.1
+django-cors-headers==4.7.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
 Faker==37.3.0
+msgpack==1.1.1
 pillow==11.2.1
 PyJWT==2.9.0
 python-decouple==3.8
+redis==6.2.0
 sqlparse==0.5.3
 typing_extensions==4.13.2
 tzdata==2025.2
-django-cors-headers==4.7.0
