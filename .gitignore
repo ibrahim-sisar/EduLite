@@ -31,3 +31,6 @@ pyrightconfig.json
 # Ruff
 .ruff_cache/
 .DS_Store
+
+# Pyenv
+.python-version
