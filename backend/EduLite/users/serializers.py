@@ -13,6 +13,14 @@ from .models import (
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.core.signing import TimestampSigner
+import json
+import base64
+
+
 User = get_user_model()
 
 
@@ -343,29 +351,54 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # You can add more custom validation here if needed
         return attrs
 
+
     def create(self, validated_data):
         """
-        Create and return a new user instance, given the validated data.
-        Handles password hashing.
+        Handles user registration and sends a verification email.
+        - Extracts and removes the password fields from the validated data.
+        - Builds a payload containing user info.
+        - Encodes and signs the payload to generate a secure token.
+        - Constructs a verification link with the signed token.
+        - Renders email templates and sends a multi-part email (text + HTML).
+        - Does NOT create the user yet; actual creation happens upon email verification.
         """
-        # Remove password2 from validated_data as it's not part of the User model
+         
         validated_data.pop("password2")
-
-        # Extract password to use with create_user
         password = validated_data.pop("password")
 
-        # create_user handles normalization of username/email and password hashing
-        user = User.objects.create_user(
-            **validated_data,  # username, email, first_name, last_name
-            password=password,
-            is_active=True,  # TODO: Setup email verification, or other means of account activation
-        )
-        return user
+        signer = TimestampSigner()
+        payload = {
+            "email": validated_data["email"],
+            "username": validated_data["username"],
+            "password": password,
+            "first_name": validated_data.get("first_name", ""),
+            "last_name": validated_data.get("last_name", ""),
+        }
+
+        json_payload = json.dumps(payload)
+        b64_payload = base64.urlsafe_b64encode(json_payload.encode()).decode()
+        signed_token = signer.sign(b64_payload)
+        
+        verification_link = f"{settings.FRONTEND_URL}/verify-email/?token={signed_token}"
+
+        subject = render_to_string("email/account_verification_subject.txt").strip()
+        text_content = render_to_string("email/account_verification_email.txt", {
+            "username": payload["username"],
+            "activation_link": verification_link,
+        })
+        html_content = render_to_string("email/account_verification_email.html", {
+            "username": payload["username"],
+            "activation_link": verification_link,
+        })
+
+        email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [payload["email"]])
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
+        return {"message": "Verification email sent."}
 
 
 ## -- Friend Request Serializers -- ##
-
-
 class ProfileFriendRequestSerializer(serializers.ModelSerializer):
     """
     Serializer for the ProfileFriendRequest model.

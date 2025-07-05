@@ -29,7 +29,9 @@ from .permissions import (
     IsFriendRequestReceiver,
     IsFriendRequestReceiverOrSender,
 )
-
+from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
+import json
+import base64
 logger = logging.getLogger(__name__)
 
 # --- Base API View for users App ---
@@ -100,15 +102,9 @@ class UserRegistrationView(UsersAppBaseAPIView):
             data=request.data, context=self.get_serializer_context()
         )
         if serializer.is_valid():
-            user = serializer.save()  # Calls create() in the serializer
-            return Response(
-                {
-                    "message": "User created successfully.",
-                    "user_id": user.id,
-                    "username": user.username,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+            if serializer.is_valid():
+                response = serializer.save()  # This returns a dict, not a User
+            return Response(response, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -718,3 +714,53 @@ class UserProfilePrivacySettingsChoicesView(UsersAppBaseAPIView):
         }
 
         return Response(choices_data)
+
+
+
+class EmailVerificationView(UsersAppBaseAPIView):
+    """
+    Handles email verification after registration.
+
+    This view verifies the signed token received via the verification email link.
+    If the token is valid and not expired, it decodes the user data and creates the user account.
+    
+    - Expects a 'token' in the query params.
+    - The token is signed and base64-encoded JSON.
+    - Token is valid for 1 hour (3600 seconds).
+    - If the email is already registered, it returns an error.
+    - On success, it creates the user and marks the account as active.
+    """
+    
+    permission_classes = []
+
+    def get(self, request):
+        token = request.GET.get("token")
+        if not token:
+            return Response({"error": "Missing token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        signer = TimestampSigner()
+        try:
+            # Step 1: verify the signature
+            unsigned = signer.unsign(token, max_age=3600)
+            
+            # Step 2: base64 decode the payload
+            json_payload = base64.urlsafe_b64decode(unsigned.encode()).decode()
+
+            # Step 3: load JSON
+            data = json.loads(json_payload)
+
+            if User.objects.filter(email=data["email"]).exists():
+                return Response({"error": "User already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = User.objects.create_user(
+                email=data["email"],
+                username=data["username"],
+                password=data["password"],
+                first_name=data.get("first_name", ""),
+                last_name=data.get("last_name", ""),
+                is_active=True
+            )
+            return Response({"message": "Email verified and account created."})
+
+        except (BadSignature, SignatureExpired):
+            return Response({"error": "Invalid or expired token."}, status=status.HTTP_400_BAD_REQUEST)

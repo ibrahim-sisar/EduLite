@@ -1,0 +1,4 @@
+<p>Hi {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %},</p>
+<p>Thank you for registering on EduLite!</p>
+<p>Please click the link below to verify your email:</p>
+<p><a href="{{ activation_link }}">{{ activation_link }}</a></p>

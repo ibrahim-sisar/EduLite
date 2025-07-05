@@ -1,0 +1,14 @@
+{% if user.first_name %}
+Hi {{ user.first_name }},
+{% else %}
+Hi {{ user.username }},
+{% endif %}
+
+Thanks for registering on EduLite!
+
+Please verify your email by visiting this link:
+{{ activation_link }}
+
+If you didn’t create this account, you can ignore this email.
+
+– The EduLite Team
