@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from django.core.exceptions import (
@@ -6,6 +8,13 @@ from django.core.exceptions import (
 from rest_framework.exceptions import (
     ValidationError as DRFValidationError,
 )  # What serializer raises
+
+from django.core import mail
+from django.core.signing import TimestampSigner
+import base64
+import json
+
+logger = getLogger(__name__)
 
 from users.serializers import UserRegistrationSerializer
 
@@ -33,6 +42,9 @@ class UserRegistrationSerializerTests(TestCase):
             # first_name and last_name are optional
         }
 
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=False
+    )
     def test_successful_registration_all_fields(self):
         """Test successful registration with all optional fields provided."""
         serializer = UserRegistrationSerializer(data=self.valid_data_full)
@@ -43,11 +55,24 @@ class UserRegistrationSerializerTests(TestCase):
         self.assertEqual(user.email, self.valid_data_full["email"])
         self.assertEqual(user.first_name, self.valid_data_full["first_name"])
         self.assertEqual(user.last_name, self.valid_data_full["last_name"])
-        self.assertTrue(user.is_active)  # From serializer's create() method
+        self.assertFalse(user.is_active)  # From serializer's create() method
         self.assertTrue(
             user.check_password(self.valid_data_full["password"])
         )  # Verify password is set and hashed
-
+        
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True
+    )
+    def test_successful_registration_all_fields_email_verification_required(self):
+        """Test successful registration with all optional fields provided."""
+        serializer = UserRegistrationSerializer(data=self.valid_data_full)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        response = serializer.save()
+        self.assertEqual(response['message'], "Verification email sent.")
+        
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=False
+    )
     def test_successful_registration_minimal_fields(self):
         """Test successful registration with only required fields."""
         serializer = UserRegistrationSerializer(data=self.valid_data_minimal)
@@ -58,8 +83,19 @@ class UserRegistrationSerializerTests(TestCase):
         self.assertEqual(user.email, self.valid_data_minimal["email"])
         self.assertEqual(user.first_name, "")  # Optional fields should be blank
         self.assertEqual(user.last_name, "")  # Optional fields should be blank
-        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_active)
         self.assertTrue(user.check_password(self.valid_data_minimal["password"]))
+        
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True
+    )
+    def test_successful_registration_minimal_fields_email_verification_required(self):
+        """Test successful registration with only required fields."""
+        serializer = UserRegistrationSerializer(data=self.valid_data_minimal)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        response = serializer.save()
+        self.assertEqual(response['message'], "Verification email sent.")
+
 
     def test_missing_required_field_username(self):
         """Test validation error if username is missing."""
@@ -235,3 +271,86 @@ class UserRegistrationSerializerTests(TestCase):
             str(serializer.errors["email"][0]),
             "A user with this email address already exists.",
         )
+
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True,
+        FRONTEND_URL="http://edulite.app"
+    )
+    def test_verification_email_sent_correctly(self):
+        """
+        Verify that an email is sent with the correct recipient, subject, and content.
+        """
+        logger.info("test_verification_email_sent_correctly\n------\n")
+        self.assertEqual(len(mail.outbox), 0)
+        serializer = UserRegistrationSerializer(data=self.valid_data_full)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        # Check that one email was sent
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+
+        logger.info(f"--\tsent_email.body: {sent_email.body}\n")
+        
+        # Verify email details
+        self.assertEqual(sent_email.to, [self.valid_data_full["email"]])
+        self.assertIn("Verify your email for EduLite", sent_email.subject)
+        
+        # Verify both text and HTML content
+        self.assertIn(self.valid_data_full["username"], sent_email.body)
+        self.assertIn("http://edulite.app/verify-email/?token=", sent_email.body)
+        html_body = sent_email.alternatives[0][0]
+        self.assertIn(self.valid_data_full["username"], html_body)
+        self.assertIn("http://edulite.app/verify-email/?token=", html_body)
+
+
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=False,
+        FRONTEND_URL="http://edulite.app"
+    )
+    def test_verification_email_sent_when_user_is_created(self):
+        """
+        Verify an email is still sent even when the user is created immediately.
+        """
+        self.assertEqual(len(mail.outbox), 0)
+        serializer = UserRegistrationSerializer(data=self.valid_data_full)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+        self.assertEqual(len(mail.outbox), 1) # Email should be sent
+        self.assertEqual(User.objects.count(), 1) # User should be created
+
+
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True,
+        FRONTEND_URL="http://edulite.app"
+    )
+    def test_email_token_payload_is_correct(self):
+        """
+        Verify that the token in the verification email contains the correct user payload.
+        """
+        logger.info("test_email_token_payload_is_correct\n------\n")
+        self.assertEqual(len(mail.outbox), 0)
+        serializer = UserRegistrationSerializer(data=self.valid_data_full)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        sent_email = mail.outbox[0]
+        # Extract the token from the link in the email body
+        token = sent_email.body.split("?token=")[-1].split('\n')[0].strip()
+        logger.info(f"--\ttoken length: {len(token)}\n")
+
+        # Unsign and decode the token to verify its contents
+        signer = TimestampSigner()
+        try:
+            b64_payload = signer.unsign(token, max_age=3600)  # max_age in seconds
+            json_payload = base64.urlsafe_b64decode(b64_payload).decode()
+            payload = json.loads(json_payload)
+
+            self.assertEqual(payload["email"], self.valid_data_full["email"])
+            self.assertEqual(payload["username"], self.valid_data_full["username"])
+            self.assertEqual(payload["password"], self.valid_data_full["password"])
+            self.assertEqual(payload["first_name"], self.valid_data_full["first_name"])
+            self.assertEqual(payload["last_name"], self.valid_data_full["last_name"])
+
+        except Exception as e:
+            self.fail(f"Token decoding failed with an exception: {e}")

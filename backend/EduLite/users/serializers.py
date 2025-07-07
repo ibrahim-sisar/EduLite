@@ -353,7 +353,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # You can add more custom validation here if needed
         return attrs
 
-
     def create(self, validated_data):
         """
         Handles user registration and sends a verification email.
@@ -363,6 +362,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         - Constructs a verification link with the signed token.
         - Renders email templates and sends a multi-part email (text + HTML).
         - Does NOT create the user yet; actual creation happens upon email verification.
+        Two paths for email verification:
+        - USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP = True (returns {"message": "Verification email sent."})
+        - USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP = False (creates user and returns user)
         """
          
         validated_data.pop("password2")

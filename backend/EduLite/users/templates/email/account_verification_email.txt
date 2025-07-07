@@ -1,8 +1,4 @@
-{% if user.first_name %}
-Hi {{ user.first_name }},
-{% else %}
-Hi {{ user.username }},
-{% endif %}
+Hi {{ username }},
 
 Thanks for registering on EduLite!
 
