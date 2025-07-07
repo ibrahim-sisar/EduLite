@@ -1,10 +1,14 @@
 # users/tests/test_views.py (or your chosen test file name)
+from logging import getLogger
 
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
 from django.test import override_settings
+
+logger = getLogger(__name__)
+
 
 
 class UserRegistrationViewTests(APITestCase):
@@ -27,6 +31,9 @@ class UserRegistrationViewTests(APITestCase):
             # first_name and last_name are optional
         }
 
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=False
+    )
     def test_successful_user_registration_all_fields(self):
         """Ensure new user can be registered with all valid fields."""
         response = self.client.post(self.register_url, self.user_data, format="json")
@@ -36,9 +43,9 @@ class UserRegistrationViewTests(APITestCase):
         self.assertEqual(created_user.email, self.user_data["email"])
         self.assertEqual(created_user.first_name, self.user_data["first_name"])
         self.assertEqual(created_user.last_name, self.user_data["last_name"])
-        self.assertTrue(
+        self.assertFalse(
             created_user.is_active
-        )  # TODO: Setup email verification, or other means of account activation
+        ) 
         self.assertTrue(
             created_user.check_password(self.strong_password)
         )  # Check password was set and hashed
@@ -47,19 +54,63 @@ class UserRegistrationViewTests(APITestCase):
         self.assertEqual(response.data["message"], "User created successfully.")
         self.assertEqual(response.data["username"], "newtestuser")
         self.assertEqual(response.data["user_id"], created_user.id)
+        
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True
+    )
+    def test_successful_user_registration_all_fields_email_verification_required(self):
+        """Ensure new user can be registered with all valid fields."""
+        response = self.client.post(self.register_url, self.user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(User.objects.count(), 0)
 
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=False
+    )
     def test_successful_user_registration_minimal_fields(self):
         """Ensure new user can be registered with only required fields."""
+        
+        logger.info("test_successful_user_registration_minimal_fields\n------\n")
+        
         response = self.client.post(
             self.register_url, self.minimal_user_data, format="json"
         )
+        
+        logger.info(f"--\tresponse.status_code: {response.status_code}\n")
+        
+        logger.info(f"--\tresponse.data: {response.data}\n")
+        
+        logger.info(f"--\tUser.objects.count(): {User.objects.count()}\n")
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(User.objects.count(), 1)
         created_user = User.objects.get(username="minimaluser")
         self.assertEqual(created_user.first_name, "")  # Optional field
         self.assertEqual(created_user.last_name, "")  # Optional field
-        self.assertTrue(created_user.is_active)
+        self.assertFalse(created_user.is_active)
+        
+    @override_settings(
+        USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP=True
+    )
+    def test_successful_user_registration_minimal_fields_email_verification_required(self):
+        """Ensure new user can be registered with only required fields."""
+        
+        logger.info("test_successful_user_registration_minimal_fields\n------\n")
+        
+        response = self.client.post(
+            self.register_url, self.minimal_user_data, format="json"
+        )
+        
+        logger.info(f"--\tresponse.status_code: {response.status_code}\n")
+        
+        logger.info(f"--\tresponse.data: {response.data}\n")
+        
+        logger.info(f"--\tUser.objects.count(): {User.objects.count()}\n")
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(User.objects.count(), 0)
 
+    
     def test_registration_fails_if_username_missing(self):
         """Ensure registration fails if username is not provided."""
         data = self.user_data.copy()

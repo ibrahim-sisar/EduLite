@@ -3,6 +3,7 @@ import logging
 
 from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -101,10 +102,21 @@ class UserRegistrationView(UsersAppBaseAPIView):
         serializer = UserRegistrationSerializer(
             data=request.data, context=self.get_serializer_context()
         )
-        if serializer.is_valid():
+        if settings.USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP:
             if serializer.is_valid():
                 response = serializer.save()  # This returns a dict, not a User
-            return Response(response, status=status.HTTP_201_CREATED)
+                return Response(response, status=status.HTTP_201_CREATED)
+        else: # if not required, create the user without email verification
+            if serializer.is_valid():
+                user = serializer.save()  # This returns a User instance
+                return Response(
+                {
+                    "message": "User created successfully.",
+                    "user_id": user.id,
+                    "username": user.username,
+                },
+                status=status.HTTP_201_CREATED,
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

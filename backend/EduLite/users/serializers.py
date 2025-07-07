@@ -2,6 +2,8 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.conf import settings
+
 from typing import Optional, TYPE_CHECKING
 
 from rest_framework import serializers
@@ -314,7 +316,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         from django.conf import settings
 
         blocked_domains = getattr(
-            settings, "BLOCKED_EMAIL_DOMAINS", ["example.com", "test.com"]
+            settings, "BLOCKED_EMAIL_DOMAINS", []
         )
 
         if domain_part.lower() in [d.lower() for d in blocked_domains]:
@@ -391,11 +393,24 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "activation_link": verification_link,
         })
 
-        email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [payload["email"]])
+        email = EmailMultiAlternatives(
+            subject, text_content, settings.DEFAULT_FROM_EMAIL, [payload["email"]]
+            )
         email.attach_alternative(html_content, "text/html")
-        email.send()
-
-        return {"message": "Verification email sent."}
+        email.send() # the email verfication is optional and would enable certain features
+        
+        if settings.USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP:
+            # function ends without creating the user
+            return {"message": "Verification email sent."}
+        
+        # create_user handles normalization of username/email and password hashing
+        user = User.objects.create_user(
+            **validated_data,  # username, email, first_name, last_name
+            password=password,
+            is_active=False,  # This will be set to True after email verification
+        )
+        
+        return user
 
 
 ## -- Friend Request Serializers -- ##
