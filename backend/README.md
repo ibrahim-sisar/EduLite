@@ -21,6 +21,84 @@ backend/
 └── manage.py
 ```
 
+## ⚙️ Setup Redis Server
+
+### Install on Ubuntu/Debian
+
+```bash
+sudo apt-get install lsb-release curl gpg
+curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+sudo apt-get update
+sudo apt-get install redis
+```
+
+* Manually enable & start the redis server (In case if Redis doesn't start on reboot)
+```bash
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+### Install on Red Hat/Rocky 
+
+```bash
+sudo yum install redis
+```
+
+* Manually enable & start the redis server (In case if Redis doesn't start on reboot)
+```bash
+sudo systemctl enable redis
+sudo systemctl start redis
+```
+
+### Install on macOS
+
+* Make sure you have [Homebrew](https://brew.sh/) installed
+```bash
+brew --version
+```
+
+* Install redis
+```bash
+brew install redis
+```
+
+* Start the redis process in background
+```bash
+brew services start redis
+```
+
+### Verify Redis Installation
+
+* To test if redis server is running or not, execute `redis-cli`:
+```bash
+redis-cli
+```
+
+### Setup Redis Docker Container
+
+* Make sure Docker is installed and running (Follow [this](https://docs.docker.com/engine/install/) document to setup docker on your machine)
+```
+docker --version
+```
+
+* Pull latest redis docker image
+```
+docker pull redis
+```
+
+* Start a Redis container
+```
+docker run --name my-redis -p 6379:6379 -d redis
+```
+
+* Verify the Redis container is running
+```
+docker ps
+```
+
 
 ## 🚀 Getting Started
 
