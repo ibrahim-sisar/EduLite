@@ -86,12 +86,12 @@ docker --version
 
 * Pull latest redis docker image
 ```
-docker pull redis
+docker pull redis:latest
 ```
 
 * Start a Redis container
 ```
-docker run --name my-redis -p 6379:6379 -d redis
+docker run -p 6379:6379 -d redis:latest
 ```
 
 * Verify the Redis container is running
