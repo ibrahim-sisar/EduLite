@@ -304,7 +304,17 @@ class ChatRoomDetailView(ChatAppBaseAPIView):
         serializer = ChatRoomSerializer(chat_room, context=self.get_serializer_context())
         return Response(serializer.data)
 
-
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='Authorization',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.HEADER,
+            required=True,
+            description='Bearer token for authentication.',
+        ),
+    ],
+)
 class MessageListCreateView(ChatAppBaseAPIView):
     """
     API view to list and create messages in a specific chat room.
@@ -334,34 +344,186 @@ class MessageListCreateView(ChatAppBaseAPIView):
             participants=self.request.user
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+            OpenApiParameter(
+                name='page_size',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description='Number of results to return per page (default 50).'
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description='Paginated list of chat room messages.',
+                response=inline_serializer(
+                    name='MessageListPaginatedResponse',
+                    fields={
+                        'next': serializers.URLField(allow_null=True),
+                        'previous': serializers.URLField(allow_null=True),
+                        'results': serializers.ListField(child=inline_serializer(
+                            name='Message',
+                            fields={
+                                'id': serializers.IntegerField(),
+                                'chat_room': serializers.IntegerField(),
+                                'sender': serializers.CharField(),
+                                'sender_id': serializers.IntegerField(),
+                                'content': serializers.CharField(),
+                                'created_at': serializers.DateTimeField(),
+                                'is_read': serializers.BooleanField(),
+                            }
+                        ))
+                    }
+                )
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+        },
+    )
     def get(self, request, chat_room_id, *args, **kwargs):
         """
         List messages for a specific chat room.
         """
         chat_room = self.get_chat_room(chat_room_id)
-        
+
         queryset = Message.objects.filter(
             chat_room=chat_room
         ).select_related("sender", "chat_room")
-        
+
         # Initialize paginator and paginate queryset
         paginator = self.pagination_class()
         paginated_queryset = paginator.paginate_queryset(queryset, request, view=self)
-        
+
         # Serialize paginated data
         serializer = MessageSerializer(
-            paginated_queryset, 
-            many=True, 
+            paginated_queryset,
+            many=True,
             context=self.get_serializer_context()
         )
-        
+
         return paginator.get_paginated_response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+        ],
+        request=inline_serializer(
+            name='MessageCreateRequest',
+            fields={
+                'content': serializers.CharField(),
+                'is_read': serializers.BooleanField(required=False, default=False)
+            }
+        ),
+        responses={
+            201: OpenApiResponse(
+                description='Successfully created a new message in the chat room.',
+                response=inline_serializer(
+                    name='MessageDetail',
+                    fields={
+                        'id': serializers.IntegerField(),
+                        'chat_room': serializers.IntegerField(),
+                        'sender': serializers.CharField(),
+                        'sender_id': serializers.IntegerField(),
+                        'content': serializers.CharField(),
+                        'created_at': serializers.DateTimeField(),
+                        'is_read': serializers.BooleanField(),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Created Message',
+                        value={
+                            "id": 15,
+                            "chat_room": 1,
+                            "sender": "edulite",
+                            "sender_id": 1,
+                            "content": "Hello everyone! How are you doing today?",
+                            "created_at": "2023-10-01T14:30:00Z",
+                            "is_read": False
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid data provided for creating a message.',
+                response=inline_serializer(
+                    name='MessageCreateError',
+                    fields={
+                        'content': serializers.ListField(child=serializers.CharField())
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Invalid Content',
+                        value={
+                            "content": ["This field may not be blank."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Missing Content',
+                        value={
+                            "content": ["This field is required."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Invalid is_read',
+                        value={
+                            "is_read": ["Must be a valid boolean."]
+                        }
+                    ),
+                ]
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+        },
+    )
     def post(self, request, chat_room_id, *args, **kwargs):
         """Create a new message in the chat room"""
         # Verify chat room exists and user is participant
         chat_room = self.get_chat_room(chat_room_id)
-        
+
         serializer = MessageSerializer(data=request.data, context=self.get_serializer_context())
         if serializer.is_valid():
             message = serializer.save(
@@ -377,7 +539,17 @@ class MessageListCreateView(ChatAppBaseAPIView):
 
 """ Retrieve a specific message in a chat room (Message sender can update/delete)"""
 
-
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name='Authorization',
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.HEADER,
+            required=True,
+            description='Bearer token for authentication.',
+        ),
+    ],
+)
 class MessageDetailView(ChatAppBaseAPIView):
     """
     API view to manage a specific message in a chat room.
@@ -415,17 +587,184 @@ class MessageDetailView(ChatAppBaseAPIView):
             chat_room__participants=self.request.user
         )
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the message.',
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Successfully retrieved message details.",
+                response=inline_serializer(
+                    name="MessageDetailResponse",
+                    fields={
+                        "id": serializers.IntegerField(),
+                        "chat_room": serializers.IntegerField(),
+                        "sender": serializers.CharField(),
+                        "content": serializers.CharField(),
+                        "created_at": serializers.DateTimeField(),
+                        "is_read": serializers.BooleanField(),
+                    }
+                ),
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Message not found.",
+                response=inline_serializer(
+                    name="NotFoundError",
+                    fields={
+                        "detail": serializers.CharField(),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Not Found',
+                        value={
+                            "detail": "No Message matches the given query."
+                        }
+                    )
+                ]
+            ),
+        }
+    )
     def get(self, request, chat_room_id, pk, *args, **kwargs):
-        """Retrieve a specific message"""
+        """Retrieve a specific message in a chat room."""
         message = self.get_object(chat_room_id, pk)
         serializer = MessageSerializer(message, context=self.get_serializer_context())
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the message.',
+            ),
+        ],
+        request=inline_serializer(
+            name="MessageUpdateRequest",
+            fields={
+                "content": serializers.CharField(),
+            }
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Successfully updated message details.",
+                response=inline_serializer(
+                    name="MessageUpdateResponse",
+                    fields={
+                        "id": serializers.IntegerField(),
+                        "chat_room": serializers.IntegerField(),
+                        "sender": serializers.CharField(),
+                        "content": serializers.CharField(),
+                        "created_at": serializers.DateTimeField(),
+                        "is_read": serializers.BooleanField(),
+                    }
+                )
+            ),
+            400: OpenApiResponse(
+                description="The provided data is invalid (e.g., `content` field data empty).",
+                response=inline_serializer(
+                    name="MessageUpdateError",
+                    fields={
+                        "content": serializers.ListField(child=serializers.CharField())
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Invalid Content',
+                        value={
+                            "content": ["This field may not be blank."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Missing Content',
+                        value={
+                            "content": ["This field is required."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Invalid is_read',
+                        value={
+                            "is_read": ["Must be a valid boolean."]
+                        }
+                    ),
+                ]
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Message not found.",
+                response=inline_serializer(
+                    name="NotFoundError",
+                    fields={
+                        "detail": serializers.CharField(),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Not Found',
+                        value={
+                            "detail": "No Message matches the given query."
+                        }
+                    )
+                ]
+            ),
+        }
+    )
     def put(self, request, chat_room_id, pk, *args, **kwargs):
-        """Update a message (full update)"""
+        """Update a message (full update)."""
         message = self.get_object(chat_room_id, pk)
         self.check_object_permissions(request, message)
-        
+
         serializer = MessageSerializer(
             message,
             data=request.data,
@@ -436,11 +775,112 @@ class MessageDetailView(ChatAppBaseAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the message.',
+            ),
+        ],
+        request=inline_serializer(
+            name="MessagePartialUpdateRequest",
+            fields={
+                "content": serializers.CharField(required=False)
+            }
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Successfully updated message details partially.",
+                response=inline_serializer(
+                    name="MessagePartialUpdateResponse",
+                    fields={
+                        "id": serializers.IntegerField(),
+                        "chat_room": serializers.IntegerField(),
+                        "sender": serializers.CharField(),
+                        "content": serializers.CharField(),
+                        "created_at": serializers.DateTimeField(),
+                        "is_read": serializers.BooleanField(),
+                    }
+                )
+            ),
+            400: OpenApiResponse(
+                description="The provided data is invalid (e.g., `content` field data empty).",
+                response=inline_serializer(
+                    name="MessageUpdateError",
+                    fields={
+                        "content": serializers.ListField(child=serializers.CharField())
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Invalid Content',
+                        value={
+                            "content": ["This field may not be blank."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Missing Content',
+                        value={
+                            "content": ["This field is required."]
+                        }
+                    ),
+                    OpenApiExample(
+                        'Invalid is_read',
+                        value={
+                            "is_read": ["Must be a valid boolean."]
+                        }
+                    ),
+                ]
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Message not found.",
+                response=inline_serializer(
+                    name="NotFoundError",
+                    fields={
+                        "detail": serializers.CharField(),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Not Found',
+                        value={
+                            "detail": "No Message matches the given query."
+                        }
+                    )
+                ]
+            ),
+        }
+    )
     def patch(self, request, chat_room_id, pk, *args, **kwargs):
         """Update a message (partial update)"""
         message = self.get_object(chat_room_id, pk)
         self.check_object_permissions(request, message)
-        
+
         serializer = MessageSerializer(
             message,
             data=request.data,
@@ -452,6 +892,61 @@ class MessageDetailView(ChatAppBaseAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='chat_room_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the chat room.',
+            ),
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description='Unique identifier for the message.',
+            ),
+        ],
+        responses={
+            204: OpenApiResponse(
+                description="Message deleted successfully. No content is returned."
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name='UnauthorizedError',
+                    fields={
+                        'detail': serializers.CharField()
+                    },
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Message not found.",
+                response=inline_serializer(
+                    name="NotFoundError",
+                    fields={
+                        "detail": serializers.CharField(),
+                    }
+                ),
+                examples=[
+                    OpenApiExample(
+                        'Not Found',
+                        value={
+                            "detail": "No Message matches the given query."
+                        }
+                    )
+                ]
+            ),
+        }
+    )
     def delete(self, request, chat_room_id, pk, *args, **kwargs):
         """Delete a message"""
         message = self.get_object(chat_room_id, pk)
