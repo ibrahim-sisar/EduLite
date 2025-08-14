@@ -337,3 +337,23 @@ class ProfileFriendRequest(models.Model):
             return True
         except (type(self).DoesNotExist, IntegrityError):
             return False
+
+
+class FriendSuggestion(models.Model):
+    """ Represents a suggested friend for a user based on various criteria."""
+    user = models.ForeignKey(
+        User,
+        related_name="friend_suggestions",
+        on_delete=models.CASCADE
+    )
+    suggested_user = models.ForeignKey(
+        User,
+        related_name="suggested_to",
+        on_delete=models.CASCADE
+    )
+    score = models.FloatField()
+    reason = models.CharField(max_length=255)  # e.g., "3 mutual friends", "Recently messaged in Study Group"
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'suggested_user')
