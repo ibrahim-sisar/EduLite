@@ -13,6 +13,7 @@ urlpatterns = [
         name="user-update",
     ),
     path("users/search/", views.UserSearchView.as_view(), name="user-search"),
+    path("users/friend-suggestions/", views.FriendSuggestionListView.as_view(), name="friend-suggestion-list"),
     # User Registration URL
     path("register/", views.UserRegistrationView.as_view(), name="user-register"),
     # Group URLs
