@@ -81,7 +81,7 @@ def download_note_files(request, note_id):
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, "w") as zipf:
         for file in files:
-            zipf.write(file.file.path, os.path.basename(file.file.name))
+            zipf.write(file.files.path, os.path.basename(file.files.name))
     buffer.seek(0)
 
     response = HttpResponse(buffer, content_type="application/zip")

@@ -29,11 +29,11 @@ class NotesSerializer(serializers.ModelSerializer):
             "course",
             "title",
             "description",
-            "uploadeder",
+            "uploader",
             "uploaded_at",
             "files",
         ]
-        read_only_fields = ["uploadeder", "uploaded_at"]
+        read_only_fields = ["uploader", "uploaded_at"]
         
 class NotesCreateSerializer(serializers.ModelSerializer):
     """
@@ -65,7 +65,7 @@ class NotesCreateSerializer(serializers.ModelSerializer):
         - Iterates through uploaded files and creates NoteFile entries.
         """
         files = validated_data.pop("files", [])
-        note = Notes.objects.create(uploadeer=self.context["request"].user, **validated_data)
+        note = Notes.objects.create(**validated_data)
         for f in files:
-            NotesFiles.objects.create(note=note, file=f)
+            NotesFiles.objects.create(note=note, files=f)
         return note

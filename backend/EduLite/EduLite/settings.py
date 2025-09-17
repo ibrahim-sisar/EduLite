@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "chat",
     "notifications",
     "courses",
+    'notes',
     # third-party apps
     "channels",
     "rest_framework",
@@ -63,7 +64,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'drf_spectacular',
     'drf_spectacular_sidecar',
-    'notes'
+    
 ]
 
 LOGGING = {

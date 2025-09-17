@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from PIL import Image
 import pikepdf
-from .models import NoteFile
+from .models import NotesFiles
 
 def compress_file_on_upload_logic(instance):
     """
@@ -13,7 +13,7 @@ def compress_file_on_upload_logic(instance):
     Can be run in background thread to avoid blocking user request.
     """
 
-    file_path = instance.file.path
+    file_path = instance.files.path
     ext = os.path.splitext(file_path)[1].lower()
 
     # Compress images
@@ -55,7 +55,7 @@ def compress_file_on_upload_logic(instance):
     else:
         print(f"No compression applied for: {file_path}")
 
-@receiver(post_save, sender=NoteFile)
+@receiver(post_save, sender=NotesFiles)
 def compress_file_on_upload(sender, instance, **kwargs):
     """
     Signal: triggered after a NoteFile is saved.
