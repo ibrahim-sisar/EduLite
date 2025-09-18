@@ -7,9 +7,9 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView
 )
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
+from users.jwt_views import (
+    CustomTokenObtainPairView,
+    CustomTokenRefreshView,
 )
 
 urlpatterns = [
@@ -19,8 +19,8 @@ urlpatterns = [
         "api-auth/", include("rest_framework.urls", namespace="rest_framework")
     ),  # For browsable API login/logout
     # JWT Token Endpoints
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
     # Our own URLs
     path("api/", include("users.urls")),
     path("api/chat/", include("chat.urls")),

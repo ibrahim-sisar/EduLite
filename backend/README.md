@@ -133,22 +133,3 @@ To populate your development database with sample users and profiles, use the `c
     * Setting user status (e.g., `is_active`, email verification status).
     * Assigning users to specific groups.
     * Populating different profile types or more diverse profile data as new features are added to user profiles.
-
-## 📌 Todo
-
-The Current Main Quest is to create a Lightweight Chat System - https://github.com/ibrahim-sisar/EduLite/issues/19
-
- [-] Define User, ChatRoom, Message models
-
- [-] Setup authentication system
-
- [] Allow Users to search for each-other
-
- [] Setup views/models/serializers for friend-request system
-
- [] Integrate the `create_dummy_users` command with new friend-request system
-
- [] Setup e-mail verification for `is_active` on User model
-
- [] Create APIs for messaging and assignments
-

@@ -43,6 +43,13 @@ class ProfileSerializer(
         view_name="user-detail",
         read_only=True,
     )
+    friends = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all(),
+        required=False,
+        default=[],
+        help_text="List of user IDs who are friends"
+    )
 
     class Meta:
         model = UserProfile
@@ -248,6 +255,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
         read_only=True,
     )
     full_name = serializers.SerializerMethodField()
+    groups = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Group.objects.all(),
+        required=False,
+        default=[],
+        help_text="List of group IDs the user belongs to"
+    )
 
     class Meta:
         model = User

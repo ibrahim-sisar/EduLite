@@ -7,19 +7,19 @@
 
 [mercury]
 version = "1.0.0"
-profile = "student"
+profile = "expert"
 project_root = "."
 auto_update = true
 
 [plugins]
-enabled = [ "discovery", "wizard", "learn", "hints",]
-disabled = []
+enabled = [ "discovery", "wizard",]
+disabled = [ "learn", "hints",]
 
 [performance]
-response_time_ms = 300
-memory_overhead_mb = 75
-query_count_max = 30
-cache_hit_ratio_min = 0.5
+response_time_ms = 200
+memory_overhead_mb = 50
+query_count_max = 20
+cache_hit_ratio_min = 0.7
 
 [project]
 name = "EduLite"
@@ -27,10 +27,10 @@ test_runner = "django.test.runner.DiscoverRunner"
 test_patterns = [ "test*.py", "*_test.py", "*_tests.py",]
 
 [mercury.settings]
-educational_mode = true
-verbosity = 2
-pause_on_errors = true
-show_tips = true
+educational_mode = false
+verbosity = 1
+pause_on_errors = false
+show_tips = false
 save_command_history = true
 interactive = true
 

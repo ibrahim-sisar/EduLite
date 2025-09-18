@@ -288,7 +288,7 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",  # Default
 }
 
-BLOCKED_EMAIL_DOMAINS = ["example.com", "test.com"]  # For testing
+BLOCKED_EMAIL_DOMAINS = ["test.com"]  # For testing
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
@@ -312,14 +312,24 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-# Email Configuration - Development Only (Console Backend)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025  # Not used by console backend but safe to include
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-DEFAULT_FROM_EMAIL = 'EduLite <noreply@edulite.local>'
+# Email Configuration
+EMAIL_HOST = config("EMAIL_HOST", default=None)
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", default=True, cast=bool)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default=None)
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default=None)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="EduLite <noreply@edulite.local>")
+
+if EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    EMAIL_HOST = "localhost"
+    EMAIL_PORT = 1025
+    EMAIL_USE_TLS = False
+    EMAIL_HOST_USER = ""
+    EMAIL_HOST_PASSWORD = ""
+
 FRONTEND_URL = 'http://127.0.0.1:8000/api'
 
 # User Registration Settings
