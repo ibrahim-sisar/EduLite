@@ -31,7 +31,7 @@ class NoteFeatureTests(APITestCase):
             title="Sample Note",
             level="high_school",
             subject="math",
-            course="algebra",
+            notes_course="algebra",
             description="Sample description",
         )
 
@@ -44,7 +44,7 @@ class NoteFeatureTests(APITestCase):
             "title": "New Note",
             "level": "high_school",   # Use choice values
             "subject": "math",        # Use choice values
-            "course": "algebra",
+            "notes_course": "algebra",
             "description": "Test description",
             "files": [file1, file2],
         }
