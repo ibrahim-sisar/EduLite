@@ -3,6 +3,7 @@ import os
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from users.models_choices import SUBJECT_CHOICES
 # Create your models here.
 
 # --- Notes model ---
@@ -12,73 +13,6 @@ class Notes(models.Model):
     """Stored Notes in the database"""
     # Subject and course choices keep being added as subject and courses add on the site
     # Subject, Courseand level choices make filtering and searching for notes much easier and faster
-    SUBJECT_CHOICES = [
-    ("math", "Mathematics"),
-    ("physics", "Physics"),
-    ("chemistry", "Chemistry"),
-    ("biology", "Biology"),
-    ("cs", "Computer Science"),
-    ("it", "Information Technology"),
-    ("engineering", "Engineering"),
-    ("datasci", "Data Science"),
-    ("ai", "Artificial Intelligence"),
-    ("envsci", "Environmental Science"),
-    ("astronomy", "Astronomy"),
-    ("stats", "Statistics"),
-    ("robotics", "Robotics"),
-    ("electronics", "Electronics"),
-    ("psych", "Psychology"),
-    ("sociology", "Sociology"),
-    ("polisci", "Political Science"),
-    ("economics", "Economics"),
-    ("anthropology", "Anthropology"),
-    ("intlrel", "International Relations"),
-    ("criminology", "Criminology"),
-    ("history", "History"),
-    ("philosophy", "Philosophy"),
-    ("literature", "Literature"),
-    ("linguistics", "Linguistics"),
-    ("religion", "Religious Studies"),
-    ("cultural", "Cultural Studies"),
-    ("classics", "Classics"),
-    ("visualart", "Visual Arts"),
-    ("music", "Music"),
-    ("performing", "Performing Arts"),
-    ("architecture", "Architecture"),
-    ("design", "Graphic Design"),
-    ("film", "Film & Media Studies"),
-    ("photo", "Photography"),
-    ("fashion", "Fashion Design"),
-    ("business", "Business Administration"),
-    ("accounting", "Accounting"),
-    ("finance", "Finance"),
-    ("marketing", "Marketing"),
-    ("hrm", "Human Resource Management"),
-    ("entrepreneurship", "Entrepreneurship"),
-    ("project", "Project Management"),
-    ("supplychain", "Supply Chain Management"),
-    ("education", "Education"),
-    ("earlyedu", "Early Childhood Education"),
-    ("specialedu", "Special Education"),
-    ("english", "English Language"),
-    ("foreignlang", "Foreign Languages"),
-    ("translation", "Translation Studies"),
-    ("tesol", "TESOL / ESL"),
-    ("law", "Law"),
-    ("legal", "Legal Studies"),
-    ("constitutional", "Constitutional Law"),
-    ("publicpolicy", "Public Policy"),
-    ("politicaltheory", "Political Theory"),
-    ("medicine", "Medicine"),
-    ("nursing", "Nursing"),
-    ("pharmacy", "Pharmacy"),
-    ("publichealth", "Public Health"),
-    ("nutrition", "Nutrition"),
-    ("veterinary", "Veterinary Science"),
-    ("dentistry", "Dentistry"),
-    ("biomed", "Biomedical Science"),
-    ("physicaltherapy", "Physical Therapy")
-]
     NOTES_COURSE_CHOICES = [
         ("algebra", "Algebra"),
         ("calculus", "Calculus"),
@@ -125,10 +59,9 @@ class Notes(models.Model):
         return f"{self.title} ({self.level} - {self.subject})"
 
 # Function to define upload path dynamically
-def note_file_path(instance, filename):
-    level = instance.note.level
-    subject = instance.note.subject
-    return f"NoteFiles/{level}/{subject}/{filename}"
+def note_file_path(instance: 'NotesFiles', filename: str) -> str:
+    """Generate upload path for note files."""
+    return os.path.join("NoteFiles", instance.note.level, instance.note.subject, filename)
 
 class NotesFiles(models.Model):
     note = models.ForeignKey(Notes, on_delete=models.CASCADE, related_name="files")
