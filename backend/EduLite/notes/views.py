@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from .models import Notes, NotesFiles
 from .serializers import NotesSerializer, NotesCreateSerializer
 from .permissions import IsOwnerOrReadOnly
-from download_zip_logic import prepare_note_files_response
+from .download_zip_logic import prepare_note_files_response
 
 # Create your views here.
 class NotesListCreateView(generics.ListCreateAPIView):
@@ -34,7 +34,7 @@ class NotesListCreateView(generics.ListCreateAPIView):
         """Save note with the logged-in user as uploader."""
         serializer.save(uploader=self.request.user)
 
-class NotesDeatilView(generics.RetrieveUpdateDestroyAPIView):
+class NotesDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     API endpoint for retrieving, updating, or deleting a single note.
 
