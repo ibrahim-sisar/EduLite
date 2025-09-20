@@ -43,3 +43,4 @@ def load_choices_from_json(filename: str) -> List[tuple]:
 OCCUPATION_CHOICES = load_choices_from_json("occupations.json")
 COUNTRY_CHOICES = load_choices_from_json("countries.json")
 LANGUAGE_CHOICES = load_choices_from_json("languages.json")
+SUBJECT_CHOICES = load_choices_from_json("subjects.json")
