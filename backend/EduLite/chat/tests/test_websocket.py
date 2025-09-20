@@ -7,6 +7,7 @@ Tests the basic features of the chat consumer:
 - Message sending/receiving
 - Typing indicators
 """
+
 import json
 import logging
 import asyncio
@@ -58,26 +59,20 @@ class ChatConsumerTestCase(TransactionTestCase):
         """Set up test data for each test."""
         # Create test users
         self.user1 = User.objects.create_user(
-            username='testuser1',
-            email='test1@example.com',
-            password='testpass123'
+            username="testuser1", email="test1@example.com", password="testpass123"
         )
         self.user2 = User.objects.create_user(
-            username='testuser2',
-            email='test2@example.com',
-            password='testpass123'
+            username="testuser2", email="test2@example.com", password="testpass123"
         )
         self.unauthorized_user = User.objects.create_user(
-            username='unauthorized',
-            email='unauthorized@example.com',
-            password='testpass123'
+            username="unauthorized",
+            email="unauthorized@example.com",
+            password="testpass123",
         )
 
         # Create test chat room
         self.chat_room = ChatRoom.objects.create(
-            name='Test Room',
-            room_type='GROUP',
-            creator=self.user1
+            name="Test Room", room_type="GROUP", creator=self.user1
         )
 
         # Add authorized users to room
@@ -94,11 +89,10 @@ class ConnectionTests(ChatConsumerTestCase):
         """Test connection with authorized user."""
         # Create WebSocket communicator with the application from routing
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
         # Add user to scope (as middleware would)
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
 
         # Connect to WebSocket with longer timeout
         connected, subprotocol = await communicator.connect(timeout=3)
@@ -112,10 +106,9 @@ class ConnectionTests(ChatConsumerTestCase):
     async def test_connect_unauthorized(self):
         """Test connection rejection for unauthorized user."""
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator.scope['user'] = self.unauthorized_user
+        communicator.scope["user"] = self.unauthorized_user
 
         # Attempt to connect
         connected, subprotocol = await communicator.connect(timeout=3)
@@ -126,8 +119,7 @@ class ConnectionTests(ChatConsumerTestCase):
     async def test_connect_unauthenticated(self):
         """Test connection rejection for unauthenticated user."""
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
         # No user in scope (unauthenticated)
 
@@ -140,10 +132,9 @@ class ConnectionTests(ChatConsumerTestCase):
     async def test_connect_nonexistent_room(self):
         """Test connection rejection for non-existent room."""
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/999999/"  # Non-existent room ID
+            self.application, f"/ws/chat/999999/"  # Non-existent room ID
         )
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
 
         # Attempt to connect
         connected, subprotocol = await communicator.connect(timeout=3)
@@ -155,10 +146,9 @@ class ConnectionTests(ChatConsumerTestCase):
         """Test that disconnected users are properly removed from the room group."""
         # Connect first user
         communicator1 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator1.scope['user'] = self.user1
+        communicator1.scope["user"] = self.user1
         connected1, _ = await communicator1.connect(timeout=3)
         self.assertTrue(connected1)
 
@@ -167,18 +157,16 @@ class ConnectionTests(ChatConsumerTestCase):
 
         # Connect second user
         communicator2 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator2.scope['user'] = self.user2
+        communicator2.scope["user"] = self.user2
         connected2, _ = await communicator2.connect(timeout=3)
         self.assertTrue(connected2)
 
         # Send message from second user
-        await communicator2.send_json_to({
-            'type': 'chat_message',
-            'message': 'Test message after disconnect'
-        })
+        await communicator2.send_json_to(
+            {"type": "chat_message", "message": "Test message after disconnect"}
+        )
 
         # User1 should NOT receive the message (would raise TimeoutError)
         with self.assertRaises(asyncio.TimeoutError):
@@ -195,49 +183,46 @@ class MessageTests(ChatConsumerTestCase):
         """Test sending and receiving a chat message."""
         # Connect user1
         communicator1 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator1.scope['user'] = self.user1
+        communicator1.scope["user"] = self.user1
         connected1, _ = await communicator1.connect(timeout=3)
         self.assertTrue(connected1)
 
         # Connect user2
         communicator2 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator2.scope['user'] = self.user2
+        communicator2.scope["user"] = self.user2
         connected2, _ = await communicator2.connect(timeout=3)
         self.assertTrue(connected2)
 
         # User1 sends a message
         test_message = "Hello, this is a test message!"
-        await communicator1.send_json_to({
-            'type': 'chat_message',
-            'message': test_message
-        })
+        await communicator1.send_json_to(
+            {"type": "chat_message", "message": test_message}
+        )
 
         # Both users should receive the message
         response1 = await communicator1.receive_json_from(timeout=3)
         response2 = await communicator2.receive_json_from(timeout=3)
 
         # Assert message received by both users
-        self.assertEqual(response1['type'], 'chat_message')
-        self.assertEqual(response2['type'], 'chat_message')
-        self.assertEqual(response1['message']['content'], test_message)
-        self.assertEqual(response2['message']['content'], test_message)
+        self.assertEqual(response1["type"], "chat_message")
+        self.assertEqual(response2["type"], "chat_message")
+        self.assertEqual(response1["message"]["content"], test_message)
+        self.assertEqual(response2["message"]["content"], test_message)
         # The sender field is a StringRelatedField in MessageSerializer
-        self.assertEqual(response1['message']['sender'], self.user1.username)
-        self.assertEqual(response2['message']['sender'], self.user1.username)
+        self.assertEqual(response1["message"]["sender"], self.user1.username)
+        self.assertEqual(response2["message"]["sender"], self.user1.username)
 
         # Verify message was saved to database
         messages = await database_sync_to_async(
-            lambda: list(Message.objects.filter(
-                content=test_message,
-                sender=self.user1,
-                chat_room=self.chat_room
-            ))
+            lambda: list(
+                Message.objects.filter(
+                    content=test_message, sender=self.user1, chat_room=self.chat_room
+                )
+            )
         )()
         self.assertEqual(len(messages), 1)
 
@@ -249,25 +234,21 @@ class MessageTests(ChatConsumerTestCase):
         """Test handling of empty messages."""
         # Connect user
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
         connected, _ = await communicator.connect(timeout=3)
         self.assertTrue(connected)
 
         # Send empty message
-        await communicator.send_json_to({
-            'type': 'chat_message',
-            'message': ''
-        })
+        await communicator.send_json_to({"type": "chat_message", "message": ""})
 
         # Should receive error
         response = await communicator.receive_json_from(timeout=3)
 
         # Assert error received
-        self.assertEqual(response['type'], 'error')
-        self.assertIn('empty', response['error'].lower())
+        self.assertEqual(response["type"], "error")
+        self.assertIn("empty", response["error"].lower())
 
         # Clean up
         await communicator.disconnect()
@@ -276,10 +257,9 @@ class MessageTests(ChatConsumerTestCase):
         """Test handling of messages that exceed length limit."""
         # Connect user
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
         connected, _ = await communicator.connect(timeout=3)
         self.assertTrue(connected)
 
@@ -287,17 +267,16 @@ class MessageTests(ChatConsumerTestCase):
         long_message = "x" * 1001
 
         # Send long message
-        await communicator.send_json_to({
-            'type': 'chat_message',
-            'message': long_message
-        })
+        await communicator.send_json_to(
+            {"type": "chat_message", "message": long_message}
+        )
 
         # Should receive error
         response = await communicator.receive_json_from(timeout=3)
 
         # Assert error received
-        self.assertEqual(response['type'], 'error')
-        self.assertIn('too long', response['error'].lower())
+        self.assertEqual(response["type"], "error")
+        self.assertIn("too long", response["error"].lower())
 
         # Clean up
         await communicator.disconnect()
@@ -306,10 +285,9 @@ class MessageTests(ChatConsumerTestCase):
         """Test handling of invalid JSON."""
         # Connect user
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
         connected, _ = await communicator.connect(timeout=3)
         self.assertTrue(connected)
 
@@ -320,8 +298,8 @@ class MessageTests(ChatConsumerTestCase):
         response = await communicator.receive_json_from(timeout=3)
 
         # Assert error received
-        self.assertEqual(response['type'], 'error')
-        self.assertIn('invalid', response['error'].lower())
+        self.assertEqual(response["type"], "error")
+        self.assertIn("invalid", response["error"].lower())
 
         # Clean up
         await communicator.disconnect()
@@ -334,35 +312,32 @@ class TypingIndicatorTests(ChatConsumerTestCase):
         """Test typing indicator broadcast."""
         # Connect user1
         communicator1 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator1.scope['user'] = self.user1
+        communicator1.scope["user"] = self.user1
         connected1, _ = await communicator1.connect(timeout=3)
         self.assertTrue(connected1)
 
         # Connect user2
         communicator2 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator2.scope['user'] = self.user2
+        communicator2.scope["user"] = self.user2
         connected2, _ = await communicator2.connect(timeout=3)
         self.assertTrue(connected2)
 
         # User1 sends typing indicator
-        await communicator1.send_json_to({
-            'type': 'typing_indicator',
-            'is_typing': True
-        })
+        await communicator1.send_json_to(
+            {"type": "typing_indicator", "is_typing": True}
+        )
 
         # User2 should receive typing indicator
         response = await communicator2.receive_json_from(timeout=3)
 
         # Assert typing indicator received
-        self.assertEqual(response['type'], 'typing_indicator')
-        self.assertEqual(response['user_id'], self.user1.id)
-        self.assertTrue(response['is_typing'])
+        self.assertEqual(response["type"], "typing_indicator")
+        self.assertEqual(response["user_id"], self.user1.id)
+        self.assertTrue(response["is_typing"])
 
         # User1 should not receive their own typing indicator
         with self.assertRaises(asyncio.TimeoutError):
@@ -376,34 +351,31 @@ class TypingIndicatorTests(ChatConsumerTestCase):
         """Test typing stopped indicator."""
         # Connect both users
         communicator1 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator1.scope['user'] = self.user1
+        communicator1.scope["user"] = self.user1
         connected1, _ = await communicator1.connect(timeout=3)
         self.assertTrue(connected1)
 
         communicator2 = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator2.scope['user'] = self.user2
+        communicator2.scope["user"] = self.user2
         connected2, _ = await communicator2.connect(timeout=3)
         self.assertTrue(connected2)
 
         # User1 sends typing indicator (stopped typing)
-        await communicator1.send_json_to({
-            'type': 'typing_indicator',
-            'is_typing': False
-        })
+        await communicator1.send_json_to(
+            {"type": "typing_indicator", "is_typing": False}
+        )
 
         # User2 should receive typing indicator
         response = await communicator2.receive_json_from(timeout=3)
 
         # Assert typing indicator received
-        self.assertEqual(response['type'], 'typing_indicator')
-        self.assertEqual(response['user_id'], self.user1.id)
-        self.assertFalse(response['is_typing'])
+        self.assertEqual(response["type"], "typing_indicator")
+        self.assertEqual(response["user_id"], self.user1.id)
+        self.assertFalse(response["is_typing"])
 
         # Clean up
         await communicator1.disconnect()
@@ -417,25 +389,23 @@ class UnsupportedMessageTypeTests(ChatConsumerTestCase):
         """Test handling of unsupported message type."""
         # Connect user
         communicator = WebsocketCommunicator(
-            self.application,
-            f"/ws/chat/{self.chat_room.id}/"
+            self.application, f"/ws/chat/{self.chat_room.id}/"
         )
-        communicator.scope['user'] = self.user1
+        communicator.scope["user"] = self.user1
         connected, _ = await communicator.connect(timeout=3)
         self.assertTrue(connected)
 
         # Send unsupported message type
-        await communicator.send_json_to({
-            'type': 'unsupported_type',
-            'data': 'test data'
-        })
+        await communicator.send_json_to(
+            {"type": "unsupported_type", "data": "test data"}
+        )
 
         # Should receive error
         response = await communicator.receive_json_from(timeout=3)
 
         # Assert error received
-        self.assertEqual(response['type'], 'error')
-        self.assertIn('unsupported', response['error'].lower())
+        self.assertEqual(response["type"], "error")
+        self.assertIn("unsupported", response["error"].lower())
 
         # Clean up
         await communicator.disconnect()

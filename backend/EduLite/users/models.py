@@ -18,16 +18,16 @@ User = get_user_model()
 
 # Privacy Settings Choices
 SEARCH_VISIBILITY_CHOICES = [
-    ('everyone', 'Everyone'),
-    ('friends_of_friends', 'Friends of Friends'),
-    ('friends_only', 'Friends Only'),
-    ('nobody', 'Nobody'),
+    ("everyone", "Everyone"),
+    ("friends_of_friends", "Friends of Friends"),
+    ("friends_only", "Friends Only"),
+    ("nobody", "Nobody"),
 ]
 
 PROFILE_VISIBILITY_CHOICES = [
-    ('public', 'Public'),
-    ('friends_only', 'Friends Only'),
-    ('private', 'Private'),
+    ("public", "Public"),
+    ("friends_only", "Friends Only"),
+    ("private", "Private"),
 ]
 
 
@@ -60,9 +60,11 @@ class UserProfile(models.Model):
         super().clean()  # Call parent clean()
         if self.preferred_language and self.secondary_language:
             if self.preferred_language == self.secondary_language:
-                raise ValidationError({
-                    'secondary_language': "Secondary language cannot be the same as the preferred language."
-                })
+                raise ValidationError(
+                    {
+                        "secondary_language": "Secondary language cannot be the same as the preferred language."
+                    }
+                )
 
     def __str__(self):
         ret_str = f"{self.user.username}"
@@ -79,7 +81,11 @@ class UserProfile(models.Model):
         """
         Returns a queryset of Users who are teachers of this user in any course.
         """
-        return self.courses.filter(memberships__role='teacher').distinct().values_list('memberships__user', flat=True)
+        return (
+            self.courses.filter(memberships__role="teacher")
+            .distinct()
+            .values_list("memberships__user", flat=True)
+        )
 
     @property
     def chatrooms(self):
@@ -87,12 +93,17 @@ class UserProfile(models.Model):
         Returns a queryset of ChatRooms that this user is a member of.
         """
         from chat.models import ChatRoom
-        return ChatRoom.objects.filter(participants=self.user).values_list('id', flat=True)
+
+        return ChatRoom.objects.filter(participants=self.user).values_list(
+            "id", flat=True
+        )
 
     @property
     def courses(self):
         from courses.models import Course
+
         return Course.objects.filter(memberships__user=self.user).distinct()
+
 
 class UserProfilePrivacySettings(models.Model):
     """
@@ -104,46 +115,42 @@ class UserProfilePrivacySettings(models.Model):
     """
 
     user_profile = models.OneToOneField(
-        UserProfile,
-        on_delete=models.CASCADE,
-        related_name="privacy_settings"
+        UserProfile, on_delete=models.CASCADE, related_name="privacy_settings"
     )
 
     # Search and Discovery Settings
     search_visibility = models.CharField(
         max_length=20,
         choices=SEARCH_VISIBILITY_CHOICES,
-        default='everyone',
-        help_text="Who can find you in search results"
+        default="everyone",
+        help_text="Who can find you in search results",
     )
 
     # Profile Information Visibility
     profile_visibility = models.CharField(
         max_length=20,
         choices=PROFILE_VISIBILITY_CHOICES,
-        default='friends_only',  # Default to friends only
-        help_text="Who can view your full profile details"
+        default="friends_only",  # Default to friends only
+        help_text="Who can view your full profile details",
     )
 
     show_full_name = models.BooleanField(
         default=True,
-        help_text="Show your first and last name in search results and profile"
+        help_text="Show your first and last name in search results and profile",
     )
 
     show_email = models.BooleanField(
         default=False,
-        help_text="Show your email address in your profile (not recommended)"
+        help_text="Show your email address in your profile (not recommended)",
     )
 
     # Interaction Settings
     allow_friend_requests = models.BooleanField(
-        default=True,
-        help_text="Allow other users to send you friend requests"
+        default=True, help_text="Allow other users to send you friend requests"
     )
 
     allow_chat_invites = models.BooleanField(
-        default=True,
-        help_text="Allow other users to send you chat invitations"
+        default=True, help_text="Allow other users to send you chat invitations"
     )
 
     # Timestamps
@@ -153,7 +160,7 @@ class UserProfilePrivacySettings(models.Model):
     class Meta:
         verbose_name = "User Profile Privacy Settings"
         verbose_name_plural = "User Profile Privacy Settings"
-        ordering = ['-updated_at']
+        ordering = ["-updated_at"]
 
     def __str__(self) -> str:
         return f"Privacy settings for {self.user_profile.user.username}"
@@ -165,12 +172,12 @@ class UserProfilePrivacySettings(models.Model):
         super().clean()
 
         # If search visibility is 'nobody', profile should be private or friends_only
-        if self.search_visibility == 'nobody' and self.profile_visibility == 'public':
+        if self.search_visibility == "nobody" and self.profile_visibility == "public":
             raise ValidationError(
                 "Profile cannot be public if search visibility is set to nobody."
             )
 
-    def can_be_found_by_user(self, requesting_user: 'AbstractUser') -> bool:
+    def can_be_found_by_user(self, requesting_user: "AbstractUser") -> bool:
         """
         Check if this user profile can be found in search by the requesting user.
 
@@ -181,20 +188,20 @@ class UserProfilePrivacySettings(models.Model):
             bool: True if the profile should appear in search results
         """
         if not requesting_user or not requesting_user.is_authenticated:
-            return self.search_visibility == 'everyone'
+            return self.search_visibility == "everyone"
 
         # User can always find themselves
         if requesting_user == self.user_profile.user:
             return True
 
-        if self.search_visibility == 'everyone':
+        if self.search_visibility == "everyone":
             return True
-        elif self.search_visibility == 'nobody':
+        elif self.search_visibility == "nobody":
             return False
-        elif self.search_visibility == 'friends_only':
+        elif self.search_visibility == "friends_only":
             # Optimized: Use exists() with direct query to avoid N+1
             return self.user_profile.friends.filter(id=requesting_user.id).exists()
-        elif self.search_visibility == 'friends_of_friends':
+        elif self.search_visibility == "friends_of_friends":
             # Optimized: Use database-level joins to avoid N+1
             # First check if they are direct friends
             if self.user_profile.friends.filter(id=requesting_user.id).exists():
@@ -207,12 +214,12 @@ class UserProfilePrivacySettings(models.Model):
             mutual_friends_exist = self.user_profile.friends.filter(
                 profile__friends=requesting_user
             ).exists()
-            
+
             return mutual_friends_exist
 
         return False
 
-    def can_profile_be_viewed_by_user(self, requesting_user: 'AbstractUser') -> bool:
+    def can_profile_be_viewed_by_user(self, requesting_user: "AbstractUser") -> bool:
         """
         Check if the full profile can be viewed by the requesting user.
 
@@ -223,23 +230,25 @@ class UserProfilePrivacySettings(models.Model):
             bool: True if the full profile can be viewed
         """
         if not requesting_user or not requesting_user.is_authenticated:
-            return self.profile_visibility == 'public'
+            return self.profile_visibility == "public"
 
         # User can always view their own profile
         if requesting_user == self.user_profile.user:
             return True
 
-        if self.profile_visibility == 'public':
+        if self.profile_visibility == "public":
             return True
-        elif self.profile_visibility == 'private':
+        elif self.profile_visibility == "private":
             return False
-        elif self.profile_visibility == 'friends_only':
+        elif self.profile_visibility == "friends_only":
             # Optimized: Use exists() with direct query to avoid N+1
             return self.user_profile.friends.filter(id=requesting_user.id).exists()
 
         return False
 
-    def can_receive_friend_request_from_user(self, requesting_user: 'AbstractUser') -> bool:
+    def can_receive_friend_request_from_user(
+        self, requesting_user: "AbstractUser"
+    ) -> bool:
         """
         Check if this user can receive a friend request from the requesting user.
 
@@ -265,10 +274,11 @@ class UserProfilePrivacySettings(models.Model):
             return False
 
         # Optimized: Check if there's already a pending request using select_related
-        existing_request = ProfileFriendRequest.objects.select_related('sender__user').filter(
-            sender__user=requesting_user,
-            receiver=self.user_profile
-        ).exists()
+        existing_request = (
+            ProfileFriendRequest.objects.select_related("sender__user")
+            .filter(sender__user=requesting_user, receiver=self.user_profile)
+            .exists()
+        )
 
         if existing_request:
             return False
@@ -298,8 +308,10 @@ class ProfileFriendRequest(models.Model):
         "UserProfile", on_delete=models.CASCADE, related_name="received_friend_requests"
     )
     message = models.TextField(
-        max_length=500, blank=True, null=True,
-        help_text="Optional message to include with the friend request."
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Optional message to include with the friend request.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True, help_text="Timestamp when the friend request was sent."
@@ -337,10 +349,12 @@ class ProfileFriendRequest(models.Model):
             with transaction.atomic():
                 # Re-fetch with `select_for_update` to guard against races
                 # Include select_related to prevent additional queries during friend additions
-                req = type(self).objects.select_for_update().select_related(
-                    'sender__user', 
-                    'receiver__user'
-                ).get(pk=self.pk)
+                req = (
+                    type(self)
+                    .objects.select_for_update()
+                    .select_related("sender__user", "receiver__user")
+                    .get(pk=self.pk)
+                )
                 req.receiver.friends.add(req.sender.user)
                 req.sender.friends.add(req.receiver.user)
                 req.delete()
@@ -364,20 +378,19 @@ class ProfileFriendRequest(models.Model):
 
 
 class FriendSuggestion(models.Model):
-    """ Represents a suggested friend for a user based on various criteria."""
+    """Represents a suggested friend for a user based on various criteria."""
+
     user = models.ForeignKey(
-        User,
-        related_name="friend_suggestions",
-        on_delete=models.CASCADE
+        User, related_name="friend_suggestions", on_delete=models.CASCADE
     )
     suggested_user = models.ForeignKey(
-        User,
-        related_name="suggested_to",
-        on_delete=models.CASCADE
+        User, related_name="suggested_to", on_delete=models.CASCADE
     )
     score = models.FloatField()
-    reason = models.CharField(max_length=255)  # e.g., "3 mutual friends", "Recently messaged in Study Group"
+    reason = models.CharField(
+        max_length=255
+    )  # e.g., "3 mutual friends", "Recently messaged in Study Group"
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'suggested_user')
+        unique_together = ("user", "suggested_user")

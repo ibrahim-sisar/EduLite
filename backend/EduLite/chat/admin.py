@@ -32,6 +32,6 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(ChatRoomInvitation)
 class ChatRoomInvitationAdmin(admin.ModelAdmin):
-    list_display = ('chat_room', 'invited_by', 'invitee', 'status', 'created_at')
-    list_filter = ('status',)
-    search_fields = ('chat_room__name', 'invited_by__username', 'invitee__username')
+    list_display = ("chat_room", "invited_by", "invitee", "status", "created_at")
+    list_filter = ("status",)
+    search_fields = ("chat_room__name", "invited_by__username", "invitee__username")

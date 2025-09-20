@@ -13,6 +13,7 @@ from chat.models import ChatRoom, Message
 
 User = get_user_model()
 
+
 class CourseModuleTest(TestCase):
     """
     Test the CourseModule model, which links a Course to any type of content
@@ -47,13 +48,13 @@ class CourseModuleTest(TestCase):
             name="test_chat_room2",
             room_type="ONE_TO_ONE",
         )
-        
+
         cls.user1 = User.objects.create_user(
             username="testuser1",
             password="password123",
             email="testuser1@example.com",
         )
-        
+
         cls.message1 = Message.objects.create(
             chat_room=cls.chat_room1,
             sender=cls.user1,
@@ -147,39 +148,31 @@ class CourseModuleTest(TestCase):
         )
         module2.full_clean()
         self.assertEqual(module2.order, 0)  # default
-        
+
     def test_course_module_missing_content_type_or_object_id(self) -> None:
         """Test ValidationError raised when content_type or object_id is missing."""
         # missing content_type
-        module = CourseModule(
-            course=self.course1,
-            object_id=self.chat_room1.id
-        )
+        module = CourseModule(course=self.course1, object_id=self.chat_room1.id)
         with self.assertRaises(ValidationError):
             module.full_clean()
 
         # missing object_id
         ct = ContentType.objects.get_for_model(ChatRoom)
-        module = CourseModule(
-            course=self.course1,
-            content_type=ct
-        )
+        module = CourseModule(course=self.course1, content_type=ct)
         with self.assertRaises(ValidationError):
             module.full_clean()
-            
+
     def test_course_module_invalid_object_id(self) -> None:
         """Test ValidationError when object_id refers to a nonexistent instance."""
         ct = ContentType.objects.get_for_model(ChatRoom)
         invalid_id = 99999  # assumed to not exist
 
         module = CourseModule(
-            course=self.course1,
-            content_type=ct,
-            object_id=invalid_id
+            course=self.course1, content_type=ct, object_id=invalid_id
         )
         with self.assertRaises(ValidationError):
             module.full_clean()
-            
+
     def test_course_module_str_with_title(self):
         """Test string representation includes title if provided."""
         ct = ContentType.objects.get_for_model(ChatRoom)
@@ -191,6 +184,3 @@ class CourseModuleTest(TestCase):
             object_id=self.chat_room1.id,
         )
         self.assertEqual(str(module), f"{self.course1.title} - Lecture 1")
-
-
-

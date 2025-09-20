@@ -60,10 +60,5 @@ urlpatterns = [
         views.SendFriendRequestView.as_view(),
         name="friend-request-send",
     ),
-    path(
-        'verify-email/', 
-        views.EmailVerificationView.as_view(), 
-        name='verify-email'
-    ),
-    
+    path("verify-email/", views.EmailVerificationView.as_view(), name="verify-email"),
 ]

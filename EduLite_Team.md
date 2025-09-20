@@ -1,7 +1,7 @@
 # 🌟 EduLite Team
 
-> **"EduLite is not just a project — it's a movement.  
-> A mission to make education accessible, simple, and powerful for everyone."**  
+> **"EduLite is not just a project — it's a movement.
+> A mission to make education accessible, simple, and powerful for everyone."**
 > – *Ibrahim Abu Al-Rous (Founder)*
 
 ---
@@ -30,10 +30,10 @@
 
 ## 🤝 Want to Join?
 
-We're always looking for passionate people to join our mission!  
+We're always looking for passionate people to join our mission!
 No matter your level — beginner or expert — you are welcome here.
 
-🎯 [Apply here](https://forms.gle/JEvKtqbzcEJiVV7d6)  
+🎯 [Apply here](https://forms.gle/JEvKtqbzcEJiVV7d6)
 💬 Join us on [Discord](https://discord.gg/phXnxX2dD4)
 
 ---

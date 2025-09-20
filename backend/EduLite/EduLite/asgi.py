@@ -20,16 +20,13 @@ import chat.routing
 from chat.auth_middleware import JWTAuthMiddlewareStack
 
 # Create ASGI application following Django patterns
-application = ProtocolTypeRouter({
-    # HTTP requests handled by Django
-    "http": get_asgi_application(),
-    
-    # WebSocket connections with secure JWT authentication
-    "websocket": AllowedHostsOriginValidator(
-        JWTAuthMiddlewareStack(
-            URLRouter(
-                chat.routing.websocket_urlpatterns
-            )
-        )
-    ),
-})
+application = ProtocolTypeRouter(
+    {
+        # HTTP requests handled by Django
+        "http": get_asgi_application(),
+        # WebSocket connections with secure JWT authentication
+        "websocket": AllowedHostsOriginValidator(
+            JWTAuthMiddlewareStack(URLRouter(chat.routing.websocket_urlpatterns))
+        ),
+    }
+)

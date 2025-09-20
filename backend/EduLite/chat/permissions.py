@@ -47,14 +47,16 @@ class IsMessageSenderOrReadOnly(permissions.BasePermission):
         # Write/Delete permissions only for message sender
         return obj.sender == request.user
 
+
 class IsChatRoomManagerOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow creators and editors to manage chat room.
     """
+
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any participant
         if request.method in permissions.SAFE_METHODS:
             return obj.participants.filter(id=request.user.id).exists()
-        
+
         # Write permissions are only allowed to creators and editors
         return obj.is_creator(request.user) or obj.is_editor(request.user)

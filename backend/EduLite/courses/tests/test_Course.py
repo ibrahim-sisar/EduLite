@@ -53,9 +53,7 @@ class CourseModelTest(TestCase):
             subject="math",
         )
 
-        cls.course4 = Course.objects.create(
-            title="test_course4"
-        )
+        cls.course4 = Course.objects.create(title="test_course4")
 
     def test_course_creation(self) -> None:
         """
@@ -68,7 +66,10 @@ class CourseModelTest(TestCase):
         self.assertEqual(self.course1.subject, "physics")
         self.assertEqual(self.course1.visibility, "public")
         self.assertEqual(self.course1.start_date, datetime(2025, 12, 31, 23, 59, 59))
-        self.assertEqual(self.course1.end_date, datetime(2025, 12, 31, 23, 59, 59) + timedelta(days=30))
+        self.assertEqual(
+            self.course1.end_date,
+            datetime(2025, 12, 31, 23, 59, 59) + timedelta(days=30),
+        )
         self.assertFalse(self.course1.is_active)
         self.assertFalse(self.course1.allow_join_requests)
 

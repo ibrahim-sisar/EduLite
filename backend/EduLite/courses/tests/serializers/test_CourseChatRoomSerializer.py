@@ -11,6 +11,7 @@ from chat.models import ChatRoom
 
 User = get_user_model()
 
+
 class CourseChatRoomSerializerTestCase(TestCase):
     """
     Test suite for the CourseChatRoomSerializer.
@@ -35,7 +36,7 @@ class CourseChatRoomSerializerTestCase(TestCase):
             chatroom=cls.chat_room1,
             created_by=cls.user1,
         )
-    
+
     def test_serializer_contains_all_fields(self):
         """
         Ensure the serializer includes all expected fields
@@ -43,13 +44,15 @@ class CourseChatRoomSerializerTestCase(TestCase):
         serializer = CourseChatRoomSerializer(instance=self.course_chat_room)
         data = serializer.data
 
-        self.assertEqual(data['id'], self.course_chat_room.id)
-        self.assertEqual(data['course'], self.course_chat_room.course.id)
-        self.assertEqual(data['course_title'], self.course_chat_room.course.title)
-        self.assertEqual(data['chatroom'], self.course_chat_room.chatroom.id)
-        self.assertEqual(data['chatroom_name'], self.course_chat_room.chatroom.name)
-        self.assertEqual(data['created_by'], self.course_chat_room.created_by.id)
-        self.assertEqual(data['created_user_name'], self.course_chat_room.created_by.username)
+        self.assertEqual(data["id"], self.course_chat_room.id)
+        self.assertEqual(data["course"], self.course_chat_room.course.id)
+        self.assertEqual(data["course_title"], self.course_chat_room.course.title)
+        self.assertEqual(data["chatroom"], self.course_chat_room.chatroom.id)
+        self.assertEqual(data["chatroom_name"], self.course_chat_room.chatroom.name)
+        self.assertEqual(data["created_by"], self.course_chat_room.created_by.id)
+        self.assertEqual(
+            data["created_user_name"], self.course_chat_room.created_by.username
+        )
 
     def test_read_only_created_by_is_ignored_on_input(self):
         """
@@ -58,7 +61,7 @@ class CourseChatRoomSerializerTestCase(TestCase):
         data = {
             "course": self.course1.id,
             "chatroom": self.chat_room1.id,
-            "created_by": self.user1.id  # This should be ignored
+            "created_by": self.user1.id,  # This should be ignored
         }
         serializer = CourseChatRoomSerializer(data=data)
         assert serializer.is_valid(), serializer.errors

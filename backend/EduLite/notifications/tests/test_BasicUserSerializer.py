@@ -77,8 +77,9 @@ class BasicUserSerializerTests(TestCase):
         expected_read_only = ["id", "username", "first_name", "last_name"]
 
         for field in expected_read_only:
-            self.assertIn(field, meta_read_only,
-                         f"Field '{field}' should be in read_only_fields")
+            self.assertIn(
+                field, meta_read_only, f"Field '{field}' should be in read_only_fields"
+            )
 
     def test_serializer_does_not_expose_sensitive_data(self):
         """
@@ -90,8 +91,11 @@ class BasicUserSerializerTests(TestCase):
         # Ensure sensitive fields are not present
         sensitive_fields = ["password", "email", "is_superuser", "is_staff", "groups"]
         for field in sensitive_fields:
-            self.assertNotIn(field, data.keys(),
-                           f"Sensitive field '{field}' should not be in serialized data")
+            self.assertNotIn(
+                field,
+                data.keys(),
+                f"Sensitive field '{field}' should not be in serialized data",
+            )
 
     def test_multiple_users_serialization(self):
         """

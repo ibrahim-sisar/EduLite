@@ -9,6 +9,7 @@ from courses.models import Course, CourseMembership
 
 User = get_user_model()
 
+
 class FriendSuggestionsTests(TestCase):
     def setUp(self):
         """
@@ -17,7 +18,9 @@ class FriendSuggestionsTests(TestCase):
         has friends, courses, teachers, and chatrooms m2m relations.
         """
         self.user_target = User.objects.create_user(username="target", password="pass")
-        self.user_candidate = User.objects.create_user(username="user_candidate", password="pass")
+        self.user_candidate = User.objects.create_user(
+            username="user_candidate", password="pass"
+        )
         self.user_common = User.objects.create_user(username="common", password="pass")
         self.teacher = User.objects.create_user(username="teacher", password="pass")
 
@@ -40,7 +43,9 @@ class FriendSuggestionsTests(TestCase):
         self.user_candidate.profile.friends.add(self.user_common)
 
         compute_friend_suggestions_for_user(self.user_target)
-        suggestion = FriendSuggestion.objects.filter(user=self.user_target, suggested_user=self.user_candidate).first()
+        suggestion = FriendSuggestion.objects.filter(
+            user=self.user_target, suggested_user=self.user_candidate
+        ).first()
         self.assertIsNotNone(suggestion)
         # Expect score to equal the number of mutual friends (1 in this case)
         self.assertEqual(suggestion.score, 1)
@@ -50,11 +55,17 @@ class FriendSuggestionsTests(TestCase):
         """
         Test that when users share the same course (and nothing else), a suggestion is created.
         """
-        CourseMembership.objects.create(user=self.user_target, course=self.course101, role="student")
-        CourseMembership.objects.create(user=self.user_candidate, course=self.course101, role="student")
+        CourseMembership.objects.create(
+            user=self.user_target, course=self.course101, role="student"
+        )
+        CourseMembership.objects.create(
+            user=self.user_candidate, course=self.course101, role="student"
+        )
 
         compute_friend_suggestions_for_user(self.user_target)
-        suggestion = FriendSuggestion.objects.filter(user=self.user_target, suggested_user=self.user_candidate).first()
+        suggestion = FriendSuggestion.objects.filter(
+            user=self.user_target, suggested_user=self.user_candidate
+        ).first()
         self.assertIsNotNone(suggestion)
         self.assertEqual(suggestion.score, 1)
         self.assertEqual(suggestion.reason, "Same course")
@@ -63,14 +74,24 @@ class FriendSuggestionsTests(TestCase):
         """
         Test that when users share the same teacher, a suggestion is created.
         """
-        CourseMembership.objects.create(user=self.user_target, course=self.course101, role="student")
-        CourseMembership.objects.create(user=self.teacher, course=self.course101, role="teacher")
+        CourseMembership.objects.create(
+            user=self.user_target, course=self.course101, role="student"
+        )
+        CourseMembership.objects.create(
+            user=self.teacher, course=self.course101, role="teacher"
+        )
 
-        CourseMembership.objects.create(user=self.user_candidate, course=self.course102, role="student")
-        CourseMembership.objects.create(user=self.teacher, course=self.course102, role="teacher")
+        CourseMembership.objects.create(
+            user=self.user_candidate, course=self.course102, role="student"
+        )
+        CourseMembership.objects.create(
+            user=self.teacher, course=self.course102, role="teacher"
+        )
 
         compute_friend_suggestions_for_user(self.user_target)
-        suggestion = FriendSuggestion.objects.filter(user=self.user_target, suggested_user=self.user_candidate).first()
+        suggestion = FriendSuggestion.objects.filter(
+            user=self.user_target, suggested_user=self.user_candidate
+        ).first()
         self.assertIsNotNone(suggestion)
         self.assertEqual(suggestion.score, 1)
         self.assertEqual(suggestion.reason, "Same teacher")
@@ -84,16 +105,16 @@ class FriendSuggestionsTests(TestCase):
 
         # Create a chat message from user2 in the shared chatroom.
         ChatRoomMessage.objects.create(
-            chat_room=self.chatroom,
-            sender=self.user_candidate,
-            content="Hi there!"
+            chat_room=self.chatroom, sender=self.user_candidate, content="Hi there!"
         )
 
         # Run friend suggestion computation.
         compute_friend_suggestions_for_user(self.user_target)
 
         # Retrieve and verify the created friend suggestion.
-        suggestion = FriendSuggestion.objects.get(user=self.user_target, suggested_user=self.user_candidate)
+        suggestion = FriendSuggestion.objects.get(
+            user=self.user_target, suggested_user=self.user_candidate
+        )
         self.assertEqual(suggestion.score, 0.5)
         self.assertEqual(suggestion.reason, "Recently messaged in shared chatroom")
 
@@ -103,7 +124,9 @@ class FriendSuggestionsTests(TestCase):
         with the target user.
         """
         compute_friend_suggestions_for_user(self.user_target)
-        suggestion = FriendSuggestion.objects.filter(user=self.user_target, suggested_user=self.user_candidate).first()
+        suggestion = FriendSuggestion.objects.filter(
+            user=self.user_target, suggested_user=self.user_candidate
+        ).first()
         self.assertIsNone(suggestion)
 
     def test_existing_suggestions_are_cleared(self):
@@ -111,16 +134,24 @@ class FriendSuggestionsTests(TestCase):
         Test that previous friend suggestions for a user are removed before creating new ones.
         """
         # Create an existing suggestion.
-        FriendSuggestion.objects.create(user=self.user_target, suggested_user=self.user_candidate,
-                                          score=5, reason="Old suggestion")
-        self.assertEqual(FriendSuggestion.objects.filter(user=self.user_target).count(), 1)
+        FriendSuggestion.objects.create(
+            user=self.user_target,
+            suggested_user=self.user_candidate,
+            score=5,
+            reason="Old suggestion",
+        )
+        self.assertEqual(
+            FriendSuggestion.objects.filter(user=self.user_target).count(), 1
+        )
 
         # Establish a mutual friend relationship to cause a fresh suggestion.
         self.user_target.profile.friends.add(self.user_common)
         self.user_candidate.profile.friends.add(self.user_common)
 
         compute_friend_suggestions_for_user(self.user_target)
-        suggestions = FriendSuggestion.objects.filter(user=self.user_target, suggested_user=self.user_candidate)
+        suggestions = FriendSuggestion.objects.filter(
+            user=self.user_target, suggested_user=self.user_candidate
+        )
         self.assertEqual(suggestions.count(), 1)
         suggestion = suggestions.first()
         self.assertEqual(suggestion.score, 1)

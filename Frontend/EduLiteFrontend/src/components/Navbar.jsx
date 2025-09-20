@@ -108,7 +108,7 @@ export default function Navbar({ isLoggedIn, onLogout }) {
         </div>
       </nav>
 
-      
+
       <SidebarMenu open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </>
   );

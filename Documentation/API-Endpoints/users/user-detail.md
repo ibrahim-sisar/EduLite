@@ -71,7 +71,7 @@ The response will contain a JSON object representing the user, including hyperli
 * **Status Code:** `401 Unauthorized`
   * **Reason:** Authentication credentials were not provided or were invalid.
   * **Response Body:**
-  
+
 ```json
 {
     "detail": "Authentication credentials were not provided."

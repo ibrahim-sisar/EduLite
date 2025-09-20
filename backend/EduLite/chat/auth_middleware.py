@@ -1,4 +1,5 @@
 """Authentication classes for channels."""
+
 from urllib.parse import parse_qs
 
 from channels.auth import AuthMiddlewareStack
@@ -22,7 +23,7 @@ class JWTAuthMiddleware:
     async def __call__(self, scope, receive, send):
         """Authenticate user from JWT in query param or Authorization header."""
         close_old_connections()
-        token = None  
+        token = None
 
         try:
             # --- 1. Try from query param ?token= ---

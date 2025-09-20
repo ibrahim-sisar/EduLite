@@ -179,11 +179,11 @@ class MyPerformanceTest(DjangoPerformanceAPITestCase):
     def setUpTestData(cls):
         # Create all test data once
         cls.users = create_bulk_test_users('perf', 100)
-    
+
     def test_api_performance(self):
         with monitor_django_view("my_operation") as monitor:
             response = self.client.get('/api/endpoint/')
-        
+
         # Performance assertions
         self.assertResponseTimeLess(monitor.metrics, 100, "Should be fast")
         self.assertMemoryLess(monitor.metrics, 50, "Should use minimal memory")
@@ -204,7 +204,7 @@ class MyMercuryTest(DjangoMercuryAPITestCase):
             store_history=True,
             verbose_reporting=True
         )
-    
+
     def test_automatically_monitored(self):
         # Mercury automatically monitors this test
         response = self.client.get('/api/users/')
@@ -231,7 +231,7 @@ class MyViewTest(APITestCase):
         # Create data once for all test methods
         cls.users = create_bulk_test_users('test', 10)
         cls.students = create_students_bulk()
-    
+
     def setUp(self):
         # Only authentication and client setup here
         self.client = APIClient()
@@ -262,7 +262,7 @@ def setUpTestData(cls):
 def test_list_performance(self):
     with monitor_django_view("user_list") as monitor:
         response = self.client.get('/api/users/')
-    
+
     # Three key metrics to always check
     self.assertResponseTimeLess(monitor.metrics, 100)
     self.assertMemoryLess(monitor.metrics, 100)

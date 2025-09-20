@@ -27,7 +27,7 @@
     },
     "featureTitles": {
       "interactive": "Interactive Learning",
-      "community": "Global Community", 
+      "community": "Global Community",
       "resources": "Rich Resources",
       "security": "Secure Platform"
     },
@@ -53,7 +53,7 @@
     "subtitle": "A student-first learning platform, built for areas with weak internet and real challenges.",
     "backToHome": "Back to Home",
     "heroFeature1": "Student-Focused",
-    "heroFeature2": "Global Access", 
+    "heroFeature2": "Global Access",
     "heroFeature3": "Lightning Fast",
     "storyTitle": "Our Story",
     "storySubtitle": "How a global crisis sparked an educational revolution",
@@ -66,7 +66,7 @@
         "description": "When the pandemic closed schools worldwide, millions of students were left without access to quality education. Traditional learning methods suddenly seemed inadequate for our interconnected world."
       },
       "gaza": {
-        "year": "2023", 
+        "year": "2023",
         "title": "The Moment",
         "description": "The situation in Gaza opened our eyes to how education becomes even more critical during times of crisis. We realized that learning shouldn't be a privilege—it should be a right, accessible to everyone, everywhere."
       },
@@ -86,7 +86,7 @@
       "description": "Picture this: A young student struggling with Microsoft Teams during the pandemic. Slow loading, confusing interface, constant crashes. That frustration sparked a thought: 'Why is education technology so... broken?'"
     },
     "gaza": {
-      "title": "The Breaking Point", 
+      "title": "The Breaking Point",
       "description": "Then came 2023. War erupted in Gaza. Over a million students cut off from education for more than a year. Watching this unfold, one question burned brighter than ever:"
     },
     "visionQuote": "Why aren't we building something made for students?",
@@ -152,7 +152,7 @@
     "socialLabels": {
       "github": "GitHub",
       "twitter": "X (Twitter)",
-      "linkedin": "LinkedIn", 
+      "linkedin": "LinkedIn",
       "facebook": "Facebook",
       "email": "Email"
     },
@@ -164,7 +164,7 @@
     "copyright": "© {{year}} EduLite. All rights reserved.",
     "links": {
       "privacy": "Privacy Policy",
-      "terms": "Terms of Service", 
+      "terms": "Terms of Service",
       "support": "Support"
     }
   },

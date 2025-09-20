@@ -1,0 +1,114 @@
+# Black code formatter configuration
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+  | __pycache__
+  | \.eggs
+  | \.hg
+  | \.nox
+  | \.pants\.d
+  | \.pytype
+  | \.ruff_cache
+  | \.svn
+  | \.env
+  | env
+)/
+'''
+
+# mypy type checker configuration
+[tool.mypy]
+python_version = "3.9"  # Minimum version supported by current mypy
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = false
+strict_equality = true
+pretty = true
+show_error_codes = true
+show_column_numbers = true
+show_error_context = true
+
+# Exclude patterns
+exclude = [
+    "venv/",
+    "env/",
+    ".venv/",
+    "migrations/",
+    "tests/",
+    "__pycache__/",
+    "build/",
+    "dist/",
+]
+
+# Django-specific overrides
+[[tool.mypy.overrides]]
+module = "django.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "rest_framework.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "drf_spectacular.*"
+ignore_missing_imports = true
+
+# Django models have too many false positives with type checking
+[[tool.mypy.overrides]]
+module = "*.models"
+ignore_errors = true
+
+# Django migrations should be ignored
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+# Django admin uses decorators that confuse mypy
+[[tool.mypy.overrides]]
+module = "*.admin"
+ignore_errors = true
+
+# Allow untyped calls in test files
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "*.tests.*"
+ignore_errors = true
+
+
+# DRF permissions have metaclass issues
+[[tool.mypy.overrides]]
+module = "*.permissions"
+ignore_errors = true
+
+# Serializers often have complex type interactions
+[[tool.mypy.overrides]]
+module = "*.serializers"
+# Less strict for serializers but still check
+warn_return_any = false
+check_untyped_defs = false
+
+# Django-stubs configuration
+[tool.django-stubs]
+django_settings_module = "EduLite.settings"
+strict_settings = false

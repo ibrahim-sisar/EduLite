@@ -20,6 +20,7 @@ class Notification(models.Model):
         target_object_id (int): The ID of the target object.
         target (GenericForeignKey): The target object of the notification.
     """
+
     recipient = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="notifications", db_index=True
     )
@@ -52,24 +53,24 @@ class Notification(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-            """
-            Provides a detailed and readable string representation of the notification.
-            """
-            # Start with the read status
-            status = "[Read]" if self.is_read else "[Unread]"
+        """
+        Provides a detailed and readable string representation of the notification.
+        """
+        # Start with the read status
+        status = "[Read]" if self.is_read else "[Unread]"
 
-            # Build the core message
-            message = f"Notification for {self.recipient.username}"
+        # Build the core message
+        message = f"Notification for {self.recipient.username}"
 
-            # Add the actor if one exists
-            if self.actor:
-                message += f" from {self.actor.username}"
+        # Add the actor if one exists
+        if self.actor:
+            message += f" from {self.actor.username}"
 
-            # Add the verb
-            message += f": '{self.verb}'"
+        # Add the verb
+        message += f": '{self.verb}'"
 
-            # Add the target if it exists
-            if self.target:
-                message += f" (Target: {self.target})"
+        # Add the target if it exists
+        if self.target:
+            message += f" (Target: {self.target})"
 
-            return f"{status} {message}"
+        return f"{status} {message}"

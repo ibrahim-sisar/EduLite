@@ -45,8 +45,7 @@ class NotificationSerializerTests(TestCase):
 
         # Create a target object for testing GenericForeignKey
         cls.friend_request = ProfileFriendRequest.objects.create(
-            sender=cls.actor_profile,
-            receiver=cls.recipient_profile
+            sender=cls.actor_profile, receiver=cls.recipient_profile
         )
 
         # APIRequestFactory for context
@@ -68,8 +67,13 @@ class NotificationSerializerTests(TestCase):
         data = serializer.data
 
         expected_keys = [
-            "id", "actor_details", "verb", "notification_type",
-            "is_read", "created_at", "target_details"
+            "id",
+            "actor_details",
+            "verb",
+            "notification_type",
+            "is_read",
+            "created_at",
+            "target_details",
         ]
         self.assertEqual(set(data.keys()), set(expected_keys))
 
@@ -191,9 +195,7 @@ class NotificationSerializerTests(TestCase):
 
         # Check format (YYYY-MM-DD HH:MM:SS)
         self.assertIsInstance(data["created_at"], str)
-        self.assertRegex(
-            data["created_at"], r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
-        )
+        self.assertRegex(data["created_at"], r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
 
     def test_read_only_fields(self):
         """
@@ -201,21 +203,27 @@ class NotificationSerializerTests(TestCase):
         """
         meta_read_only = getattr(NotificationSerializer.Meta, "read_only_fields", [])
         expected_read_only = [
-            "id", "actor_details", "verb", "notification_type",
-            "created_at", "target_details"
+            "id",
+            "actor_details",
+            "verb",
+            "notification_type",
+            "created_at",
+            "target_details",
         ]
 
         for field in expected_read_only:
-            self.assertIn(field, meta_read_only,
-                         f"Field '{field}' should be in read_only_fields")
+            self.assertIn(
+                field, meta_read_only, f"Field '{field}' should be in read_only_fields"
+            )
 
     def test_is_read_field_modifiable(self):
         """
         Test that is_read field is not in read_only_fields (can be modified).
         """
         meta_read_only = getattr(NotificationSerializer.Meta, "read_only_fields", [])
-        self.assertNotIn("is_read", meta_read_only,
-                        "Field 'is_read' should not be read-only")
+        self.assertNotIn(
+            "is_read", meta_read_only, "Field 'is_read' should not be read-only"
+        )
 
     def test_multiple_notifications_serialization(self):
         """
@@ -276,10 +284,16 @@ class NotificationSerializerTests(TestCase):
         serializer = NotificationSerializer(notification)
         data = serializer.data
 
-        self.assertNotIn("recipient", data.keys(),
-                        "Recipient field should not be in serialized output")
-        self.assertNotIn("recipient_id", data.keys(),
-                        "Recipient ID should not be in serialized output")
+        self.assertNotIn(
+            "recipient",
+            data.keys(),
+            "Recipient field should not be in serialized output",
+        )
+        self.assertNotIn(
+            "recipient_id",
+            data.keys(),
+            "Recipient ID should not be in serialized output",
+        )
 
     def test_get_target_details_method_type_hints(self):
         """

@@ -21,7 +21,9 @@ class ChatRoomInvitationTests(APITestCase):
         self.other = User.objects.create_user(username="other", password="pass1234")
 
         # Room
-        self.room = ChatRoom.objects.create(name="Room A", room_type="GROUP", creator=self.creator)
+        self.room = ChatRoom.objects.create(
+            name="Room A", room_type="GROUP", creator=self.creator
+        )
         self.room.participants.add(self.creator)
         self.room.participants.add(self.editor)
         self.room.editors.add(self.editor)
@@ -36,50 +38,81 @@ class ChatRoomInvitationTests(APITestCase):
 
     def test_creator_can_send_invitation_and_notification_created(self):
         self.client.force_authenticate(user=self.creator)
-        resp = self.client.post(self.invite_url, {"invitee_id": self.invitee.id}, format="json")
+        resp = self.client.post(
+            self.invite_url, {"invitee_id": self.invitee.id}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(ChatRoomInvitation.objects.filter(chat_room=self.room, invitee=self.invitee, status="pending").exists())
+        self.assertTrue(
+            ChatRoomInvitation.objects.filter(
+                chat_room=self.room, invitee=self.invitee, status="pending"
+            ).exists()
+        )
         # Expect a notification to be created by the post_save signal
-        self.assertTrue(Notification.objects.filter(recipient=self.invitee, actor=self.creator, verb__icontains="invited").exists())
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=self.invitee, actor=self.creator, verb__icontains="invited"
+            ).exists()
+        )
 
     def test_editor_can_send_invitation(self):
         self.client.force_authenticate(user=self.editor)
-        resp = self.client.post(self.invite_url, {"invitee_id": self.invitee.id}, format="json")
+        resp = self.client.post(
+            self.invite_url, {"invitee_id": self.invitee.id}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_non_manager_cannot_send_invitation(self):
         # A user who is not creator/editor should not be able to invite
         self.client.force_authenticate(user=self.other)
-        resp = self.client.post(self.invite_url, {"invitee_id": self.invitee.id}, format="json")
+        resp = self.client.post(
+            self.invite_url, {"invitee_id": self.invitee.id}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_cannot_invite_self(self):
         self.client.force_authenticate(user=self.creator)
-        resp = self.client.post(self.invite_url, {"invitee_id": self.creator.id}, format="json")
+        resp = self.client.post(
+            self.invite_url, {"invitee_id": self.creator.id}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("You cannot invite yourself", str(resp.data))
 
     def test_cannot_invite_existing_participant(self):
         self.client.force_authenticate(user=self.creator)
-        resp = self.client.post(self.invite_url, {"invitee_id": self.editor.id}, format="json")
+        resp = self.client.post(
+            self.invite_url, {"invitee_id": self.editor.id}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("already a participant", str(resp.data))
 
     def test_duplicate_pending_invitation_rejected(self):
         self.client.force_authenticate(user=self.creator)
-        first = self.client.post(self.invite_url, {"invitee_id": self.invitee.id}, format="json")
+        first = self.client.post(
+            self.invite_url, {"invitee_id": self.invitee.id}, format="json"
+        )
         self.assertEqual(first.status_code, status.HTTP_201_CREATED)
-        second = self.client.post(self.invite_url, {"invitee_id": self.invitee.id}, format="json")
+        second = self.client.post(
+            self.invite_url, {"invitee_id": self.invitee.id}, format="json"
+        )
         self.assertEqual(second.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("pending invitation", str(second.data))
 
     def test_accept_invitation_adds_participant(self):
         # Temporarily disconnect signal to avoid side-effects when creating an invitation directly
-        post_save.disconnect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+        post_save.disconnect(
+            receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+        )
         try:
-            inv = ChatRoomInvitation.objects.create(chat_room=self.room, invited_by=self.creator, invitee=self.invitee, status="pending")
+            inv = ChatRoomInvitation.objects.create(
+                chat_room=self.room,
+                invited_by=self.creator,
+                invitee=self.invitee,
+                status="pending",
+            )
         finally:
-            post_save.connect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+            post_save.connect(
+                receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+            )
 
         self.client.force_authenticate(user=self.invitee)
         resp = self.client.post(self._accept_url(inv))
@@ -89,11 +122,20 @@ class ChatRoomInvitationTests(APITestCase):
         self.assertTrue(self.room.participants.filter(id=self.invitee.id).exists())
 
     def test_decline_invitation(self):
-        post_save.disconnect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+        post_save.disconnect(
+            receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+        )
         try:
-            inv = ChatRoomInvitation.objects.create(chat_room=self.room, invited_by=self.creator, invitee=self.invitee, status="pending")
+            inv = ChatRoomInvitation.objects.create(
+                chat_room=self.room,
+                invited_by=self.creator,
+                invitee=self.invitee,
+                status="pending",
+            )
         finally:
-            post_save.connect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+            post_save.connect(
+                receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+            )
 
         self.client.force_authenticate(user=self.invitee)
         resp = self.client.post(self._decline_url(inv))
@@ -103,11 +145,20 @@ class ChatRoomInvitationTests(APITestCase):
         self.assertFalse(self.room.participants.filter(id=self.invitee.id).exists())
 
     def test_accept_or_decline_only_when_pending(self):
-        post_save.disconnect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+        post_save.disconnect(
+            receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+        )
         try:
-            inv = ChatRoomInvitation.objects.create(chat_room=self.room, invited_by=self.creator, invitee=self.invitee, status="accepted")
+            inv = ChatRoomInvitation.objects.create(
+                chat_room=self.room,
+                invited_by=self.creator,
+                invitee=self.invitee,
+                status="accepted",
+            )
         finally:
-            post_save.connect(receiver=notify_user_on_invitation, sender=ChatRoomInvitation)
+            post_save.connect(
+                receiver=notify_user_on_invitation, sender=ChatRoomInvitation
+            )
 
         self.client.force_authenticate(user=self.invitee)
         # Accept should fail

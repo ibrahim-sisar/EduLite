@@ -85,4 +85,3 @@ Upon successful authentication, the API will return a JSON object containing an 
     "detail": "No active account found with the given credentials"
 }
 ```
-

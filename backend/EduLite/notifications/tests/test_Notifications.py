@@ -84,15 +84,21 @@ class NotificationModelTests(TestCase):
             target=self.actor,
         )
         self.assertEqual(notification.target, self.actor)
-        self.assertEqual(notification.target_content_type, ContentType.objects.get_for_model(User))
+        self.assertEqual(
+            notification.target_content_type, ContentType.objects.get_for_model(User)
+        )
         self.assertEqual(notification.target_object_id, self.actor.id)
 
     def test_notification_ordering(self):
         """
         Tests that notifications are ordered by creation date, most recent first.
         """
-        notification1 = Notification.objects.create(recipient=self.recipient, verb="First")
-        notification2 = Notification.objects.create(recipient=self.recipient, verb="Second")
+        notification1 = Notification.objects.create(
+            recipient=self.recipient, verb="First"
+        )
+        notification2 = Notification.objects.create(
+            recipient=self.recipient, verb="Second"
+        )
 
         notifications = list(Notification.objects.all())
         # The first item should be the most recently created one (notification2)

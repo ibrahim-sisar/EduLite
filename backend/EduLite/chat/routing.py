@@ -12,10 +12,12 @@ from . import consumers
 websocket_urlpatterns = [
     # # Simple echo consumer for testing (no authentication required)
     # re_path(r'ws/echo/$', consumers.EchoConsumer.as_asgi(), name='websocket_echo'),
-    
     # # Ping-pong consumer for connection testing
     # re_path(r'ws/ping/$', consumers.PingPongConsumer.as_asgi(), name='websocket_ping'),
-    
     # Production chat consumer with authentication
-    re_path(r'ws/chat/(?P<room_id>[\w-]+)/$', consumers.ChatConsumer.as_asgi(), name='websocket_chat'),
+    re_path(
+        r"ws/chat/(?P<room_id>[\w-]+)/$",
+        consumers.ChatConsumer.as_asgi(),
+        name="websocket_chat",
+    ),
 ]

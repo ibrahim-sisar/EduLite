@@ -143,36 +143,36 @@
         <div class="header">
             <h1>Welcome to EduLite!</h1>
         </div>
-        
+
         <div class="content">
             <p class="greeting">Hi {{ username }},</p>
-            
+
             <p class="message">
-                Thank you for joining EduLite, your gateway to quality education. 
+                Thank you for joining EduLite, your gateway to quality education.
                 We're excited to have you as part of our learning community!
             </p>
-            
+
             <p class="message">
                 To get started, please verify your email address by clicking the button below:
             </p>
-            
+
             <div class="button-container">
                 <a href="{{ activation_link }}" class="verify-button">Verify Email Address</a>
             </div>
-            
+
             <div class="alternative-link">
                 <p>Or copy and paste this link into your browser:</p>
                 <a href="{{ activation_link }}">{{ activation_link }}</a>
             </div>
-            
+
             <div class="security-notice">
                 <p>
-                    <strong>Security Notice:</strong> This verification link will expire in 24 hours. 
+                    <strong>Security Notice:</strong> This verification link will expire in 24 hours.
                     If you didn't create an account with EduLite, please ignore this email.
                 </p>
             </div>
         </div>
-        
+
         <div class="footer">
             <p>Need help? Contact us at <a href="mailto:support@edulite.com">support@edulite.com</a></p>
             <p>&copy; 2025 EduLite. All rights reserved.</p>

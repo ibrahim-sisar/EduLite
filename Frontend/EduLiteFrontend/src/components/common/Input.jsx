@@ -66,24 +66,24 @@ const Input = React.forwardRef(
               transition-all duration-300 ease-out
               placeholder-gray-400 dark:placeholder-gray-500
               text-gray-900 dark:text-white
-              
-              focus:outline-none 
+
+              focus:outline-none
               focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
               focus:border-blue-500/50 dark:focus:border-blue-400/50
               focus:bg-white dark:focus:bg-gray-800/60
               focus:shadow-xl focus:shadow-blue-500/10 dark:focus:shadow-blue-400/10
               focus:scale-[1.02]
-              
+
               hover:border-gray-300/70 dark:hover:border-gray-600/50
               hover:shadow-xl hover:shadow-gray-200/30 dark:hover:shadow-gray-900/30
               hover:bg-white dark:hover:bg-gray-800/50
-              
+
               ${
                 disabled
                   ? "opacity-60 cursor-not-allowed bg-gray-100/50 dark:bg-gray-800/20"
                   : ""
               }
-              
+
               ${
                 error
                   ? "border-red-500/50 dark:border-red-400/50 bg-red-50/50 dark:bg-red-900/10 focus:ring-red-500/50 dark:focus:ring-red-400/50 focus:border-red-500/50 dark:focus:border-red-400/50"

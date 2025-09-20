@@ -126,15 +126,15 @@ const LoginPage = () => {
                   rounded-2xl
                   shadow-lg shadow-blue-500/20 dark:shadow-blue-600/20
                   transition-all duration-300 ease-out
-                  
-                  focus:outline-none 
+
+                  focus:outline-none
                   focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
                   focus:shadow-xl focus:shadow-blue-500/30 dark:focus:shadow-blue-400/30
                   focus:scale-[1.02]
-                  
+
                   hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-600/30
                   hover:scale-[1.02]
-                  
+
                   ${loading ? "opacity-60 cursor-not-allowed" : ""}
                 `}
               >

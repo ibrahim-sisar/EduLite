@@ -7,6 +7,7 @@ from users.models import FriendSuggestion
 
 User = get_user_model()
 
+
 class FriendSuggestionModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -21,7 +22,7 @@ class FriendSuggestionModelTests(TestCase):
             user=self.user1,
             suggested_user=self.user2,
             score=0.85,
-            reason="2 mutual friends"
+            reason="2 mutual friends",
         )
         self.assertIsNotNone(suggestion.pk)
         self.assertIsNotNone(suggestion.created_at)
@@ -35,12 +36,12 @@ class FriendSuggestionModelTests(TestCase):
             user=self.user1,
             suggested_user=self.user2,
             score=0.90,
-            reason="Similar interests"
+            reason="Similar interests",
         )
         with self.assertRaises(IntegrityError):
             FriendSuggestion.objects.create(
                 user=self.user1,
                 suggested_user=self.user2,
                 score=0.92,
-                reason="Duplicate suggestion"
+                reason="Duplicate suggestion",
             )

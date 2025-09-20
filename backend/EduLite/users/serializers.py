@@ -9,7 +9,9 @@ from typing import Optional, TYPE_CHECKING
 from rest_framework import serializers
 
 from .models import (
-    UserProfile, ProfileFriendRequest, UserProfilePrivacySettings,
+    UserProfile,
+    ProfileFriendRequest,
+    UserProfilePrivacySettings,
 )
 
 if TYPE_CHECKING:
@@ -43,6 +45,13 @@ class ProfileSerializer(
         view_name="user-detail",
         read_only=True,
     )
+    friends = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all(),
+        required=False,
+        default=[],
+        help_text="List of user IDs who are friends",
+    )
 
     class Meta:
         model = UserProfile
@@ -60,27 +69,28 @@ class ProfileSerializer(
             "friends",
         ]
 
-    def _get_requesting_user(self) -> Optional['AbstractUser']:
+    def _get_requesting_user(self) -> Optional["AbstractUser"]:
         """Get the requesting user from context."""
-        request = self.context.get('request')
+        request = self.context.get("request")
 
         # Production: Get authenticated user from request
-        if request and hasattr(
-            request, 'user'
-        ) and hasattr(
-            request.user, 'is_authenticated'
-        ) and request.user.is_authenticated:
+        if (
+            request
+            and hasattr(request, "user")
+            and hasattr(request.user, "is_authenticated")
+            and request.user.is_authenticated
+        ):
             return request.user
 
         # Test context: Allow passing user directly (only for tests)
-        test_user = self.context.get('test_user')
-        if test_user and hasattr(test_user, 'pk'):
+        test_user = self.context.get("test_user")
+        if test_user and hasattr(test_user, "pk"):
             return test_user
 
         return None
 
     def _can_view_full_profile(
-        self, obj: UserProfile, requesting_user: Optional['AbstractUser']
+        self, obj: UserProfile, requesting_user: Optional["AbstractUser"]
     ) -> bool:
         """
         Check if the requesting user can view the
@@ -99,11 +109,9 @@ class ProfileSerializer(
 
         # Check privacy settings with proper error handling
         try:
-            privacy_settings = getattr(obj, 'privacy_settings', None)
+            privacy_settings = getattr(obj, "privacy_settings", None)
             if privacy_settings:
-                return privacy_settings.can_profile_be_viewed_by_user(
-                    requesting_user
-                )
+                return privacy_settings.can_profile_be_viewed_by_user(requesting_user)
         except (AttributeError, UserProfilePrivacySettings.DoesNotExist):
             pass
 
@@ -120,9 +128,11 @@ class ProfileSerializer(
         # Check if requesting user can view the full profile
         if not self._can_view_full_profile(instance, requesting_user):
             # For users who can't view the full profile, return limited info
-            limited_fields = ['url', 'user_url']
+            limited_fields = ["url", "user_url"]
             representation = {
-                key: value for key, value in representation.items() if key in limited_fields
+                key: value
+                for key, value in representation.items()
+                if key in limited_fields
             }
 
         return representation
@@ -136,21 +146,22 @@ class UserSearchSerializer(serializers.ModelSerializer):
     Lightweight serializer for user search results.
     Optimized to minimize database queries by avoiding hyperlinked fields.
     """
+
     full_name = serializers.SerializerMethodField()
-    profile_id = serializers.IntegerField(source='profile.id', read_only=True)
-    
+    profile_id = serializers.IntegerField(source="profile.id", read_only=True)
+
     class Meta:
         model = User
         fields = [
             "id",
             "username",
             "email",
-            "first_name", 
+            "first_name",
             "last_name",
             "full_name",
             "profile_id",
         ]
-    
+
     def get_full_name(self, obj):
         """Get full name efficiently."""
         first = obj.first_name
@@ -162,65 +173,70 @@ class UserSearchSerializer(serializers.ModelSerializer):
         elif last:
             return last
         return ""
-    
+
     def _get_requesting_user(self):
         """Get the requesting user from context."""
-        request = self.context.get('request')
-        if request and hasattr(request, 'user') and hasattr(
-            request.user, 'is_authenticated'
-        ) and request.user.is_authenticated:
+        request = self.context.get("request")
+        if (
+            request
+            and hasattr(request, "user")
+            and hasattr(request.user, "is_authenticated")
+            and request.user.is_authenticated
+        ):
             return request.user
         return None
-    
+
     def _get_privacy_settings(self, obj):
         """
         Get privacy settings for the user, with caching to avoid multiple DB hits.
         """
-        cache_key = f'_privacy_settings_{id(obj)}'
+        cache_key = f"_privacy_settings_{id(obj)}"
         if hasattr(self, cache_key):
             return getattr(self, cache_key)
-        
+
         privacy_settings = None
         try:
-            if hasattr(obj, 'profile') and hasattr(obj.profile, 'privacy_settings'):
+            if hasattr(obj, "profile") and hasattr(obj.profile, "privacy_settings"):
                 privacy_settings = obj.profile.privacy_settings
         except (AttributeError, UserProfilePrivacySettings.DoesNotExist):
             pass
-        
+
         setattr(self, cache_key, privacy_settings)
         return privacy_settings
-    
+
     def to_representation(self, instance):
         """
         Override to apply privacy filtering efficiently.
         """
         representation = super().to_representation(instance)
         requesting_user = self._get_requesting_user()
-        
+
         # Apply privacy filtering
         if requesting_user and instance.id == requesting_user.id:
             # User can see all their own data
             return representation
-        
-        if requesting_user and (requesting_user.is_superuser or requesting_user.is_staff):
+
+        if requesting_user and (
+            requesting_user.is_superuser or requesting_user.is_staff
+        ):
             # Admin can see all data
             return representation
-        
+
         # Check privacy settings
         privacy_settings = self._get_privacy_settings(instance)
-        
+
         if not privacy_settings:
             # Default privacy: hide email
-            representation.pop('email', None)
+            representation.pop("email", None)
         else:
             if not privacy_settings.show_email:
-                representation.pop('email', None)
-            
+                representation.pop("email", None)
+
             if not privacy_settings.show_full_name:
-                representation.pop('first_name', None)
-                representation.pop('last_name', None)
-                representation.pop('full_name', None)
-        
+                representation.pop("first_name", None)
+                representation.pop("last_name", None)
+                representation.pop("full_name", None)
+
         return representation
 
 
@@ -248,6 +264,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
         read_only=True,
     )
     full_name = serializers.SerializerMethodField()
+    groups = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Group.objects.all(),
+        required=False,
+        default=[],
+        help_text="List of group IDs the user belongs to",
+    )
 
     class Meta:
         model = User
@@ -276,48 +299,51 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
 
     def _get_requesting_user(self):
         """Get the requesting user from context."""
-        request = self.context.get('request')
+        request = self.context.get("request")
 
         # Production: Get authenticated user from request
-        if request and hasattr(
-            request, 'user'
-        ) and hasattr(
-            request.user, 'is_authenticated'
-        ) and request.user.is_authenticated:
+        if (
+            request
+            and hasattr(request, "user")
+            and hasattr(request.user, "is_authenticated")
+            and request.user.is_authenticated
+        ):
             return request.user
 
         # Test context: Allow passing user directly (only for tests)
-        test_user = self.context.get('test_user')  # Doesn't exist without test
-        if test_user and hasattr(test_user, 'pk'):
+        test_user = self.context.get("test_user")  # Doesn't exist without test
+        if test_user and hasattr(test_user, "pk"):
             return test_user
 
         return None
-    
+
     def _get_privacy_settings(self, obj):
         """
         Get privacy settings for the user, with caching to avoid multiple DB hits.
         Uses instance-level caching to prevent repeated access within the same serialization.
         """
         # Create a cache key specific to this serializer instance and object
-        cache_key = f'_privacy_settings_{id(obj)}'
-        
+        cache_key = f"_privacy_settings_{id(obj)}"
+
         # Check if we've already fetched privacy settings for this object
         if hasattr(self, cache_key):
             return getattr(self, cache_key)
-        
+
         # Fetch privacy settings
         privacy_settings = None
         try:
-            if hasattr(obj, 'profile') and hasattr(obj.profile, 'privacy_settings'):
+            if hasattr(obj, "profile") and hasattr(obj.profile, "privacy_settings"):
                 privacy_settings = obj.profile.privacy_settings
         except (AttributeError, UserProfilePrivacySettings.DoesNotExist):
             pass
-        
+
         # Cache the result on this serializer instance
         setattr(self, cache_key, privacy_settings)
         return privacy_settings
 
-    def _should_show_email(self, obj, requesting_user: Optional['AbstractUser']) -> bool:
+    def _should_show_email(
+        self, obj, requesting_user: Optional["AbstractUser"]
+    ) -> bool:
         """
         Determine if email should be shown to the requesting user.
         """
@@ -326,7 +352,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
             return True
 
         # Admin users can see all emails
-        if requesting_user and (requesting_user.is_superuser or requesting_user.is_staff):
+        if requesting_user and (
+            requesting_user.is_superuser or requesting_user.is_staff
+        ):
             return True
 
         # Check privacy settings using cached method
@@ -337,7 +365,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
         # Default to hiding email if no privacy settings exist
         return False
 
-    def _should_show_full_name(self, obj, requesting_user: Optional['AbstractUser']) -> bool:
+    def _should_show_full_name(
+        self, obj, requesting_user: Optional["AbstractUser"]
+    ) -> bool:
         """
         Determine if full name should be shown to the requesting user.
         """
@@ -346,7 +376,9 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
             return True
 
         # Admin users can see all names
-        if requesting_user and (requesting_user.is_superuser or requesting_user.is_staff):
+        if requesting_user and (
+            requesting_user.is_superuser or requesting_user.is_staff
+        ):
             return True
 
         # Check privacy settings using cached method
@@ -366,15 +398,14 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
 
         # Apply individual field privacy filtering
         if not self._should_show_email(instance, requesting_user):
-            representation.pop('email', None)
+            representation.pop("email", None)
 
         if not self._should_show_full_name(instance, requesting_user):
-            representation.pop('first_name', None)
-            representation.pop('last_name', None)
-            representation.pop('full_name', None)
+            representation.pop("first_name", None)
+            representation.pop("last_name", None)
+            representation.pop("full_name", None)
 
         return representation
-
 
 
 ## -- Secure Password Hashing Serializers -- ##
@@ -425,9 +456,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "Invalid email format: '@' symbol missing."
             )
         email_name, domain_part = value.split("@", 1)
-        
+
         # Cache blocked domains to avoid repeated getattr calls
-        if not hasattr(self, '_blocked_domains'):
+        if not hasattr(self, "_blocked_domains"):
             blocked_domains = getattr(
                 settings, "BLOCKED_EMAIL_DOMAINS", ["example.com", "test.com"]
             )
@@ -457,48 +488,49 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password2": "Password fields didn't match."}
             )
-        
+
         # Perform combined uniqueness check using a single query
-        username = attrs.get('username')
-        email = attrs.get('email')
-        
+        username = attrs.get("username")
+        email = attrs.get("email")
+
         if username and email:
             # Use Q objects for efficient OR query
             existing_users = User.objects.filter(
                 models.Q(username__iexact=username) | models.Q(email__iexact=email)
-            ).values('username', 'email')
-            
+            ).values("username", "email")
+
             errors = {}
             for user in existing_users:
-                if user['username'].lower() == username.lower():
-                    errors['username'] = "A user with that username already exists."
-                if user['email'].lower() == email.lower():
-                    errors['email'] = "A user with this email address already exists."
-            
+                if user["username"].lower() == username.lower():
+                    errors["username"] = "A user with that username already exists."
+                if user["email"].lower() == email.lower():
+                    errors["email"] = "A user with this email address already exists."
+
             if errors:
                 raise serializers.ValidationError(errors)
-        
-        return attrs
 
+        return attrs
 
     def create(self, validated_data):
         """
         Handles user registration based on EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP setting.
-        
+
         If verification required:
         - Sends verification email with signed token
         - Does NOT create user yet (happens on email verification)
-        
+
         If verification not required:
         - Creates user immediately
         - Still sends verification email for optional verification
         """
         validated_data.pop("password2")
         password = validated_data.pop("password")
-        
+
         # Check if email verification is required
-        require_verification = getattr(settings, 'USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP', False)
-        
+        require_verification = getattr(
+            settings, "USER_EMAIL_VERIFICATION_REQUIRED_FOR_SIGNUP", False
+        )
+
         # Prepare email verification token
         signer = TimestampSigner()
         payload = {
@@ -508,28 +540,38 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "first_name": validated_data.get("first_name", ""),
             "last_name": validated_data.get("last_name", ""),
         }
-        
+
         json_payload = json.dumps(payload)
         b64_payload = base64.urlsafe_b64encode(json_payload.encode()).decode()
         signed_token = signer.sign(b64_payload)
-        
-        verification_link = f"{settings.FRONTEND_URL}/verify-email/?token={signed_token}"
-        
+
+        verification_link = (
+            f"{settings.FRONTEND_URL}/verify-email/?token={signed_token}"
+        )
+
         # Send verification email
         subject = render_to_string("email/account_verification_subject.txt").strip()
-        text_content = render_to_string("email/account_verification_email.txt", {
-            "username": payload["username"],
-            "activation_link": verification_link,
-        })
-        html_content = render_to_string("email/account_verification_email.html", {
-            "username": payload["username"],
-            "activation_link": verification_link,
-        })
-        
-        email = EmailMultiAlternatives(subject, text_content, settings.DEFAULT_FROM_EMAIL, [payload["email"]])
+        text_content = render_to_string(
+            "email/account_verification_email.txt",
+            {
+                "username": payload["username"],
+                "activation_link": verification_link,
+            },
+        )
+        html_content = render_to_string(
+            "email/account_verification_email.html",
+            {
+                "username": payload["username"],
+                "activation_link": verification_link,
+            },
+        )
+
+        email = EmailMultiAlternatives(
+            subject, text_content, settings.DEFAULT_FROM_EMAIL, [payload["email"]]
+        )
         email.attach_alternative(html_content, "text/html")
         email.send()
-        
+
         if require_verification:
             # Don't create user yet - wait for email verification
             return {"message": "Verification email sent."}
@@ -542,11 +584,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 first_name=validated_data.get("first_name", ""),
                 last_name=validated_data.get("last_name", ""),
             )
-            
+
             # Create UserProfile with defaults
             from .models import UserProfile
+
             UserProfile.objects.get_or_create(user=user)
-            
+
             return user
 
 
@@ -565,9 +608,7 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
     # Include nested sender and receiver user info
     sender = serializers.SerializerMethodField()
     receiver = serializers.SerializerMethodField()
-    message = serializers.CharField(
-        required=False, allow_blank=True, max_length=500
-    )
+    message = serializers.CharField(required=False, allow_blank=True, max_length=500)
     created_at = serializers.DateTimeField(read_only=True, format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
@@ -591,24 +632,24 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
         """Return basic sender user info."""
         if obj.sender and obj.sender.user:
             return {
-                'id': obj.sender.user.id,
-                'username': obj.sender.user.username,
-                'first_name': obj.sender.user.first_name,
-                'last_name': obj.sender.user.last_name,
+                "id": obj.sender.user.id,
+                "username": obj.sender.user.username,
+                "first_name": obj.sender.user.first_name,
+                "last_name": obj.sender.user.last_name,
             }
         return None
-    
+
     def get_receiver(self, obj: ProfileFriendRequest) -> dict:
         """Return basic receiver user info."""
         if obj.receiver and obj.receiver.user:
             return {
-                'id': obj.receiver.user.id,
-                'username': obj.receiver.user.username,
-                'first_name': obj.receiver.user.first_name,
-                'last_name': obj.receiver.user.last_name,
+                "id": obj.receiver.user.id,
+                "username": obj.receiver.user.username,
+                "first_name": obj.receiver.user.first_name,
+                "last_name": obj.receiver.user.last_name,
             }
         return None
-    
+
     def get_sender_profile_url(self, obj: ProfileFriendRequest) -> str | None:
         request = self.context.get("request")
         if request and obj.sender:
@@ -677,11 +718,11 @@ class UserProfilePrivacySettingsSerializer(serializers.ModelSerializer):
         """
         Validate privacy settings for logical consistency.
         """
-        search_visibility = attrs.get('search_visibility')
-        profile_visibility = attrs.get('profile_visibility')
+        search_visibility = attrs.get("search_visibility")
+        profile_visibility = attrs.get("profile_visibility")
 
         # If search visibility is 'nobody', profile should be private or friends_only
-        if search_visibility == 'nobody' and profile_visibility == 'public':
+        if search_visibility == "nobody" and profile_visibility == "public":
             raise serializers.ValidationError(
                 "Profile cannot be public if search visibility is set to nobody."
             )
@@ -696,12 +737,10 @@ class UserProfilePrivacySettingsReadOnlySerializer(serializers.ModelSerializer):
     """
 
     search_visibility_display = serializers.CharField(
-        source='get_search_visibility_display',
-        read_only=True
+        source="get_search_visibility_display", read_only=True
     )
     profile_visibility_display = serializers.CharField(
-        source='get_profile_visibility_display',
-        read_only=True
+        source="get_profile_visibility_display", read_only=True
     )
 
     class Meta:

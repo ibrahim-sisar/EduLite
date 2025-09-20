@@ -45,7 +45,7 @@ Before you begin, ensure you have the following installed on your system:
 
 2.  **Navigate to this Directory:**
     ```bash
-    cd Docker-Files 
+    cd Docker-Files
     ```
     *(Or ensure the `containers.sh` script, `Dockerfile`, and `docker-compose.yml` are in your current working directory when running commands, or adjust paths in the script if needed).*
 

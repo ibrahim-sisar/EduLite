@@ -16,7 +16,13 @@ class ChatRoom(models.Model):
         ("COURSE", "Course Group"),
     )
 
-    creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="created_chat_rooms", null=True, blank=True)
+    creator = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="created_chat_rooms",
+        null=True,
+        blank=True,
+    )
     editors = models.ManyToManyField(User, related_name="edited_chat_rooms", blank=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     room_type = models.CharField(max_length=20, choices=ROOM_TYPES)
@@ -50,8 +56,13 @@ class Message(models.Model):
     Represents a message sent in a chat room.
     Each message is associated with a chat room and a sender.
     """
-    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+
+    chat_room = models.ForeignKey(
+        ChatRoom, on_delete=models.CASCADE, related_name="messages"
+    )
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sent_messages"
+    )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
@@ -66,29 +77,41 @@ class Message(models.Model):
 
 
 class ChatRoomInvitation(models.Model):
-    STATUS_PENDING = 'pending'
-    STATUS_ACCEPTED = 'accepted'
-    STATUS_DECLINED = 'declined'
+    STATUS_PENDING = "pending"
+    STATUS_ACCEPTED = "accepted"
+    STATUS_DECLINED = "declined"
 
     STATUS_CHOICES = (
         (STATUS_PENDING, "Pending"),
         (STATUS_ACCEPTED, "Accepted"),
         (STATUS_DECLINED, "Declined"),
     )
-    
+
     from django.conf import settings
 
-    chat_room = models.ForeignKey('ChatRoom', on_delete=models.CASCADE, related_name='invitations')
-    invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_invitations')
-    invitee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_invitations')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    chat_room = models.ForeignKey(
+        "ChatRoom", on_delete=models.CASCADE, related_name="invitations"
+    )
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_invitations",
+    )
+    invitee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="received_invitations",
+    )
+    status = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('chat_room', 'invitee', 'status')
+        unique_together = ("chat_room", "invitee", "status")
         indexes = [
-            models.Index(fields=['status']),
+            models.Index(fields=["status"]),
         ]
 
     def __str__(self):

@@ -80,7 +80,7 @@ import Input from '../components/common/Input';
 
 function MyForm() {
   const [email, setEmail] = useState('');
-  
+
   return (
     <Input
       type="email"
@@ -100,8 +100,8 @@ const handleEmailChange = (e) => {
   const value = e.target.value;
   setEmail(value);
   setEmailError(
-    value && !value.includes('@') 
-      ? 'Please enter a valid email address' 
+    value && !value.includes('@')
+      ? 'Please enter a valid email address'
       : ''
   );
 };
@@ -122,7 +122,7 @@ const [phoneError, setPhoneError] = useState('');
 const handlePhoneChange = (e) => {
   const value = e.target.value;
   const phoneRegex = /^[\\d\\s\\-\\(\\)]*$/;
-  
+
   if (phoneRegex.test(value) || value === '') {
     setPhone(value);
     setPhoneError('');
@@ -204,22 +204,22 @@ const formatCurrency = (value) => {
   // Remove all non-digit characters except decimal point
   const numericValue = value.replace(/[^\\d.]/g, '');
   const parts = numericValue.split('.');
-  
+
   if (parts.length > 2) {
     return parts[0] + '.' + parts.slice(1).join('');
   }
-  
+
   if (parts[1] && parts[1].length > 2) {
     return parts[0] + '.' + parts[1].slice(0, 2);
   }
-  
+
   return numericValue;
 };
 
 const handleAmountChange = (e) => {
   const value = formatCurrency(e.target.value);
   setAmount(value);
-  
+
   if (value && (isNaN(value) || parseFloat(value) <= 0)) {
     setAmountError('Please enter a valid amount');
   } else {
@@ -240,11 +240,11 @@ const handleAmountChange = (e) => {
     form: `import { useForm } from 'react-hook-form';
 
 function ContactForm() {
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     formState: { errors, isSubmitting },
-    watch 
+    watch
   } = useForm();
 
   const onSubmit = async (data) => {
@@ -259,7 +259,7 @@ function ContactForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Input
-        {...register('name', { 
+        {...register('name', {
           required: 'Name is required',
           minLength: { value: 2, message: 'Name too short' }
         })}
@@ -268,7 +268,7 @@ function ContactForm() {
         label="Full Name"
         error={errors.name?.message}
       />
-      
+
       <Input
         {...register('email', {
           required: 'Email is required',
@@ -282,9 +282,9 @@ function ContactForm() {
         label="Email Address"
         error={errors.email?.message}
       />
-      
-      <button 
-        type="submit" 
+
+      <button
+        type="submit"
         disabled={isSubmitting}
         className="btn-primary"
       >
@@ -311,7 +311,7 @@ const validationRules = {
     }
     return '';
   },
-  
+
   password: (value) => {
     if (!value) return 'Password is required';
     if (value.length < 8) return 'Password must be at least 8 characters';
@@ -320,7 +320,7 @@ const validationRules = {
     }
     return '';
   },
-  
+
   confirmPassword: (value) => {
     if (!value) return 'Please confirm your password';
     if (value !== formData.password) return 'Passwords do not match';
@@ -337,12 +337,12 @@ const validateField = (name, value) => {
 const handleChange = (e) => {
   const { name, value } = e.target;
   setFormData(prev => ({ ...prev, [name]: value }));
-  
+
   // Only validate if field has been touched
   if (touched[name]) {
     validateField(name, value);
   }
-  
+
   // Special case: re-validate confirm password when password changes
   if (name === 'password' && touched.confirmPassword) {
     validateField('confirmPassword', formData.confirmPassword);
@@ -367,7 +367,7 @@ return (
       error={touched.email ? errors.email : ''}
       placeholder="user@example.com"
     />
-    
+
     <Input
       type="password"
       name="password"
@@ -378,7 +378,7 @@ return (
       error={touched.password ? errors.password : ''}
       placeholder="Enter password"
     />
-    
+
     <Input
       type="password"
       name="confirmPassword"
@@ -410,14 +410,14 @@ const checkUsernameAvailability = useCallback(
       });
       return;
     }
-    
+
     setUsernameStatus(prev => ({ ...prev, isChecking: true }));
-    
+
     try {
       // Simulate API call
       const response = await fetch(\`/api/check-username/\${username}\`);
       const { available } = await response.json();
-      
+
       setUsernameStatus({
         error: available ? '' : 'Username is already taken',
         isChecking: false,
@@ -437,14 +437,14 @@ const checkUsernameAvailability = useCallback(
 const handleUsernameChange = (e) => {
   const value = e.target.value;
   setUsername(value);
-  
+
   // Reset status
   setUsernameStatus({
     error: '',
     isChecking: false,
     isAvailable: null
   });
-  
+
   // Trigger async validation
   if (value.trim()) {
     checkUsernameAvailability(value);
@@ -462,14 +462,14 @@ return (
       error={usernameStatus.error}
       placeholder="Enter username"
     />
-    
+
     {/* Loading indicator */}
     {usernameStatus.isChecking && (
       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-3">
         <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
       </div>
     )}
-    
+
     {/* Success indicator */}
     {usernameStatus.isAvailable && (
       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-3">
@@ -985,10 +985,10 @@ return (
 const formatCardNumber = (value) => {
   // Remove all non-digit characters
   const digits = value.replace(/\\D/g, '');
-  
+
   // Add spaces every 4 digits
   const formatted = digits.replace(/(\\d{4})(?=\\d)/g, '$1 ');
-  
+
   // Limit to 19 characters (16 digits + 3 spaces)
   return formatted.slice(0, 19);
 };
@@ -1066,7 +1066,7 @@ const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 const checkUsernameAvailability = useCallback(
   debounce(async (username) => {
     if (username.length < 3) return;
-    
+
     setIsCheckingUsername(true);
     try {
       const isAvailable = await api.checkUsername(username);
@@ -1084,7 +1084,7 @@ const handleUsernameChange = (e) => {
   const value = e.target.value;
   setUsername(value);
   setUsernameError('');
-  
+
   if (value.length >= 3) {
     checkUsernameAvailability(value);
   }

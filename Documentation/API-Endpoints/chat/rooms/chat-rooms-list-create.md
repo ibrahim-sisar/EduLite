@@ -64,7 +64,7 @@ The response will be a paginated JSON object containing a list of all chat rooms
           "id": 1,
           "chat_room": 1,
           "sender": 1,
-          "sender_id": 1, 
+          "sender_id": 1,
           "content": "Hello, EduLite!",
           "created_at": "2023-10-01T12:00:00Z",
           "is_read": true
@@ -187,7 +187,7 @@ The response will contain the JSON object of the newly created group.
 ```
 
 * **Status Code:** `400 Bad Request`
-  * **Reason (for `POST`):** The provided data is invalid (e.g., `room_type` field missing).  
+  * **Reason (for `POST`):** The provided data is invalid (e.g., `room_type` field missing).
   * **Response Body (Example - `room_type` missing):**
 
 ```json

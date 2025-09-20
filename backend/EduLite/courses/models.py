@@ -28,11 +28,17 @@ class Course(models.Model):
     """
 
     title = models.CharField(
-        blank=False, null=False, max_length=128, help_text="What your Course is called.."
-        )
+        blank=False,
+        null=False,
+        max_length=128,
+        help_text="What your Course is called..",
+    )
     outline = models.TextField(
-        blank=True, null=True, max_length=1000, help_text="A brief description of the course."
-        )
+        blank=True,
+        null=True,
+        max_length=1000,
+        help_text="A brief description of the course.",
+    )
 
     language = models.CharField(
         max_length=64, choices=LANGUAGE_CHOICES, blank=True, null=True
@@ -96,10 +102,13 @@ class CourseModule(models.Model):
     # the title of the module
     title = models.CharField(
         max_length=128, blank=True, null=True, help_text="What your Module is called."
-        )
+    )
 
     # Display order of the module within the course
-    order = models.PositiveIntegerField(default=0, help_text="The order of the module within the course's list of modules.")
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="The order of the module within the course's list of modules.",
+    )
 
     # the content_type and object_id are used to link the module to a specific content object
     # example: Lecture, Quiz, Assignment, etc.
@@ -117,10 +126,10 @@ class CourseModule(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
-        
+
     def clean(self) -> None:
         super().clean()
-    
+
         # Checking if the content_type and object_id are valid
         if not self.content_type_id or not self.object_id:
             raise ValidationError("Content type and object id are required")
@@ -145,35 +154,52 @@ class CourseMembership(models.Model):
     """
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="course_memberships", help_text="The user who is a member of the course."
+        User,
+        on_delete=models.CASCADE,
+        related_name="course_memberships",
+        help_text="The user who is a member of the course.",
     )
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="memberships", help_text="The course that the user is a member of."
+        Course,
+        on_delete=models.CASCADE,
+        related_name="memberships",
+        help_text="The course that the user is a member of.",
     )
     role = models.CharField(
-        max_length=32, choices=COURSE_ROLE_CHOICES, default="student", help_text="The role of the user in the course. (student, assistant, teacher)"
+        max_length=32,
+        choices=COURSE_ROLE_CHOICES,
+        default="student",
+        help_text="The role of the user in the course. (student, assistant, teacher)",
     )
     status = models.CharField(
-        max_length=64, choices=COURSE_MEMBERSHIP_STATUS, default="enrolled", help_text="The status of the user in the course. (pending, enrolled, invited)"
+        max_length=64,
+        choices=COURSE_MEMBERSHIP_STATUS,
+        default="enrolled",
+        help_text="The status of the user in the course. (pending, enrolled, invited)",
     )
-    
+
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["user", "course"], name="unique_user_course_membership")
+            models.UniqueConstraint(
+                fields=["user", "course"], name="unique_user_course_membership"
+            )
         ]
 
     def clean(self) -> None:
         super().clean()
-        
+
         # Checking if the user is already a member of the course
-        if CourseMembership.objects.filter(user=self.user, course=self.course).exclude(pk=self.pk).exists():
+        if (
+            CourseMembership.objects.filter(user=self.user, course=self.course)
+            .exclude(pk=self.pk)
+            .exists()
+        ):
             raise ValidationError("User is already a member of the course")
-        
+
         # Checking state match the role
         if self.role != "student" and self.status == "pending":
             raise ValidationError("Only students can have 'pending' status.")
-        
-        
+
     def __str__(self):
         return f"{self.user.username} - {self.course.title} - {self.role}"
 
@@ -185,23 +211,32 @@ class CourseChatRoom(models.Model):
     """
 
     course = models.ForeignKey(
-        Course, on_delete=models.CASCADE, related_name="course_chatrooms", help_text="The course that the chatroom is associated with."
+        Course,
+        on_delete=models.CASCADE,
+        related_name="course_chatrooms",
+        help_text="The course that the chatroom is associated with.",
     )
     chatroom = models.ForeignKey(
-        ChatRoom, on_delete=models.CASCADE, related_name="course_links", help_text="The chatroom that is associated with the course."
+        ChatRoom,
+        on_delete=models.CASCADE,
+        related_name="course_links",
+        help_text="The chatroom that is associated with the course.",
     )
     created_by = models.ForeignKey(
-        User, related_name="chatroom_user", on_delete=models.CASCADE, help_text="The user who created the chatroom."
+        User,
+        related_name="chatroom_user",
+        on_delete=models.CASCADE,
+        help_text="The user who created the chatroom.",
     )
 
     def __str__(self):
         return f"{self.course.title} - {self.chatroom.name}"
-    
+
     def clean(self):
         super().clean()
         # Ensure that created user cannot be changed.
         if self.pk:
             old_instance = CourseChatRoom.objects.get(pk=self.pk)
-            
+
             if old_instance.created_by != self.created_by:
                 raise ValidationError("Cannot change the creator of the chatroom.")

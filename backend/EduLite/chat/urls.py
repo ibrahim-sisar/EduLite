@@ -19,9 +19,22 @@ urlpatterns = [
         name="message-detail",
     ),
     # Send invitation
-    path("rooms/<int:pk>/invite/", views.ChatRoomInvitationView.as_view(), name="chatroom-invite"),
-
+    path(
+        "rooms/<int:pk>/invite/",
+        views.ChatRoomInvitationView.as_view(),
+        name="chatroom-invite",
+    ),
     # Accept/Decline invitation
-    path("invitations/<int:pk>/accept/", views.ChatRoomInvitationView.as_view(), {"action": "accept"}, name="chatroom-invite-accept"),
-    path("invitations/<int:pk>/decline/", views.ChatRoomInvitationView.as_view(), {"action": "decline"}, name="chatroom-invite-decline"),
+    path(
+        "invitations/<int:pk>/accept/",
+        views.ChatRoomInvitationView.as_view(),
+        {"action": "accept"},
+        name="chatroom-invite-accept",
+    ),
+    path(
+        "invitations/<int:pk>/decline/",
+        views.ChatRoomInvitationView.as_view(),
+        {"action": "decline"},
+        name="chatroom-invite-decline",
+    ),
 ]

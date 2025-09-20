@@ -8,11 +8,13 @@ from django.contrib.auth import get_user_model
 
 from ...models import CourseMembership, Course
 from ...serializers import CourseMembershipSerializer
+
 User = get_user_model()
 
 
 class CourseMembershipSerializerTest(TestCase):
     """Test suite for CourseMembershipSerializer."""
+
     @classmethod
     def setUpTestData(cls) -> None:
         """Set up user, course, and course membership instances for testing."""
@@ -39,29 +41,28 @@ class CourseMembershipSerializerTest(TestCase):
             course=cls.course1,
             role="student",
         )
-        
+
     def test_serializer_contains_all_fields(self):
         """Ensure the serializer includes all expected fields."""
         serializer = CourseMembershipSerializer(instance=self.course_membership1)
         data = serializer.data
-        self.assertEqual(data['id'], self.course_membership1.id)
-        self.assertEqual(data['user'], self.course_membership1.user.id)
-        self.assertEqual(data['course'], self.course_membership1.course.id)
-        self.assertEqual(data['role'], self.course_membership1.role)
-        self.assertEqual(data['course_title'], self.course_membership1.course.title)
-        self.assertEqual(data['user_name'], self.course_membership1.user.username)
+        self.assertEqual(data["id"], self.course_membership1.id)
+        self.assertEqual(data["user"], self.course_membership1.user.id)
+        self.assertEqual(data["course"], self.course_membership1.course.id)
+        self.assertEqual(data["role"], self.course_membership1.role)
+        self.assertEqual(data["course_title"], self.course_membership1.course.title)
+        self.assertEqual(data["user_name"], self.course_membership1.user.username)
 
     def test_serializer_validation(self):
         """Test serializer validation logic."""
-        payload ={
+        payload = {
             "user": self.user2.id,
             "course": self.course_membership1.course.id,
             "role": "student",
         }
         serializer = CourseMembershipSerializer(data=payload)
         self.assertTrue(serializer.is_valid())
-        
-    
+
     def test_serializer_invalid_user(self):
         """Test serializer with non-existent user."""
         payload = {
@@ -79,26 +80,33 @@ class CourseMembershipSerializerTest(TestCase):
             "user": self.user2.id,
             "course": self.course1.id,
             "role": "teacher",
-            "status":"pending",
+            "status": "pending",
         }
         serializer = CourseMembershipSerializer(data=payload)
         self.assertFalse(serializer.is_valid())
         self.assertIn("non_field_errors", serializer.errors)
-        
+
     def test_student_pending_is_allowed(self):
         """Test that a student can have 'pending' status."""
-        payload = {"user": self.user2.id, "course": self.course1.id, "role": "student", "status": "pending"}
+        payload = {
+            "user": self.user2.id,
+            "course": self.course1.id,
+            "role": "student",
+            "status": "pending",
+        }
         serializer = CourseMembershipSerializer(data=payload)
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_update_violates_uniqueness(self):
         """Test updating a CourseMembership to a user-course pair that already exists."""
-        m2 = CourseMembership.objects.create(user=self.user2, course=self.course1, role="student")
+        m2 = CourseMembership.objects.create(
+            user=self.user2, course=self.course1, role="student"
+        )
         payload = {"user": self.user1.id, "course": self.course1.id, "role": "student"}
         serializer = CourseMembershipSerializer(instance=m2, data=payload)
         self.assertFalse(serializer.is_valid())
         self.assertIn("non_field_errors", serializer.errors)
-        
+
     def test_missing_user_or_course(self):
         """Test serializer validation when user or course is missing."""
         serializer = CourseMembershipSerializer(data={"role": "student"})
@@ -113,7 +121,7 @@ class CourseMembershipSerializerTest(TestCase):
             "course": self.course1.id,
             "role": "student",
             "user_name": "hacker",
-            "course_title": "fake"
+            "course_title": "fake",
         }
         serializer = CourseMembershipSerializer(data=payload)
         self.assertTrue(serializer.is_valid(), serializer.errors)

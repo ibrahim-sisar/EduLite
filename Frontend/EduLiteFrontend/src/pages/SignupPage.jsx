@@ -245,13 +245,13 @@ const SignUpPage = () => {
                   border border-blue-500/20 dark:border-blue-600/20
                   rounded-2xl
                   transition-all duration-300 ease-out
-                  
-                  focus:outline-none 
+
+                  focus:outline-none
                   focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
                   focus:scale-[1.02]
-                  
+
                   hover:scale-[1.02]
-                  
+
                   ${loading ? "opacity-60 cursor-not-allowed" : ""}
                 `}
               >

@@ -8,8 +8,10 @@ from rest_framework.exceptions import ValidationError
 from ...models import Course
 from ...serializers import CourseSerializer
 
+
 class CourseSerializerTest(TestCase):
     """Test suite for CourseSerializer."""
+
     @classmethod
     def setUpTestData(cls):
         """Set up a course instance for testing."""
@@ -30,18 +32,18 @@ class CourseSerializerTest(TestCase):
         """Ensure the serializer includes all expected fields."""
         serializer = CourseSerializer(instance=self.course1)
         data = serializer.data
-        self.assertEqual(data['title'], "test_course1")
-        self.assertEqual(data['outline'], "This is test_course1 outline")
-        self.assertEqual(data['language'], "en")
-        self.assertEqual(data['country'], "US")
-        self.assertEqual(data['subject'], "physics")
-        self.assertEqual(data['visibility'], "public")
-        self.assertIn('duration_time', data)
+        self.assertEqual(data["title"], "test_course1")
+        self.assertEqual(data["outline"], "This is test_course1 outline")
+        self.assertEqual(data["language"], "en")
+        self.assertEqual(data["country"], "US")
+        self.assertEqual(data["subject"], "physics")
+        self.assertEqual(data["visibility"], "public")
+        self.assertIn("duration_time", data)
 
     def test_serializer_get_duration_time(self):
         """Test the get_duration_time method with valid dates."""
         serializer = CourseSerializer(instance=self.course1)
-        self.assertEqual(serializer.data['duration_time'], 43200)  # 30 days * 24 * 60
+        self.assertEqual(serializer.data["duration_time"], 43200)  # 30 days * 24 * 60
 
     def test_serializer_invalid_date(self):
         """Test serializer with invalid date range (start_date after end_date)."""

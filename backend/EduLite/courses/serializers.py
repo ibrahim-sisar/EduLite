@@ -11,10 +11,11 @@ from .models import Course, CourseModule, CourseMembership, CourseChatRoom
 class CourseSerializer(serializers.ModelSerializer):
     """
     Serializer for the Course model.
-    
+
     Includes additional derived field:
     - `duration_time`: duration of the course in minutes, calculated from start and end dates.
     """
+
     duration_time = serializers.SerializerMethodField()
 
     class Meta:
@@ -31,7 +32,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "end_date",
             "duration_time",
             "allow_join_requests",
-            "is_active"
+            "is_active",
         ]
         read_only_fields = ("id", "is_active")
 
@@ -59,22 +60,23 @@ class CourseSerializer(serializers.ModelSerializer):
         start = attrs.get("start_date", getattr(self.instance, "start_date", None))
         end = attrs.get("end_date", getattr(self.instance, "end_date", None))
         if start and end and start > end:
-            raise serializers.ValidationError({
-                "end_date": "End date must be after start date."
-            })
+            raise serializers.ValidationError(
+                {"end_date": "End date must be after start date."}
+            )
         return attrs
 
 
 class CourseModuleSerializer(serializers.ModelSerializer):
     """
     Serializer for the CourseModule model.
-    
+
     Supports:
     - `course_title`: read-only name of the related course
     - `content_type`: accepts and outputs "app_label.model" style strings
     """
+
     content_type = serializers.CharField()
-    course_title = serializers.CharField(source='course.title', read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
 
     class Meta:
         model = CourseModule
@@ -85,7 +87,7 @@ class CourseModuleSerializer(serializers.ModelSerializer):
             "order",
             "course_title",
             "content_type",
-            "object_id"
+            "object_id",
         ]
         read_only_fields = ("id",)
 
@@ -94,7 +96,9 @@ class CourseModuleSerializer(serializers.ModelSerializer):
         Validate content_type input as 'app_label.model' format and convert to ContentType object.
         """
         if "." not in value:
-            raise serializers.ValidationError("Content type must be in the format 'app_label.model'.")
+            raise serializers.ValidationError(
+                "Content type must be in the format 'app_label.model'."
+            )
         app_label, model = value.split(".", 1)
         try:
             return ContentType.objects.get(app_label=app_label, model=model)
@@ -112,11 +116,17 @@ class CourseModuleSerializer(serializers.ModelSerializer):
         object_id = attrs.get("object_id")
 
         if not object_id:
-            raise serializers.ValidationError({"object_id": "Object ID must be provided."})
+            raise serializers.ValidationError(
+                {"object_id": "Object ID must be provided."}
+            )
 
         model_class = content_type.model_class()
         if not model_class or not model_class.objects.filter(id=object_id).exists():
-            raise serializers.ValidationError({"object_id": "Target object does not exist for the given content type."})
+            raise serializers.ValidationError(
+                {
+                    "object_id": "Target object does not exist for the given content type."
+                }
+            )
 
         return attrs
 
@@ -125,32 +135,27 @@ class CourseModuleSerializer(serializers.ModelSerializer):
         Serialize content_type as 'app_label.model' string.
         """
         rep = super().to_representation(instance)
-        rep["content_type"] = f"{instance.content_type.app_label}.{instance.content_type.model}"
+        rep["content_type"] = (
+            f"{instance.content_type.app_label}.{instance.content_type.model}"
+        )
         return rep
 
 
 class CourseMembershipSerializer(serializers.ModelSerializer):
     """
     Serializer for the CourseMembership model.
-    
+
     Exposes:
     - `user_name`: read-only username of the user
     - `course_title`: read-only course title
     """
-    user_name = serializers.CharField(source='user.username', read_only=True)
-    course_title = serializers.CharField(source='course.title', read_only=True)
+
+    user_name = serializers.CharField(source="user.username", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
 
     class Meta:
         model = CourseMembership
-        fields = [
-            "id",
-            "user",
-            "user_name",
-            "course",
-            "course_title",
-            "role",
-            "status"
-        ]
+        fields = ["id", "user", "user_name", "course", "course_title", "role", "status"]
         read_only_fields = ("id",)
 
     def validate(self, attrs):
@@ -171,10 +176,14 @@ class CourseMembershipSerializer(serializers.ModelSerializer):
         if self.instance:
             existing = existing.exclude(pk=self.instance.pk)
         if existing.exists():
-            raise serializers.ValidationError("User is already a member of this course.")
+            raise serializers.ValidationError(
+                "User is already a member of this course."
+            )
 
         if role != "student" and status == "pending":
-            raise serializers.ValidationError("Only students can have 'pending' status.")
+            raise serializers.ValidationError(
+                "Only students can have 'pending' status."
+            )
 
         return attrs
 
@@ -182,7 +191,7 @@ class CourseMembershipSerializer(serializers.ModelSerializer):
 class CourseChatRoomSerializer(serializers.ModelSerializer):
     """
     Serializer for the CourseChatRoom model.
-    
+
     Exposes:
     - `course_title`: read-only course name
     - `chatroom_name`: read-only chatroom name
@@ -190,9 +199,12 @@ class CourseChatRoomSerializer(serializers.ModelSerializer):
     - created_by is read-only to prevent changing the creator after creation.
       To create a CourseChatRoom, set created_by to the current user in the view by using perform_create method.
     """
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    chatroom_name = serializers.CharField(source='chatroom.name', read_only=True)
-    created_user_name = serializers.CharField(source='created_by.username', read_only=True)
+
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    chatroom_name = serializers.CharField(source="chatroom.name", read_only=True)
+    created_user_name = serializers.CharField(
+        source="created_by.username", read_only=True
+    )
 
     class Meta:
         model = CourseChatRoom
@@ -203,6 +215,6 @@ class CourseChatRoomSerializer(serializers.ModelSerializer):
             "chatroom",
             "chatroom_name",
             "created_by",
-            "created_user_name"
+            "created_user_name",
         ]
         read_only_fields = ("id", "created_by")

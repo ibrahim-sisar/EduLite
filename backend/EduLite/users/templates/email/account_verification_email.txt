@@ -3,7 +3,7 @@ Welcome to EduLite!
 
 Hi {{ username }},
 
-Thank you for joining EduLite, your gateway to quality education. 
+Thank you for joining EduLite, your gateway to quality education.
 We're excited to have you as part of our learning community!
 
 To get started, please verify your email address by clicking the link below:

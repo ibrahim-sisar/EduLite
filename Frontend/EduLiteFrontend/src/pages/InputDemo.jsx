@@ -388,19 +388,19 @@ const InputDemo = () => {
             </h3>
             <pre className="text-green-400 text-sm md:text-base overflow-x-auto leading-relaxed">
               {`// Basic usage
-<Input 
-  type="email" 
-  name="email" 
+<Input
+  type="email"
+  name="email"
   label="Email Address"
-  placeholder="Enter your email" 
+  placeholder="Enter your email"
   value={email}
   onChange={handleEmailChange}
 />
 
 // With validation error
-<Input 
-  type="password" 
-  name="password" 
+<Input
+  type="password"
+  name="password"
   label="Password"
   error={passwordError}
   value={password}
@@ -408,7 +408,7 @@ const InputDemo = () => {
 />
 
 // Disabled state
-<Input 
+<Input
   label="Read Only Field"
   value="Cannot edit"
   disabled

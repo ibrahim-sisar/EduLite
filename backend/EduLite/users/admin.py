@@ -29,9 +29,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {  #
-                "fields": ("user",)  # Display the linked user (read-only)
-            },
+            {"fields": ("user",)},  #  # Display the linked user (read-only)
         ),
         (
             "Personal Information",

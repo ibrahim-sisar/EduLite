@@ -10,13 +10,16 @@ from django.contrib.auth import get_user_model
 from ...models import CourseModule, Course
 from chat.models import ChatRoom
 from ...serializers import CourseModuleSerializer
+
 User = get_user_model()
+
 
 class CourseModuleSerializerTest(TestCase):
     """
     Test suite for CourseModuleSerializer.
     Focuses on content_type and object_id validation.
     """
+
     @classmethod
     def setUpTestData(cls) -> None:
         """
@@ -42,10 +45,10 @@ class CourseModuleSerializerTest(TestCase):
         chatroom_ct = ContentType.objects.get_for_model(ChatRoom)
 
         cls.course_module1 = CourseModule.objects.create(
-           course = cls.course1,
-           content_type = chatroom_ct,
-           object_id = cls.chat_room1.id,
-           title = "test_module1"
+            course=cls.course1,
+            content_type=chatroom_ct,
+            object_id=cls.chat_room1.id,
+            title="test_module1",
         )
 
     def test_serializer_contains_all_fields(self):
@@ -57,8 +60,7 @@ class CourseModuleSerializerTest(TestCase):
         self.assertEqual(data["course_title"], self.course1.title)
         self.assertEqual(data["content_type"], "chat.chatroom")
         self.assertEqual(data["object_id"], self.chat_room1.id)
-        self.assertEqual(data['order'], 0)
-
+        self.assertEqual(data["order"], 0)
 
     def test_serializer_validation(self):
         """Test serializer validation logic."""
@@ -67,11 +69,11 @@ class CourseModuleSerializerTest(TestCase):
             "course": self.course1.id,
             "content_type": "chat.chatroom",
             "object_id": self.chat_room1.id,
-            "order": 0
+            "order": 0,
         }
         serializer = CourseModuleSerializer(data=payload)
         self.assertTrue(serializer.is_valid())
-        
+
     def test_serializer_invalid_content_type(self):
         """Test serializer with invalid content type."""
         payload = {
@@ -79,12 +81,12 @@ class CourseModuleSerializerTest(TestCase):
             "course": self.course1.id,
             "content_type": "invalid.content.type",
             "object_id": self.chat_room1.id,
-            "order": 0
+            "order": 0,
         }
         serializer = CourseModuleSerializer(data=payload)
         self.assertFalse(serializer.is_valid())
         self.assertIn("content_type", serializer.errors)
-    
+
     def test_serializer_invalid_object_id(self):
         """Test serializer with invalid object ID."""
         payload = {
@@ -92,24 +94,24 @@ class CourseModuleSerializerTest(TestCase):
             "course": self.course1.id,
             "content_type": "chat.chatroom",
             "object_id": 99999,  # Invalid object ID
-            "order": 0
+            "order": 0,
         }
         serializer = CourseModuleSerializer(data=payload)
         self.assertFalse(serializer.is_valid())
         self.assertIn("object_id", serializer.errors)
-    
+
     def test_serializer_with_empty_object_id(self):
         """Test serializer with missing object ID."""
         payload = {
             "title": "test_module1",
             "course": self.course1.id,
             "content_type": "chat.chatroom",
-            "order": 0
+            "order": 0,
         }
         serializer = CourseModuleSerializer(data=payload)
         self.assertFalse(serializer.is_valid())
         self.assertIn("object_id", serializer.errors)
-    
+
     def test_serializer_to_representation(self):
         """Test the to_representation method for correct output."""
         serializer = CourseModuleSerializer(instance=self.course_module1)
@@ -119,4 +121,4 @@ class CourseModuleSerializerTest(TestCase):
         self.assertEqual(data["course_title"], self.course1.title)
         self.assertEqual(data["content_type"], "chat.chatroom")
         self.assertEqual(data["object_id"], self.chat_room1.id)
-        self.assertEqual(data['order'], 0)
+        self.assertEqual(data["order"], 0)

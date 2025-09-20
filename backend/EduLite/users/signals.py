@@ -42,7 +42,8 @@ def create_user_profile_privacy_settings(sender, instance, created, **kwargs):
         except Exception as e:
             logger.error(
                 "Failed to create privacy settings for user profile %s: %s",
-                instance.id, e
+                instance.id,
+                e,
             )
 
 
@@ -62,25 +63,31 @@ def create_notification_on_friend_request(sender, instance, created, **kwargs):
             logger.warning("ProfileFriendRequest instance is None")
             return
 
-        if not hasattr(instance, 'receiver') or not instance.receiver:
-            logger.warning("ProfileFriendRequest %s has no receiver", getattr(instance, 'id', 'unknown'))
+        if not hasattr(instance, "receiver") or not instance.receiver:
+            logger.warning(
+                "ProfileFriendRequest %s has no receiver",
+                getattr(instance, "id", "unknown"),
+            )
             return
 
-        if not hasattr(instance, 'sender') or not instance.sender:
-            logger.warning("ProfileFriendRequest %s has no sender", getattr(instance, 'id', 'unknown'))
+        if not hasattr(instance, "sender") or not instance.sender:
+            logger.warning(
+                "ProfileFriendRequest %s has no sender",
+                getattr(instance, "id", "unknown"),
+            )
             return
 
-        if not hasattr(instance.receiver, 'user') or not instance.receiver.user:
+        if not hasattr(instance.receiver, "user") or not instance.receiver.user:
             logger.warning("ProfileFriendRequest %s receiver has no user", instance.id)
             return
 
-        if not hasattr(instance.sender, 'user') or not instance.sender.user:
+        if not hasattr(instance.sender, "user") or not instance.sender.user:
             logger.warning("ProfileFriendRequest %s sender has no user", instance.id)
             return
 
         # Import here to avoid circular imports
         from notifications.models import Notification
-        
+
         # Prepare optional message content
         description = ""
         if instance.message:
@@ -92,24 +99,29 @@ def create_notification_on_friend_request(sender, instance, created, **kwargs):
             verb="sent you a friend request",
             notification_type="FRIEND_REQUEST",
             target=instance,
-            description=description
+            description=description,
         )
 
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Notification created for friend request %s from %s to %s",
-                        instance.id, instance.sender.user.username,
-                        instance.receiver.user.username)
+            logger.debug(
+                "Notification created for friend request %s from %s to %s",
+                instance.id,
+                instance.sender.user.username,
+                instance.receiver.user.username,
+            )
 
     except AttributeError as e:
         logger.error(
             "AttributeError while creating notification for friend request %s: %s",
-            getattr(instance, 'id', 'unknown'), e
+            getattr(instance, "id", "unknown"),
+            e,
         )
     except Exception as e:
         # Log the error but don't re-raise it to prevent breaking the main operation
         logger.error(
             "Failed to create notification for friend request %s: %s",
-            getattr(instance, 'id', 'unknown'), e
+            getattr(instance, "id", "unknown"),
+            e,
         )
 
 
@@ -121,7 +133,7 @@ def delete_notification_on_friend_request(sender, instance, **kwargs):
     - Uses defensive coding to handle missing data gracefully.
     """
     # Store the instance ID early, as it might become None after deletion operations
-    instance_id = getattr(instance, 'pk', None) or getattr(instance, 'id', 'unknown')
+    instance_id = getattr(instance, "pk", None) or getattr(instance, "id", "unknown")
 
     try:
         # Defensive coding: Check if instance exists
@@ -139,8 +151,7 @@ def delete_notification_on_friend_request(sender, instance, **kwargs):
         # Find notification by content_type and object_id instead of using target
         try:
             notification = Notification.objects.get(
-                target_content_type=content_type,
-                target_object_id=instance_id
+                target_content_type=content_type, target_object_id=instance_id
             )
             notification.delete()
 
@@ -155,6 +166,5 @@ def delete_notification_on_friend_request(sender, instance, **kwargs):
 
     except Exception as e:
         logger.error(
-            "Failed to delete notification for friend request %s: %s",
-            instance_id, e
+            "Failed to delete notification for friend request %s: %s", instance_id, e
         )

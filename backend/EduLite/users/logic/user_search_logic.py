@@ -13,7 +13,9 @@ from rest_framework.request import Request
 User = get_user_model()
 
 
-def validate_search_query(search_query: str, min_length: int = 2) -> Tuple[bool, Optional[Response]]:
+def validate_search_query(
+    search_query: str, min_length: int = 2
+) -> Tuple[bool, Optional[Response]]:
     """
     Validates the search query parameters.
 
@@ -43,7 +45,9 @@ def validate_search_query(search_query: str, min_length: int = 2) -> Tuple[bool,
     return True, None
 
 
-def build_privacy_aware_search_queryset(search_query: str, requesting_user: Optional[User]) -> QuerySet:
+def build_privacy_aware_search_queryset(
+    search_query: str, requesting_user: Optional[User]
+) -> QuerySet:
     """
     Creates a privacy-aware search queryset that only searches fields the requesting user can see.
 
@@ -59,9 +63,8 @@ def build_privacy_aware_search_queryset(search_query: str, requesting_user: Opti
     # Start with all users, selecting related profile and privacy settings for efficiency
     # Also prefetch groups to avoid N+1 queries in serializer
     queryset = User.objects.select_related(
-        'profile', 
-        'profile__privacy_settings'
-    ).prefetch_related('groups')
+        "profile", "profile__privacy_settings"
+    ).prefetch_related("groups")
 
     # Build search conditions based on what fields the requesting user can see
     search_conditions = Q()
@@ -71,13 +74,17 @@ def build_privacy_aware_search_queryset(search_query: str, requesting_user: Opti
 
     # First name and last name are always searchable.
     # Privacy for visibility in search results is handled by apply_privacy_filters.
-    search_conditions |= Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query)
+    search_conditions |= Q(first_name__icontains=search_query) | Q(
+        last_name__icontains=search_query
+    )
 
     # Apply the combined search conditions
     return queryset.filter(search_conditions).distinct().order_by("username")
 
 
-def build_base_search_queryset(search_query: str, requesting_user: Optional[User] = None) -> QuerySet:
+def build_base_search_queryset(
+    search_query: str, requesting_user: Optional[User] = None
+) -> QuerySet:
     """
     Creates the base search queryset with privacy-aware field searching.
 
@@ -92,7 +99,9 @@ def build_base_search_queryset(search_query: str, requesting_user: Optional[User
     return build_privacy_aware_search_queryset(search_query, requesting_user)
 
 
-def apply_privacy_filters(queryset: QuerySet, requesting_user: Optional[User]) -> QuerySet:
+def apply_privacy_filters(
+    queryset: QuerySet, requesting_user: Optional[User]
+) -> QuerySet:
     """
     Applies privacy settings to filter out users based on their privacy preferences
     and the requesting user's relationship to them.
@@ -108,9 +117,7 @@ def apply_privacy_filters(queryset: QuerySet, requesting_user: Optional[User]) -
     """
     if not requesting_user or not requesting_user.is_authenticated:
         # Anonymous users can only see users with 'everyone' search visibility
-        return queryset.filter(
-            profile__privacy_settings__search_visibility='everyone'
-        )
+        return queryset.filter(profile__privacy_settings__search_visibility="everyone")
 
     # For authenticated users, build complex filter conditions
     # Users visible to requesting user if:
@@ -123,12 +130,12 @@ def apply_privacy_filters(queryset: QuerySet, requesting_user: Optional[User]) -
     self_filter = Q(id=requesting_user.id)
 
     # Everyone visibility
-    everyone_filter = Q(profile__privacy_settings__search_visibility='everyone')
+    everyone_filter = Q(profile__privacy_settings__search_visibility="everyone")
 
     # Friends only visibility
     friends_only_filter = Q(
-        profile__privacy_settings__search_visibility='friends_only',
-        profile__friends=requesting_user
+        profile__privacy_settings__search_visibility="friends_only",
+        profile__friends=requesting_user,
     )
 
     # Friends of friends visibility - more complex query
@@ -138,34 +145,37 @@ def apply_privacy_filters(queryset: QuerySet, requesting_user: Optional[User]) -
     # Check for mutual friends using Exists subquery
     # OPTIMIZATION: Pre-fetch requesting user's friends to avoid query in filter
     # Get the friend IDs once to avoid repeated queries
-    if hasattr(requesting_user, '_prefetched_friend_ids'):
+    if hasattr(requesting_user, "_prefetched_friend_ids"):
         # Use cached friend IDs if available
         requesting_user_friend_ids = requesting_user._prefetched_friend_ids
     else:
         # Fetch once and cache on the user object
-        requesting_user_friend_ids = list(requesting_user.profile.friends.values_list('id', flat=True))
+        requesting_user_friend_ids = list(
+            requesting_user.profile.friends.values_list("id", flat=True)
+        )
         requesting_user._prefetched_friend_ids = requesting_user_friend_ids
-    
+
     mutual_friends_subquery = User.objects.filter(
-        profile__friends=OuterRef('id'),  # Users whose profile has the target user as a friend
-        id__in=requesting_user_friend_ids  # Who are also friends with requesting user
+        profile__friends=OuterRef(
+            "id"
+        ),  # Users whose profile has the target user as a friend
+        id__in=requesting_user_friend_ids,  # Who are also friends with requesting user
     )
 
     friends_of_friends_filter = Q(
-        profile__privacy_settings__search_visibility='friends_of_friends'
+        profile__privacy_settings__search_visibility="friends_of_friends"
     ) & (direct_friend_filter | Exists(mutual_friends_subquery))
 
     # Combine all conditions with OR
-    final_filter = self_filter | everyone_filter | friends_only_filter | friends_of_friends_filter
+    final_filter = (
+        self_filter | everyone_filter | friends_only_filter | friends_of_friends_filter
+    )
 
     return queryset.filter(final_filter)
 
 
 def paginate_search_results(
-    queryset: QuerySet,
-    request: HttpRequest,
-    view_instance,
-    page_size: int = 10
+    queryset: QuerySet, request: HttpRequest, view_instance, page_size: int = 10
 ) -> Tuple[QuerySet, Optional[PageNumberPagination]]:
     """
     Handles pagination of search results.
@@ -185,7 +195,7 @@ def paginate_search_results(
     paginator.page_size = page_size
 
     # Ensure we have a DRF Request object for pagination compatibility
-    if not hasattr(request, 'query_params'):
+    if not hasattr(request, "query_params"):
         # Wrap Django HttpRequest in DRF Request
         drf_request = Request(request)
     else:
@@ -209,8 +219,10 @@ def execute_user_search(
     view_instance,
     min_query_length: int = 2,
     page_size: int = 10,
-    bypass_privacy_filters: bool = False
-) -> Tuple[bool, Optional[QuerySet], Optional[PageNumberPagination], Optional[Response]]:
+    bypass_privacy_filters: bool = False,
+) -> Tuple[
+    bool, Optional[QuerySet], Optional[PageNumberPagination], Optional[Response]
+]:
     """Main function that orchestrates the user search process with privacy controls."""
 
     # Step 1: Validate search query
@@ -221,14 +233,17 @@ def execute_user_search(
     # Step 2: Build privacy-aware search queryset
     if bypass_privacy_filters:
         # Admin search - use old logic that searches all fields
-        base_queryset = User.objects.select_related(
-            'profile', 
-            'profile__privacy_settings'
-        ).prefetch_related('groups').filter(
-            Q(username__icontains=search_query.strip()) |
-            Q(first_name__icontains=search_query.strip()) |
-            Q(last_name__icontains=search_query.strip())
-        ).distinct().order_by("username")
+        base_queryset = (
+            User.objects.select_related("profile", "profile__privacy_settings")
+            .prefetch_related("groups")
+            .filter(
+                Q(username__icontains=search_query.strip())
+                | Q(first_name__icontains=search_query.strip())
+                | Q(last_name__icontains=search_query.strip())
+            )
+            .distinct()
+            .order_by("username")
+        )
     else:
         # Regular search - respect privacy settings
         base_queryset = build_base_search_queryset(search_query, requesting_user)
@@ -247,7 +262,9 @@ def execute_user_search(
     return True, page_or_queryset, paginator, None
 
 
-def filter_user_display_data(users_queryset: QuerySet, requesting_user: Optional[User]) -> QuerySet:
+def filter_user_display_data(
+    users_queryset: QuerySet, requesting_user: Optional[User]
+) -> QuerySet:
     """
     Additional filtering to respect privacy settings for what user data is displayed
     in search results (e.g., showing/hiding full names based on privacy settings).
@@ -288,7 +305,7 @@ def get_user_friends_ids(user: User) -> set:
         # user.friend_profiles gives UserProfile objects that have this user as a friend
         # But we want the actual User IDs that are friends with this user
         # So we need to get the friends from the user's profile
-        return set(user.profile.friends.values_list('id', flat=True))
+        return set(user.profile.friends.values_list("id", flat=True))
     except AttributeError:
         return set()
 
@@ -304,7 +321,12 @@ def have_mutual_friends(user1: User, user2: User) -> bool:
     Returns:
         True if users have mutual friends, False otherwise
     """
-    if not user1 or not user2 or not user1.is_authenticated or not user2.is_authenticated:
+    if (
+        not user1
+        or not user2
+        or not user1.is_authenticated
+        or not user2.is_authenticated
+    ):
         return False
 
     # Same user cannot have mutual friends with themselves
