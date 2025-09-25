@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "chat",
     "notifications",
     "courses",
+    'notes',
     # third-party apps
     "channels",
     "rest_framework",
