@@ -13,7 +13,6 @@ from rest_framework.response import Response
 from rest_framework import status, permissions, serializers
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
-
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
@@ -23,7 +22,12 @@ from drf_spectacular.utils import (
     OpenApiExample,
 )
 
-from .models import UserProfile, ProfileFriendRequest, UserProfilePrivacySettings
+from .models import (
+    UserProfile,
+    ProfileFriendRequest,
+    UserProfilePrivacySettings,
+    FriendSuggestion,
+)
 
 from .serializers import (
     UserSerializer,
@@ -32,6 +36,7 @@ from .serializers import (
     UserRegistrationSerializer,
     ProfileSerializer,
     ProfileFriendRequestSerializer,
+    FriendSuggestionSerializer,
     UserProfilePrivacySettingsSerializer,
 )
 
@@ -1024,6 +1029,90 @@ class UserSearchView(UsersAppBaseAPIView):
         # Handle non-paginated response
         serializer = self.serializer_class_instance(
             queryset, many=True, context=self.get_serializer_context()
+        )
+        return Response(serializer.data)
+
+
+# -- Friend Suggestion API View -- ##
+
+
+@extend_schema(tags=["Users"])
+class FriendSuggestionListView(UsersAppBaseAPIView):
+    """API view to retrieve friend suggestions for the authenticated user.
+
+    GET:
+    - Returns a list of precomputed friend suggestions sorted by score.
+    - Optional `type` query parameter filters suggestions by reason.
+    """
+
+    serializer_class = FriendSuggestionSerializer
+
+    @extend_schema(
+        summary="Friend Suggestion Retrieve",
+        description="Retrieve friend suggestions for the authenticated user, optionally filtered by reason.",
+        parameters=[
+            OpenApiParameter(
+                name="type",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter suggestions by reason (case-insensitive)",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="List of friend suggestions.",
+                response=FriendSuggestionSerializer(many=True),
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided.",
+                response=inline_serializer(
+                    name="UnauthorizedError",
+                    fields={"detail": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample(
+                        "Unauthorized",
+                        value={
+                            "detail": "Authentication credentials were not provided."
+                        },
+                    )
+                ],
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Success Example",
+                value={
+                    "suggested_user": {
+                        "id": 3,
+                        "username": "john_doe",
+                        "full_name": "John Doe",
+                        "avatar_url": "http://localhost:8000/media/profile_pics/dummy/avatar2.png",
+                    },
+                    "score": 1,
+                    "reason": "Same teacher",
+                },
+                response_only=True,
+            )
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        """Retrieve friend suggestions for the authenticated user."""
+        # Base queryset for current user's suggestions
+        suggestions = FriendSuggestion.objects.filter(user=request.user)
+
+        # Optional reason filter
+        suggestion_type = request.query_params.get("type")
+        if suggestion_type:
+            suggestions = suggestions.filter(reason__iexact=suggestion_type)
+
+        # Optimize related user/profile and order by relevance
+        suggestions = suggestions.select_related(
+            "suggested_user", "suggested_user__profile"
+        ).order_by("-score")
+
+        serializer = self.serializer_class(
+            suggestions, many=True, context=self.get_serializer_context()
         )
         return Response(serializer.data)
 

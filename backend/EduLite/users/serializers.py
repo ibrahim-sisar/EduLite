@@ -12,6 +12,7 @@ from .models import (
     UserProfile,
     ProfileFriendRequest,
     UserProfilePrivacySettings,
+    FriendSuggestion,
 )
 
 if TYPE_CHECKING:
@@ -681,6 +682,48 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
                 reverse("friend-request-decline", kwargs={"request_pk": obj.id})
             )
         return None
+
+
+## -- Friend Suggestion Serializer -- ##
+class FriendSuggestionSerializer(serializers.ModelSerializer):
+    """Serialize :class:`FriendSuggestion` instances for API output."""
+
+    suggested_user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FriendSuggestion
+        fields = ["suggested_user", "score", "reason"]
+
+    def get_suggested_user(self, obj):
+        """Return basic information about the suggested user."""
+        user = getattr(obj, "suggested_user", None)
+        if not user:
+            return None
+
+        # Build full name
+        first = getattr(user, "first_name", "")
+        last = getattr(user, "last_name", "")
+        full_name = (f"{first} {last}".strip()) if (first or last) else ""
+
+        # Resolve avatar URL if profile picture exists
+        avatar_url = None
+        try:
+            profile = user.profile
+            if profile.picture:
+                request = self.context.get("request")
+                if request:
+                    avatar_url = request.build_absolute_uri(profile.picture.url)
+                else:
+                    avatar_url = profile.picture.url
+        except Exception:
+            avatar_url = None
+
+        return {
+            "id": user.id,
+            "username": user.username,
+            "full_name": full_name,
+            "avatar_url": avatar_url,
+        }
 
 
 # -- Privacy Settings Serializers -- ##
