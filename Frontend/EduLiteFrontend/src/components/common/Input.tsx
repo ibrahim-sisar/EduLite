@@ -1,12 +1,50 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React, { ChangeEvent, InputHTMLAttributes } from "react";
+
+/**
+ * TypeScript interface for Input component props
+ * Extends HTML input attributes for full compatibility
+ */
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'className'> {
+  /** The input type (text, email, password, etc.) */
+  type?: string;
+
+  /** The name attribute for the input */
+  name: string;
+
+  /** Placeholder text */
+  placeholder?: string;
+
+  /** Current input value */
+  value: string;
+
+  /** Change handler function */
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+
+  /** Optional label text displayed above the input */
+  label?: string;
+
+  /** Error message to display below the input */
+  error?: string;
+
+  /** Whether the input is disabled */
+  disabled?: boolean;
+
+  /** Whether the input is required */
+  required?: boolean;
+
+  /** Additional CSS classes */
+  className?: string;
+
+  /** Whether to use compact spacing for forms */
+  compact?: boolean;
+}
 
 /**
  * A reusable Input component designed to match the established Apple-style
  * design system with glass-morphism effects, proper dark mode support,
  * and consistent styling across the application.
  */
-const Input = React.forwardRef(
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
     {
       type = "text",
@@ -19,7 +57,7 @@ const Input = React.forwardRef(
       disabled = false,
       required = false,
       className = "",
-      compact = false, // Add compact prop
+      compact = false,
       ...props
     },
     ref
@@ -111,43 +149,6 @@ const Input = React.forwardRef(
   }
 );
 
-// CRITICAL: Add these lines at the end of your Input.jsx file
 Input.displayName = "Input";
-
-Input.propTypes = {
-  /** The input type (text, email, password, etc.) */
-  type: PropTypes.string,
-
-  /** The name attribute for the input */
-  name: PropTypes.string.isRequired,
-
-  /** Placeholder text */
-  placeholder: PropTypes.string,
-
-  /** Current input value */
-  value: PropTypes.string.isRequired,
-
-  /** Change handler function */
-  onChange: PropTypes.func.isRequired,
-
-  /** Optional label text displayed above the input */
-  label: PropTypes.string,
-
-  /** Error message to display below the input */
-  error: PropTypes.string,
-
-  /** Whether the input is disabled */
-  disabled: PropTypes.bool,
-
-  /** Whether the input is required */
-  required: PropTypes.bool,
-
-  /** Additional CSS classes */
-  className: PropTypes.string,
-
-  /** Whether to use compact spacing for forms */
-  compact: PropTypes.bool,
-};
-
 
 export default Input;
