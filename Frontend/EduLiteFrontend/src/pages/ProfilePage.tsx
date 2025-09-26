@@ -136,7 +136,7 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   // Handle field blur to track touched fields
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement>) => {
     const { name } = e.target;
     setTouchedFields(prev => new Set(prev).add(name));
   };
@@ -427,10 +427,16 @@ const ProfilePage: React.FC = () => {
                 name="occupation"
                 value={formData.occupation || ""}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Select your occupation..."
                 disabled={saving}
                 error={errors.occupation}
                 choiceType="occupations"
+                className={
+                  touchedFields.has('occupation') && formData.occupation !== originalFormData.occupation
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
               />
 
               <LazySelect
@@ -438,11 +444,17 @@ const ProfilePage: React.FC = () => {
                 name="country"
                 value={formData.country || ""}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Select your country..."
                 disabled={saving}
                 error={errors.country}
                 choiceType="countries"
                 searchable={true}
+                className={
+                  touchedFields.has('country') && formData.country !== originalFormData.country
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
               />
 
               <LazySelect
@@ -450,10 +462,16 @@ const ProfilePage: React.FC = () => {
                 name="preferred_language"
                 value={formData.preferred_language || ""}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Select your primary language..."
                 disabled={saving}
                 error={errors.preferred_language}
                 choiceType="languages"
+                className={
+                  touchedFields.has('preferred_language') && formData.preferred_language !== originalFormData.preferred_language
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
               />
 
               <LazySelect
@@ -461,10 +479,16 @@ const ProfilePage: React.FC = () => {
                 name="secondary_language"
                 value={formData.secondary_language || ""}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Select your secondary language..."
                 disabled={saving}
                 error={errors.secondary_language}
                 choiceType="languages"
+                className={
+                  touchedFields.has('secondary_language') && formData.secondary_language !== originalFormData.secondary_language
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
               />
             </div>
 

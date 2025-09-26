@@ -7,12 +7,14 @@ interface LazySelectProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLButtonElement | HTMLInputElement>) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
   choiceType: ChoiceType;
   required?: boolean;
   searchable?: boolean;
+  className?: string;
 }
 
 const LazySelect: React.FC<LazySelectProps> = ({
@@ -20,12 +22,14 @@ const LazySelect: React.FC<LazySelectProps> = ({
   name,
   value,
   onChange,
+  onBlur,
   placeholder = "Select an option...",
   disabled = false,
   error,
   choiceType,
   required = false,
-  searchable = true // Default to searchable for better UX
+  searchable = true, // Default to searchable for better UX
+  className
 }) => {
   const [choices, setChoices] = useState<Choice[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,7 +162,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
   const triggerClasses = `
     w-full px-4 py-3 pr-10
     bg-white dark:bg-gray-800
-    border border-gray-300 dark:border-gray-600
+    border ${className && className.includes('border-red') ? className : 'border-gray-300 dark:border-gray-600'}
     rounded-xl
     shadow-sm
     text-gray-700 dark:text-gray-200
@@ -185,6 +189,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
           name={name}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
           className={triggerClasses}
@@ -214,6 +219,16 @@ const LazySelect: React.FC<LazySelectProps> = ({
         <button
           type="button"
           onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+          onBlur={(e) => {
+            // Create synthetic event with name property for onBlur
+            if (onBlur) {
+              const syntheticEvent = {
+                ...e,
+                target: { ...e.target, name }
+              } as React.FocusEvent<HTMLButtonElement>;
+              onBlur(syntheticEvent);
+            }
+          }}
           onKeyDown={handleKeyDown}
           disabled={disabled || loading}
           className={triggerClasses}

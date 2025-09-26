@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FaHome, FaExclamationTriangle, FaArrowLeft } from "react-icons/fa";
+import { FaHome, FaExclamationTriangle, FaArrowLeft, FaGithub } from "react-icons/fa";
 
 const NotFoundPage = () => {
   return (
@@ -76,6 +76,27 @@ const NotFoundPage = () => {
               Sign Up
             </Link>
           </div>
+        </div>
+
+        {/* Contribute Section */}
+        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <FaGithub className="text-xl text-gray-600 dark:text-gray-400" />
+            <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+              Do you think this page should exist?
+            </p>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Create an issue at{' '}
+            <a
+              href="https://github.com/ibrahim-sisar/EduLite/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium"
+            >
+              github.com/ibrahim-sisar/EduLite/issues
+            </a>
+          </p>
         </div>
       </div>
     </div>
