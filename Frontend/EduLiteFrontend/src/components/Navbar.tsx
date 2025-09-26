@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { HiBell, HiMenuAlt2 } from "react-icons/hi";
 import { FaUserCircle } from "react-icons/fa";
@@ -8,13 +8,23 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import logo from "../assets/EdTech_Logo.webp";
 import SidebarMenu from "./Sidebar";
 
-export default function Navbar({ isLoggedIn, onLogout }) {
+interface NavbarProps {
+  isLoggedIn: boolean;
+  onLogout: () => void;
+}
+
+export default function Navbar({ isLoggedIn }: NavbarProps) {
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isActiveRoute = (path) =>
+  const isActiveRoute = (path: string): boolean =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
 
   return (
     <>
@@ -71,14 +81,21 @@ export default function Navbar({ isLoggedIn, onLogout }) {
                 >
                   <HiBell className="text-xl text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                 </Link>
-                {isLoggedIn ? (
+
+                {/* Profile Icon - Only show when logged in */}
+                {isLoggedIn && (
                   <button
-                    onClick={onLogout}
-                    className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all duration-200"
+                    onClick={handleProfileClick}
+                    title={t("nav.profile")}
+                    className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+                    aria-label="Go to profile"
                   >
-                    {t("nav.logout")}
+                    <FaUserCircle className="text-xl text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                   </button>
-                ) : (
+                )}
+
+                {/* Login Link - Only show when not logged in */}
+                {!isLoggedIn && (
                   <Link
                     to="/login"
                     className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all duration-200"
@@ -107,7 +124,6 @@ export default function Navbar({ isLoggedIn, onLogout }) {
           </div>
         </div>
       </nav>
-
 
       <SidebarMenu open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
     </>
