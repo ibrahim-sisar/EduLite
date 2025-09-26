@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
 import {
   HiX,
   HiHome,
@@ -9,11 +10,18 @@ import {
   HiUser,
   HiCog,
 } from "react-icons/hi";
+import { FaSignOutAlt } from "react-icons/fa";
 
 export default function SidebarMenu({ open, onClose }) {
   const { t, i18n } = useTranslation();
+  const { isLoggedIn, logout } = useAuth();
   const direction = i18n.dir();
   const side = direction === "rtl" ? "left-0" : "right-0";
+
+  const handleLogout = () => {
+    logout();
+    onClose(); // Close sidebar after logout
+  };
 
   const menuItems = [
     { to: "/", label: t("nav.home"), icon: HiHome },
@@ -79,6 +87,23 @@ export default function SidebarMenu({ open, onClose }) {
             })}
           </nav>
         </div>
+
+        {/* Logout Button - Only show when logged in */}
+        {isLoggedIn && (
+          <div className="px-4 py-4 border-t border-gray-200/30 dark:border-gray-700/30">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition group"
+            >
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 group-hover:bg-red-500 transition">
+                <FaSignOutAlt className="text-lg text-red-600 dark:text-red-400 group-hover:text-white" />
+              </div>
+              <span className="font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300">
+                {t("nav.logout", "Sign Out")}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200/30 dark:border-gray-700/30">

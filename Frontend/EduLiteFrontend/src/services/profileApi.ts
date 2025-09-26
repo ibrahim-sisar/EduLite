@@ -39,45 +39,27 @@ interface ProfileData {
   profile: UserProfile;
 }
 
-// Request types
+// Request types - for updating profile (all fields optional)
 interface ProfileUpdateRequest {
-  bio?: string;
-  occupation?: string;
-  country?: string;
-  preferred_language?: string;
-  secondary_language?: string;
-  website_url?: string;
+  bio?: string | null;
+  occupation?: string | null;
+  country?: string | null; // Country code like 'US', 'PS', 'AF'
+  preferred_language?: string | null; // Language code like 'en', 'ar', 'es'
+  secondary_language?: string | null;
+  website_url?: string | null; // Must be valid URL format like 'https://example.com'
 }
 
-// Get auth headers with stored token
-const getAuthHeaders = (): Record<string, string> => {
-  const token = localStorage.getItem("access");
-  return {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  };
-};
-
-// Get auth headers for file upload (multipart/form-data)
-const getFileUploadHeaders = (): Record<string, string> => {
-  const token = localStorage.getItem("access");
-  return {
-    "Authorization": `Bearer ${token}`,
-  };
-};
+// Note: Authorization headers are now handled automatically by axios interceptors in tokenService.ts
+// This simplifies our API calls and ensures consistent token management
 
 // Get current user profile
 export const getUserProfile = async (): Promise<UserProfile> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/users/me/profile/`, {
-      headers: getAuthHeaders(),
       timeout: 10000,
     });
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      throw new Error("Authentication required. Please log in again.");
-    }
     throw new Error(error.response?.data?.detail || "Failed to fetch profile");
   }
 };
@@ -89,15 +71,11 @@ export const updateUserProfile = async (profileData: ProfileUpdateRequest): Prom
       `${API_BASE_URL}/users/me/profile/`,
       profileData,
       {
-        headers: getAuthHeaders(),
         timeout: 10000,
       }
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      throw new Error("Authentication required. Please log in again.");
-    }
     if (error.response?.status === 400) {
       throw new Error(error.response?.data?.detail || "Invalid profile data");
     }
@@ -115,15 +93,11 @@ export const uploadProfilePicture = async (file: File): Promise<UserProfile> => 
       `${API_BASE_URL}/users/me/profile/`,
       formData,
       {
-        headers: getFileUploadHeaders(),
         timeout: 30000, // Longer timeout for file uploads
       }
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      throw new Error("Authentication required. Please log in again.");
-    }
     if (error.response?.status === 400) {
       const message = error.response?.data?.picture?.[0] ||
                      error.response?.data?.detail ||
@@ -138,14 +112,10 @@ export const uploadProfilePicture = async (file: File): Promise<UserProfile> => 
 export const getUserInfo = async (): Promise<User> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/users/me/`, {
-      headers: getAuthHeaders(),
       timeout: 10000,
     });
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      throw new Error("Authentication required. Please log in again.");
-    }
     throw new Error(error.response?.data?.detail || "Failed to fetch user info");
   }
 };
@@ -157,15 +127,11 @@ export const deleteProfilePicture = async (): Promise<UserProfile> => {
       `${API_BASE_URL}/users/me/profile/`,
       { picture: null },
       {
-        headers: getAuthHeaders(),
         timeout: 10000,
       }
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      throw new Error("Authentication required. Please log in again.");
-    }
     throw new Error(error.response?.data?.detail || "Failed to remove profile picture");
   }
 };

@@ -14,6 +14,7 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import InputDemo from "./pages/InputDemo";
 import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
+import ProfilePage from "./pages/ProfilePage";
 
 // AppContent component that has access to auth context
 const AppContent = () => {
@@ -45,6 +46,7 @@ const AppContent = () => {
           <Route path="/button-demo" element={<ButtonDemo />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/input-demo" element={<InputDemo />} />
           <Route path="/input-component-doc" element={<InputComponentDoc />} />
         </Routes>
