@@ -87,7 +87,7 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
                   <button
                     onClick={handleProfileClick}
                     title={t("nav.profile")}
-                    className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group"
+                    className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 group cursor-pointer"
                     aria-label="Go to profile"
                   >
                     <FaUserCircle className="text-xl text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
@@ -98,23 +98,23 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
                 {!isLoggedIn && (
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all duration-200"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all duration-20 cursor-pointer0"
                   >
                     {t("nav.login")}
                   </Link>
                 )}
               </div>
 
-              <div className="flex items-center gap-0.5 sm:gap-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-full p-0.5 sm:p-1 backdrop-blur-sm">
-                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200">
+              <div className="flex items-center gap-0.5 sm:gap-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-full p-0.5 sm:p-1 backdrop-blur-sm ">
+                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer">
                   <LanguageSwitcher />
                 </div>
-                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200">
+                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer">
                   <DarkModeToggle />
                 </div>
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 group"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 group cursor-pointer"
                   title={t("menu")}
                 >
                   <HiMenuAlt2 className="text-lg sm:text-xl text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />

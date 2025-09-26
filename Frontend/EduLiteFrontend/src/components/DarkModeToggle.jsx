@@ -19,7 +19,7 @@ export default function DarkModeToggle() {
   return (
     <button
       onClick={() => setIsDark(!isDark)}
-      className="text-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+      className="text-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 cursor-pointer"
       aria-label="Toggle dark mode"
     >
       {isDark ? <HiOutlineSun /> : <HiOutlineMoon />}
