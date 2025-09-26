@@ -1,3 +1,32 @@
+## TypeScript Support
+
+EduLite frontend now supports TypeScript! We're gradually migrating from JavaScript to TypeScript to improve code quality, developer experience, and maintainability.
+
+### TypeScript Status
+- ✅ TypeScript configured and ready
+- ✅ Components migrated: `Button.tsx`, `Input.tsx`
+- 🚧 Gradual migration in progress
+- ✅ JavaScript files still fully supported
+
+### Available Scripts
+
+```bash
+npm run dev          # Start development server (works with both JS and TS)
+npm run build        # Build for production (handles TS automatically)
+npm run type-check   # Run TypeScript type checking
+npm run lint         # Lint all files
+npm run preview     # Preview production build
+```
+
+### TypeScript Configuration
+
+Our `tsconfig.json` is configured for:
+- React JSX support
+- ES2020 target
+- Strict type checking
+- JavaScript interoperability (`allowJs: true`)
+- Path aliases (`@/` maps to `./src/`)
+
 ## Project Architecture
 
 ### Folder Structure
@@ -6,7 +35,8 @@
 src/
 ├── components/
 │   ├── common/           # Reusable UI components
-│   │   ├── Button.jsx
+│   │   ├── Button.tsx    # TypeScript ✅
+│   │   ├── Input.tsx     # TypeScript ✅
 │   │   └── BackToTopButton.jsx
 │   ├── DarkModeToggle.jsx
 │   ├── LanguageSwitcher.jsx
@@ -103,6 +133,47 @@ Button.propTypes = {
 
 export default Button;
 ```
+
+### TypeScript Migration Guide
+
+When converting a component from JavaScript to TypeScript:
+
+#### 1. Change file extension from `.jsx` to `.tsx`
+
+#### 2. Replace PropTypes with TypeScript interfaces:
+
+**Before (JavaScript with PropTypes):**
+```jsx
+Button.propTypes = {
+  children: PropTypes.node.isRequired,
+  onClick: PropTypes.func,
+  type: PropTypes.oneOf(["primary", "secondary", "danger"]),
+  disabled: PropTypes.bool,
+};
+```
+
+**After (TypeScript):**
+```tsx
+interface ButtonProps {
+  children: ReactNode;
+  onClick?: () => void;
+  type?: "primary" | "secondary" | "danger";
+  disabled?: boolean;
+}
+```
+
+#### 3. Add proper typing to React.forwardRef:
+```tsx
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ children, onClick, ...props }, ref) => {
+    // Component implementation
+  }
+);
+```
+
+#### 4. Remove PropTypes import and validation code
+
+#### 5. Test with `npm run type-check` to ensure no type errors
 
 ### Coding Standards for Common Components
 

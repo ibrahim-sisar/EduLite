@@ -1,17 +1,41 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React, { ButtonHTMLAttributes, ReactNode, MouseEventHandler } from "react";
+
+/**
+ * Type definitions for Button component styling options
+ */
+type ButtonType = "primary" | "secondary" | "danger";
+type ButtonSize = "sm" | "md" | "lg";
+type ButtonWidth = "auto" | "full" | "half" | "one-third" | "two-thirds" | "one-fourth" | "three-fourths";
+
+/**
+ * TypeScript interface for Button component props
+ * Extends HTML button attributes for full compatibility
+ */
+interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'type' | 'className'> {
+  /** Content inside the button (text, icon, etc.) */
+  children: ReactNode;
+
+  /** Click handler function */
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+
+  /** Visual style of the button */
+  type?: ButtonType;
+
+  /** Button size variant */
+  size?: ButtonSize;
+
+  /** Width variant of the button */
+  width?: ButtonWidth;
+
+  /** Whether the button is disabled */
+  disabled?: boolean;
+
+  /** Additional CSS classes */
+  className?: string;
+}
 
 /**
  * Reusable Button component for EduLite, styled with Tailwind CSS.
- *
- * Props:
- * - children: Content inside the button (text, icon, etc.)
- * - onClick: Click handler function
- * - type: 'primary' | 'secondary' | 'danger' (visual style)
- * - size: 'sm' | 'md' | 'lg' (button size)
- * - disabled: If true, button is disabled
- * - className: Additional Tailwind classes
- * - ...rest: Any other button attributes (e.g., aria-label)
  *
  * Usage examples:
  * <Button onClick={...}>Default</Button>
@@ -25,7 +49,7 @@ const baseStyles =
   "disabled:opacity-50 disabled:cursor-not-allowed " +
   "active:scale-[.98]";
 
-const typeStyles = {
+const typeStyles: Record<ButtonType, string> = {
   primary:
     "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500",
   secondary:
@@ -33,13 +57,13 @@ const typeStyles = {
   danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
 };
 
-const sizeStyles = {
+const sizeStyles: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-sm",
   md: "px-4 py-2 text-base",
   lg: "px-6 py-3 text-lg",
 };
 
-const widthStyles = {
+const widthStyles: Record<ButtonWidth, string> = {
   auto: "w-auto",
   full: "w-full",
   half: "w-1/2",
@@ -49,7 +73,7 @@ const widthStyles = {
   "three-fourths": "w-3/4",
 };
 
-const Button = React.forwardRef(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       children,
@@ -61,7 +85,7 @@ const Button = React.forwardRef(
       className = "",
       ...rest
     },
-    ref,
+    ref
   ) => {
     const style = [
       baseStyles,
@@ -86,19 +110,9 @@ const Button = React.forwardRef(
         {children}
       </button>
     );
-  },
+  }
 );
 
 Button.displayName = "Button";
-
-Button.propTypes = {
-  children: PropTypes.node.isRequired,
-  onClick: PropTypes.func,
-  type: PropTypes.oneOf(["primary", "secondary", "danger"]),
-  size: PropTypes.oneOf(["sm", "md", "lg"]),
-  width: PropTypes.oneOf(Object.keys(widthStyles)),
-  disabled: PropTypes.bool,
-  className: PropTypes.string,
-};
 
 export default Button;
