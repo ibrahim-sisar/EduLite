@@ -1879,6 +1879,45 @@ class CurrentUserView(UsersAppBaseAPIView):
 @extend_schema(
     summary="Get/update current user profile",
     description="Get or update the authenticated user's profile information",
+    request=inline_serializer(
+        name="ProfileUpdateRequest",
+        fields={
+            "bio": serializers.CharField(
+                required=False, help_text="User bio/description"
+            ),
+            "occupation": serializers.CharField(
+                required=False, help_text="User occupation"
+            ),
+            "country": serializers.CharField(
+                required=False, help_text="Country code (e.g., 'US', 'AF')"
+            ),
+            "preferred_language": serializers.CharField(
+                required=False, help_text="Language code (e.g., 'en', 'ar')"
+            ),
+            "secondary_language": serializers.CharField(
+                required=False, help_text="Secondary language code"
+            ),
+            "website_url": serializers.URLField(
+                required=False,
+                help_text="Personal website URL (e.g., 'https://example.com')",
+            ),
+        },
+    ),
+    examples=[
+        OpenApiExample(
+            "Profile Update",
+            summary="Update profile information",
+            description="Example of updating profile fields. Note: picture upload is handled separately.",
+            value={
+                "bio": "Computer Science student passionate about education technology",
+                "occupation": "student",
+                "country": "PS",
+                "preferred_language": "ar",
+                "secondary_language": "en",
+                "website_url": "https://example.com",
+            },
+        ),
+    ],
     responses={
         200: OpenApiResponse(
             description="Profile retrieved/updated successfully",

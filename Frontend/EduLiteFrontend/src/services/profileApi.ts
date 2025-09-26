@@ -14,13 +14,17 @@ interface User {
 }
 
 interface UserProfile {
-  bio: string;
-  occupation: string;
-  country: string;
-  preferred_language: string;
-  secondary_language: string;
-  website: string;
-  profile_picture: string | null; // URL or null
+  url: string;
+  user: number;
+  user_url: string;
+  bio: string | null;
+  occupation: string | null;
+  country: string | null;
+  preferred_language: string | null;
+  secondary_language: string | null;
+  picture: string | null; // URL or null for profile picture
+  website_url: string | null;
+  friends: number[];
 }
 
 interface ApiResponse<T> {
@@ -42,7 +46,7 @@ interface ProfileUpdateRequest {
   country?: string;
   preferred_language?: string;
   secondary_language?: string;
-  website?: string;
+  website_url?: string;
 }
 
 // Get auth headers with stored token
@@ -105,7 +109,7 @@ export const updateUserProfile = async (profileData: ProfileUpdateRequest): Prom
 export const uploadProfilePicture = async (file: File): Promise<UserProfile> => {
   try {
     const formData = new FormData();
-    formData.append("profile_picture", file);
+    formData.append("picture", file);
 
     const response = await axios.patch(
       `${API_BASE_URL}/users/me/profile/`,
@@ -121,7 +125,7 @@ export const uploadProfilePicture = async (file: File): Promise<UserProfile> => 
       throw new Error("Authentication required. Please log in again.");
     }
     if (error.response?.status === 400) {
-      const message = error.response?.data?.profile_picture?.[0] ||
+      const message = error.response?.data?.picture?.[0] ||
                      error.response?.data?.detail ||
                      "Invalid file. Please use JPG, PNG, or WEBP format.";
       throw new Error(message);
@@ -151,7 +155,7 @@ export const deleteProfilePicture = async (): Promise<UserProfile> => {
   try {
     const response = await axios.patch(
       `${API_BASE_URL}/users/me/profile/`,
-      { profile_picture: null },
+      { picture: null },
       {
         headers: getAuthHeaders(),
         timeout: 10000,
