@@ -28,7 +28,6 @@ export default function SidebarMenu({ open, onClose }) {
     { to: "/about", label: t("nav.about"), icon: HiInformationCircle },
     { to: "/conversations", label: t("nav.conversations"), icon: HiChatAlt2 },
     { to: "/chapters", label: t("nav.chapters"), icon: HiBookOpen },
-    { to: "/profile", label: t("nav.profile"), icon: HiUser },
     { to: "/settings", label: t("nav.settings"), icon: HiCog },
   ];
 
@@ -88,12 +87,27 @@ export default function SidebarMenu({ open, onClose }) {
           </nav>
         </div>
 
-        {/* Logout Button - Only show when logged in */}
+        {/* Profile & Logout Section - Only show when logged in */}
         {isLoggedIn && (
-          <div className="px-4 py-4 border-t border-gray-200/30 dark:border-gray-700/30">
+          <div className="px-4 py-4 border-t border-gray-200/30 dark:border-gray-700/30 space-y-2">
+            {/* Profile Button */}
+            <Link
+              to="/profile"
+              onClick={onClose}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 transition group cursor-pointer"
+            >
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-500 transition">
+                <HiUser className="text-lg text-blue-600 dark:text-blue-400 group-hover:text-white" />
+              </div>
+              <span className="font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
+                {t("nav.profile")}
+              </span>
+            </Link>
+
+            {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition group"
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition group cursor-pointer"
             >
               <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 group-hover:bg-red-500 transition">
                 <FaSignOutAlt className="text-lg text-red-600 dark:text-red-400 group-hover:text-white" />

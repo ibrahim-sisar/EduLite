@@ -15,6 +15,7 @@ import InputDemo from "./pages/InputDemo";
 import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // AppContent component that has access to auth context
 const AppContent = () => {
@@ -46,7 +47,11 @@ const AppContent = () => {
           <Route path="/button-demo" element={<ButtonDemo />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
           <Route path="/input-demo" element={<InputDemo />} />
           <Route path="/input-component-doc" element={<InputComponentDoc />} />
         </Routes>

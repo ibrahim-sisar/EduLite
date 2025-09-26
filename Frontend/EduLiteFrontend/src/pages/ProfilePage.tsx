@@ -4,6 +4,7 @@ import { FaUser, FaCamera, FaSignOutAlt, FaSave } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
+import LazySelect from "../components/common/LazySelect";
 import {
   getUserInfo,
   getUserProfile,
