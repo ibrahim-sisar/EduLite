@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
@@ -16,9 +16,11 @@ import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import NotFoundPage from "./pages/NotFoundPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-// AppContent component that has access to auth context
-const AppContent = () => {
+// RootLayout component that wraps all routes
+const RootLayout = () => {
   const { isLoggedIn, logout, loading } = useAuth();
 
   // Show loading spinner while checking auth status
@@ -36,55 +38,93 @@ const AppContent = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Pass auth props to your existing Navbar */}
-      <Navbar isLoggedIn={isLoggedIn} onLogout={logout} />
+    <>
+      <ScrollToTop />
+      <div className="flex flex-col min-h-screen">
+        {/* Pass auth props to your existing Navbar */}
+        <Navbar isLoggedIn={isLoggedIn} onLogout={logout} />
 
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/button-demo" element={<ButtonDemo />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/input-demo" element={<InputDemo />} />
-          <Route path="/input-component-doc" element={<InputComponentDoc />} />
-        </Routes>
-      </main>
+        <main className="flex-grow">
+          <Outlet />
+        </main>
 
-      <Footer />
-      <BackToTopButton />
+        <Footer />
+        <BackToTopButton />
 
-      {/* Toast notifications for login/logout feedback */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "16px",
-            color: "#374151",
-          },
-        }}
-      />
-    </div>
+        {/* Toast notifications for login/logout feedback */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "16px",
+              color: "#374151",
+            },
+          }}
+        />
+      </div>
+    </>
   );
 };
+
+// Create the router with all routes
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <Home />
+      },
+      {
+        path: "about",
+        element: <AboutPage />
+      },
+      {
+        path: "button-demo",
+        element: <ButtonDemo />
+      },
+      {
+        path: "login",
+        element: <LoginPage />
+      },
+      {
+        path: "signup",
+        element: <SignUpPage />
+      },
+      {
+        path: "profile",
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "input-demo",
+        element: <InputDemo />
+      },
+      {
+        path: "input-component-doc",
+        element: <InputComponentDoc />
+      },
+      {
+        path: "*",
+        element: <NotFoundPage />
+      }
+    ]
+  }
+]);
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <AppContent />
-      </Router>
+      <RouterProvider router={router} />
     </AuthProvider>
   );
 }

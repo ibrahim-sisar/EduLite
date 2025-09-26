@@ -1,17 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 /**
- * Custom hook to detect and warn about unsaved changes
- * Works with standard BrowserRouter
- * Provides browser-level (beforeunload) protection and React Router navigation interception
+ * Simple hook to add browser warning for unsaved changes
+ * Shows browser's native warning when trying to close/refresh tab
  */
 export const useUnsavedChanges = (isDirty: boolean, message?: string) => {
-  const [showModal, setShowModal] = useState(false);
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
   const defaultMessage = message || "You have unsaved changes. Are you sure you want to leave?";
 
   // Browser-level protection (tab close, refresh, etc.)
@@ -33,65 +26,6 @@ export const useUnsavedChanges = (isDirty: boolean, message?: string) => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [isDirty, defaultMessage]);
-
-  // Intercept link clicks for navigation
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      // Check if it's a link click that would cause navigation
-      const target = e.target as HTMLElement;
-      const link = target.closest('a');
-
-      if (!link) return;
-
-      const href = link.getAttribute('href');
-
-      // Check if it's an internal navigation link
-      if (href && href.startsWith('/') && isDirty) {
-        // Check if we're navigating to a different path
-        if (href !== location.pathname) {
-          e.preventDefault();
-          setPendingPath(href);
-          setShowModal(true);
-        }
-      }
-    };
-
-    // Add click listener to intercept navigation
-    document.addEventListener('click', handleClick);
-
-    return () => {
-      document.removeEventListener('click', handleClick);
-    };
-  }, [isDirty, location.pathname]);
-
-  // Note: Programmatic navigation (like logout button) needs to be handled
-  // separately in the component by checking isDirty before calling navigate
-
-  // Confirm navigation (user clicked "Leave" in modal)
-  const confirmNavigation = useCallback(() => {
-    setShowModal(false);
-    if (pendingPath) {
-      const path = pendingPath;
-      setPendingPath(null);
-      // Navigate after a small delay to ensure state cleanup
-      setTimeout(() => {
-        navigate(path);
-      }, 0);
-    }
-  }, [pendingPath, navigate]);
-
-  // Cancel navigation (user clicked "Stay" in modal)
-  const cancelNavigation = useCallback(() => {
-    setPendingPath(null);
-    setShowModal(false);
-  }, []);
-
-  return {
-    showModal,
-    confirmNavigation,
-    cancelNavigation,
-    message: defaultMessage
-  };
 };
 
 /**
@@ -105,7 +39,7 @@ export const useFormDirtyState = <T extends Record<string, any>>(
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    if (!originalData) {
+    if (!originalData || Object.keys(originalData).length === 0) {
       setIsDirty(false);
       return;
     }
@@ -116,7 +50,9 @@ export const useFormDirtyState = <T extends Record<string, any>>(
       const original = originalData[key];
 
       // Handle null/undefined/empty string as equivalent
-      if (!current && !original) return false;
+      if ((!current || current === '') && (!original || original === '')) {
+        return false;
+      }
 
       // Check if values are different
       return current !== original;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap } from "react-icons/fa";
+import { useNavigate, useBlocker } from "react-router-dom";
+import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap, FaLock } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
@@ -28,10 +28,13 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'friends' | 'settings' | 'notes' | 'chats' | 'courses'>('friends');
+  const [activeTab, setActiveTab] = useState<'friends' | 'settings' | 'notes' | 'chats' | 'courses' | 'privacy'>('friends');
+  const [showNavigationModal, setShowNavigationModal] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   // Refs for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const blockerRef = useRef<any>(null);
 
   // Hooks
   const navigate = useNavigate();
@@ -40,11 +43,39 @@ const ProfilePage: React.FC = () => {
   // Track form dirty state
   const isDirty = useFormDirtyState(formData, originalFormData);
 
-  // Handle unsaved changes warning
-  const { showModal, confirmNavigation, cancelNavigation } = useUnsavedChanges(
-    isDirty,
-    "You have unsaved changes to your profile. Are you sure you want to leave without saving?"
+  // Add browser warning for unsaved changes
+  useUnsavedChanges(isDirty, "You have unsaved changes that will be lost.");
+
+  // Block navigation when there are unsaved changes
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty && currentLocation.pathname !== nextLocation.pathname
   );
+
+  // Store blocker reference for modal callbacks
+  blockerRef.current = blocker;
+
+  // Handle blocked navigation with custom modal
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setShowNavigationModal(true);
+    }
+  }, [blocker]);
+
+  // Modal callbacks for navigation
+  const handleConfirmNavigation = () => {
+    setShowNavigationModal(false);
+    if (blockerRef.current?.proceed) {
+      blockerRef.current.proceed();
+    }
+  };
+
+  const handleCancelNavigation = () => {
+    setShowNavigationModal(false);
+    if (blockerRef.current?.reset) {
+      blockerRef.current.reset();
+    }
+  };
 
   // Load user data on component mount
   useEffect(() => {
@@ -63,12 +94,12 @@ const ProfilePage: React.FC = () => {
 
         // Initialize form data with current profile values
         const initialFormData = {
-          bio: profileData.bio,
-          occupation: profileData.occupation,
-          country: profileData.country,
-          preferred_language: profileData.preferred_language,
-          secondary_language: profileData.secondary_language,
-          website_url: profileData.website_url
+          bio: profileData.bio || '',
+          occupation: profileData.occupation || '',
+          country: profileData.country || '',
+          preferred_language: profileData.preferred_language || '',
+          secondary_language: profileData.secondary_language || '',
+          website_url: profileData.website_url || ''
         };
 
         setFormData(initialFormData);
@@ -103,6 +134,12 @@ const ProfilePage: React.FC = () => {
 
     cacheAllChoices();
   }, []);
+
+  // Handle field blur to track touched fields
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = e.target;
+    setTouchedFields(prev => new Set(prev).add(name));
+  };
 
   // Handle form field changes (matching SignupPage pattern)
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -196,6 +233,8 @@ const ProfilePage: React.FC = () => {
       setOriginalFormData(formData);
 
       toast.success("Profile updated successfully! 🎉");
+      // Clear touched fields after successful save
+      setTouchedFields(new Set());
     } catch (error: any) {
       console.error("Failed to update profile:", error);
       toast.error(error.message || "Failed to update profile");
@@ -238,31 +277,16 @@ const ProfilePage: React.FC = () => {
   const handleLogout = () => {
     // Check for unsaved changes before logout
     if (isDirty) {
-      // Set a flag to logout after confirmation
-      setPendingLogout(true);
-      setShowLogoutModal(true);
+      // Use browser's native confirm dialog
+      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to logout without saving?");
+      if (confirmed) {
+        logout();
+        navigate("/");
+      }
     } else {
       logout();
       navigate("/");
     }
-  };
-
-  // State for logout confirmation
-  const [pendingLogout, setPendingLogout] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  // Handle confirmed logout
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    setPendingLogout(false);
-    logout();
-    navigate("/");
-  };
-
-  // Cancel logout
-  const cancelLogout = () => {
-    setShowLogoutModal(false);
-    setPendingLogout(false);
   };
 
   // Show loading spinner while fetching data (matching LoginPage pattern)
@@ -377,9 +401,14 @@ const ProfilePage: React.FC = () => {
                 name="bio"
                 value={formData.bio || ""}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="Tell us about yourself..."
                 disabled={saving}
-                className="w-full px-4 py-3 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 focus:shadow-xl focus:shadow-blue-500/30 dark:focus:shadow-blue-400/30 focus:scale-[1.02] transition-all duration-300 ease-out font-light resize-none"
+                className={`w-full px-4 py-3 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border ${
+                  touchedFields.has('bio') && formData.bio !== originalFormData.bio
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : 'border-gray-200/50 dark:border-gray-700/30'
+                } rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 focus:shadow-xl focus:shadow-blue-500/30 dark:focus:shadow-blue-400/30 focus:scale-[1.02] transition-all duration-300 ease-out font-light resize-none`}
                 rows={4}
                 maxLength={1000}
               />
@@ -445,9 +474,15 @@ const ProfilePage: React.FC = () => {
               type="url"
               value={formData.website_url || ""}
               onChange={handleChange}
+              onBlur={handleBlur}
               placeholder="example.com or https://example.com"
               disabled={saving}
               error={errors.website_url}
+              className={
+                touchedFields.has('website_url') && formData.website_url !== originalFormData.website_url
+                  ? 'border-red-300 dark:border-red-500/50'
+                  : ''
+              }
             />
 
             {/* Save Button - Clean navbar style */}
@@ -550,6 +585,18 @@ const ProfilePage: React.FC = () => {
                   <FaGraduationCap className="text-lg" />
                   <span className="font-medium">Courses</span>
                 </button>
+
+                <button
+                  onClick={() => setActiveTab('privacy')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+                    activeTab === 'privacy'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaLock className="text-lg" />
+                  <span className="font-medium">Privacy</span>
+                </button>
               </div>
 
               {/* Content Area */}
@@ -560,6 +607,7 @@ const ProfilePage: React.FC = () => {
                   {activeTab === 'notes' && <FaStickyNote className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
                   {activeTab === 'chats' && <FaComments className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
                   {activeTab === 'courses' && <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {activeTab === 'privacy' && <FaLock className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
                 </div>
 
                 <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2 capitalize">
@@ -588,20 +636,12 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Unsaved Changes Modal for Navigation */}
+      {/* Unsaved Changes Modal */}
       <UnsavedChangesModal
-        isOpen={showModal}
-        onConfirm={confirmNavigation}
-        onCancel={cancelNavigation}
-      />
-
-      {/* Unsaved Changes Modal for Logout */}
-      <UnsavedChangesModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onCancel={cancelLogout}
-        message="You have unsaved changes to your profile. Are you sure you want to logout without saving?"
-        confirmText="Logout Without Saving"
+        isOpen={showNavigationModal}
+        onConfirm={handleConfirmNavigation}
+        onCancel={handleCancelNavigation}
+        message="You have unsaved changes. Are you sure you want to leave?"
       />
     </div>
   );

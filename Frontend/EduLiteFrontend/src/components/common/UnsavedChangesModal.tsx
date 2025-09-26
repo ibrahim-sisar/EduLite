@@ -76,7 +76,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-md transform transition-all duration-300 ease-out animate-in fade-in zoom-in-95"
+        className="relative w-full max-w-md transform transition-all duration-300 ease-out scale-100 opacity-100"
       >
         <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-3xl shadow-2xl shadow-gray-900/20 dark:shadow-black/40 p-8">
           {/* Icon and Title */}
@@ -100,7 +100,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
             <button
               ref={cancelButtonRef}
               onClick={onCancel}
-              className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 focus:scale-[1.02]"
+              className="cursor-pointer flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 focus:scale-[1.02]"
             >
               {cancelText}
             </button>
@@ -108,7 +108,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
             {/* Leave Button (Destructive Action) */}
             <button
               onClick={onConfirm}
-              className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:border-red-300 dark:hover:border-red-600 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:focus:ring-red-400/50 focus:scale-[1.02]"
+              className="cursor-pointer flex-1 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-2xl transition-all duration-200 hover:scale-[1.02] hover:border-red-300 dark:hover:border-red-600 hover:text-red-600 dark:hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:focus:ring-red-400/50 focus:scale-[1.02]"
             >
               {confirmText}
             </button>
