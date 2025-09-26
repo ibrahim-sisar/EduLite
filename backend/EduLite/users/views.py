@@ -1849,3 +1849,79 @@ class EmailVerificationView(UsersAppBaseAPIView):
                 {"error": "Invalid or expired token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+@extend_schema(
+    summary="Get current user info",
+    description="Get the authenticated user's basic information (username, email, etc.)",
+    responses={
+        200: OpenApiResponse(
+            description="User info retrieved successfully", response=UserSerializer
+        ),
+        401: OpenApiResponse(description="Unauthorized - authentication required"),
+    },
+    tags=["Current User"],
+)
+class CurrentUserView(UsersAppBaseAPIView):
+    """
+    API view to get the current authenticated user's information.
+    - GET: Returns current user's basic info
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        """Get current user's basic information"""
+        serializer = UserSerializer(request.user, context=self.get_serializer_context())
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    summary="Get/update current user profile",
+    description="Get or update the authenticated user's profile information",
+    responses={
+        200: OpenApiResponse(
+            description="Profile retrieved/updated successfully",
+            response=ProfileSerializer,
+        ),
+        401: OpenApiResponse(description="Unauthorized - authentication required"),
+        400: OpenApiResponse(description="Bad request - invalid data"),
+    },
+    tags=["Current User"],
+)
+class CurrentUserProfileView(UsersAppBaseAPIView):
+    """
+    API view to get or update the current authenticated user's profile.
+    - GET: Returns current user's profile
+    - PATCH: Updates current user's profile
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        """Get the current user's profile"""
+        return get_object_or_404(UserProfile, user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        """Get current user's profile"""
+        profile = self.get_object()
+        serializer = self.serializer_class(
+            profile, context=self.get_serializer_context()
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        """Update current user's profile"""
+        profile = self.get_object()
+        serializer = self.serializer_class(
+            profile,
+            data=request.data,
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
