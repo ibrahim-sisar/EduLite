@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HiOutlineMoon, HiOutlineSun } from "react-icons/hi";
 
-export default function DarkModeToggle({ onClick }) {
+export default function DarkModeToggle({ onClick } = {}) {
   const [isDark, setIsDark] = useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches
   );

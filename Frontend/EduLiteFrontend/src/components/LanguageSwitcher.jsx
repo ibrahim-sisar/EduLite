@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { HiOutlineTranslate } from "react-icons/hi";
 
-export default function LanguageSwitcher({ onClick }) {
+export default function LanguageSwitcher({ onClick } = {}) {
   const { i18n } = useTranslation();
 
   const toggleLanguage = () => {

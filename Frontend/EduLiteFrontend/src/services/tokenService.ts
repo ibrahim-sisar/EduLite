@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import toast from "react-hot-toast";
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -151,7 +151,7 @@ export const setLogoutHandler = (handler: () => void): void => {
 export const setupAxiosInterceptors = (): void => {
   // Request interceptor: Add authorization header with valid token
   axios.interceptors.request.use(
-    async (config: AxiosRequestConfig) => {
+    async (config: InternalAxiosRequestConfig) => {
       // Skip token injection for auth endpoints
       if (config.url?.includes('/token/') || config.url?.includes('/register/')) {
         return config;

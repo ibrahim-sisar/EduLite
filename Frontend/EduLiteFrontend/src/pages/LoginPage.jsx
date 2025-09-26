@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import Input from "../components/common/Input";
@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth(); // Get login function from context
 
   const handleChange = (e) => {
@@ -47,7 +48,10 @@ const LoginPage = () => {
       login(access, refresh);
 
       toast.success("Login successful 🎉");
-      navigate("/");
+
+      // Navigate to the page they were trying to access, or profile by default
+      const from = location.state?.from?.pathname || "/profile";
+      navigate(from);
     } catch (err) {
       // Only log non-sensitive error information
       console.error(

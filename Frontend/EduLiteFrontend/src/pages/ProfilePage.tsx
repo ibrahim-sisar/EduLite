@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";
+import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
+import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
 import { choicesService } from "../services/choicesService";
 import {
   getUserInfo,
@@ -20,6 +22,7 @@ const ProfilePage: React.FC = () => {
   // State management following existing patterns from LoginPage/SignupPage
   const [userInfo, setUserInfo] = useState<User | null>(null);
   const [profileData, setProfileData] = useState<UserProfile | null>(null);
+  const [originalFormData, setOriginalFormData] = useState<ProfileUpdateRequest>({});
   const [formData, setFormData] = useState<ProfileUpdateRequest>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,15 @@ const ProfilePage: React.FC = () => {
   // Hooks
   const navigate = useNavigate();
   const { logout } = useAuth();
+
+  // Track form dirty state
+  const isDirty = useFormDirtyState(formData, originalFormData);
+
+  // Handle unsaved changes warning
+  const { showModal, confirmNavigation, cancelNavigation } = useUnsavedChanges(
+    isDirty,
+    "You have unsaved changes to your profile. Are you sure you want to leave without saving?"
+  );
 
   // Load user data on component mount
   useEffect(() => {
@@ -50,14 +62,17 @@ const ProfilePage: React.FC = () => {
         setProfileData(profileData);
 
         // Initialize form data with current profile values
-        setFormData({
+        const initialFormData = {
           bio: profileData.bio,
           occupation: profileData.occupation,
           country: profileData.country,
           preferred_language: profileData.preferred_language,
           secondary_language: profileData.secondary_language,
           website_url: profileData.website_url
-        });
+        };
+
+        setFormData(initialFormData);
+        setOriginalFormData(initialFormData);
       } catch (error) {
         console.error("Failed to load user data:", error);
         toast.error("Failed to load profile data");
@@ -176,6 +191,10 @@ const ProfilePage: React.FC = () => {
     try {
       const updatedProfile = await updateUserProfile(formData);
       setProfileData(updatedProfile);
+
+      // Reset original form data to match saved data
+      setOriginalFormData(formData);
+
       toast.success("Profile updated successfully! 🎉");
     } catch (error: any) {
       console.error("Failed to update profile:", error);
@@ -217,8 +236,33 @@ const ProfilePage: React.FC = () => {
 
   // Handle logout with navigation
   const handleLogout = () => {
+    // Check for unsaved changes before logout
+    if (isDirty) {
+      // Set a flag to logout after confirmation
+      setPendingLogout(true);
+      setShowLogoutModal(true);
+    } else {
+      logout();
+      navigate("/");
+    }
+  };
+
+  // State for logout confirmation
+  const [pendingLogout, setPendingLogout] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Handle confirmed logout
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    setPendingLogout(false);
     logout();
     navigate("/");
+  };
+
+  // Cancel logout
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
+    setPendingLogout(false);
   };
 
   // Show loading spinner while fetching data (matching LoginPage pattern)
@@ -449,7 +493,7 @@ const ProfilePage: React.FC = () => {
               <div className="flex flex-wrap gap-2 mb-6">
                 <button
                   onClick={() => setActiveTab('friends')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'friends'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
@@ -461,7 +505,7 @@ const ProfilePage: React.FC = () => {
 
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'settings'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
@@ -473,7 +517,7 @@ const ProfilePage: React.FC = () => {
 
                 <button
                   onClick={() => setActiveTab('notes')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'notes'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
@@ -485,7 +529,7 @@ const ProfilePage: React.FC = () => {
 
                 <button
                   onClick={() => setActiveTab('chats')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'chats'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
@@ -497,7 +541,7 @@ const ProfilePage: React.FC = () => {
 
                 <button
                   onClick={() => setActiveTab('courses')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'courses'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
@@ -543,6 +587,22 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Unsaved Changes Modal for Navigation */}
+      <UnsavedChangesModal
+        isOpen={showModal}
+        onConfirm={confirmNavigation}
+        onCancel={cancelNavigation}
+      />
+
+      {/* Unsaved Changes Modal for Logout */}
+      <UnsavedChangesModal
+        isOpen={showLogoutModal}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+        message="You have unsaved changes to your profile. Are you sure you want to logout without saving?"
+        confirmText="Logout Without Saving"
+      />
     </div>
   );
 };

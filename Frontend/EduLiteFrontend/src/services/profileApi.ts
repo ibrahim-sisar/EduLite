@@ -27,12 +27,6 @@ interface UserProfile {
   friends: number[];
 }
 
-interface ApiResponse<T> {
-  data: T;
-  status: number;
-  message?: string;
-}
-
 // Combined user data for profile page
 interface ProfileData {
   user: User;
