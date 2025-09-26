@@ -59,19 +59,6 @@ class UsersAppBaseAPIView(APIView):
     """
     Enhanced base API view with automatic performance monitoring and alerting.
     Monitors response time and payload size, triggering alerts when thresholds exceeded.
-
-    **Monitoring Thresholds:**
-    - Response Time: 100ms (configurable via PERFORMANCE_MONITORING['RESPONSE_TIME_THRESHOLD'])
-    - Payload Size: 10KB (configurable via PERFORMANCE_MONITORING['PAYLOAD_SIZE_THRESHOLD_KB'])
-
-    **Configuration in settings.py:**
-    PERFORMANCE_MONITORING = {
-        'ENABLED': True,  # Enable monitoring
-        'RESPONSE_TIME_THRESHOLD': 100,  # milliseconds
-        'PAYLOAD_SIZE_THRESHOLD_KB': 10,  # kilobytes
-        'LOG_ALL_REQUESTS': False,  # Only log threshold violations
-        'LOG_LEVEL': 'WARNING',  # 'DEBUG', 'INFO', 'WARNING', 'ERROR'
-    }
     """
 
     permission_classes = [permissions.IsAuthenticated]
