@@ -41,16 +41,53 @@ class ChoicesService {
         }
       }
 
-      // 3. Fetch from static file (network request)
-      const response = await fetch(`/project_choices_data/${type}.json`, {
-        cache: 'force-cache', // Use browser cache for better performance
-      });
+      // 3. Fetch from static file with retry logic for first-click issues
+      let response: Response;
+      let responseText: string = '';
+      const maxRetries = 3;
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${type} choices: ${response.status}`);
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        response = await fetch(`/project_choices_data/${type}.json`, {
+          cache: 'force-cache', // Use browser cache for better performance
+        });
+
+        // Check if we got HTML instead of JSON (common first-click issue)
+        const contentType = response.headers.get('content-type') || '';
+
+        if (response.ok && contentType.includes('application/json')) {
+          // Success! Got JSON response
+          responseText = await response.text();
+          break;
+        } else if (contentType.includes('text/html') && attempt < maxRetries - 1) {
+          // Got HTML, wait a bit and retry
+          console.warn(`[Attempt ${attempt + 1}/${maxRetries}] Got HTML instead of JSON for ${type}, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 150)); // Wait 150ms before retry
+          continue;
+        } else if (!response.ok) {
+          // Non-OK response, log and throw
+          responseText = await response.text();
+          console.error(`Failed to fetch ${type} choices. Status: ${response.status}, Response:`, responseText.substring(0, 200));
+          throw new Error(`Failed to fetch ${type} choices: ${response.status} ${response.statusText}`);
+        } else {
+          // Final attempt failed with HTML
+          responseText = await response.text();
+          console.error(`Final attempt: Still getting HTML for ${type}. Response:`, responseText.substring(0, 200));
+          throw new Error(`Server returned HTML instead of JSON for ${type} choices`);
+        }
       }
 
-      const data: Choice[] = await response.json();
+      // Debug log the response to help troubleshoot JSON parsing issues
+      if (responseText.length < 50) {
+        console.warn(`Suspiciously short response for ${type}:`, responseText);
+      }
+
+      let data: Choice[];
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`JSON parsing failed for ${type}. Response text:`, responseText.substring(0, 500));
+        throw new Error(`Invalid JSON response for ${type}: ${parseError instanceof Error ? parseError.message : 'Unknown parsing error'}`);
+      }
 
       // Validate data structure
       if (!Array.isArray(data) || data.some(item => !item.value || !item.label)) {

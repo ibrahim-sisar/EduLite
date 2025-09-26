@@ -106,12 +106,8 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
               </div>
 
               <div className="flex items-center gap-0.5 sm:gap-1 bg-gray-100/50 dark:bg-gray-800/50 rounded-full p-0.5 sm:p-1 backdrop-blur-sm ">
-                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer">
-                  <LanguageSwitcher />
-                </div>
-                <div className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer">
-                  <DarkModeToggle />
-                </div>
+                <LanguageSwitcher />
+                <DarkModeToggle />
                 <button
                   onClick={() => setSidebarOpen(true)}
                   className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 group cursor-pointer"

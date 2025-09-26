@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaCamera, FaSignOutAlt, FaSave } from "react-icons/fa";
+import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";
+import { choicesService } from "../services/choicesService";
 import {
   getUserInfo,
   getUserProfile,
@@ -24,6 +25,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'friends' | 'settings' | 'notes' | 'chats' | 'courses'>('friends');
 
   // Refs for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,9 +69,51 @@ const ProfilePage: React.FC = () => {
     loadUserData();
   }, []);
 
+  // Pre-cache all choice types when component mounts
+  useEffect(() => {
+    const cacheAllChoices = async () => {
+      try {
+        // Load all choices in parallel for instant dropdown access
+        await Promise.all([
+          choicesService.getChoices('occupations'),
+          choicesService.getChoices('countries'),
+          choicesService.getChoices('languages')
+        ]);
+        console.log('All choices pre-cached successfully');
+      } catch (error) {
+        console.error('Failed to pre-cache some choices:', error);
+        // Non-critical error - dropdowns will still work with lazy loading
+      }
+    };
+
+    cacheAllChoices();
+  }, []);
+
   // Handle form field changes (matching SignupPage pattern)
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    let { name, value } = e.target;
+
+    // Smart website URL handling
+    if (name === 'website_url' && value) {
+      // Block insecure http://
+      if (value.toLowerCase().startsWith('http://')) {
+        setErrors((prev) => ({
+          ...prev,
+          website_url: "Insecure HTTP not allowed. Please use HTTPS."
+        }));
+        return; // Don't update the value
+      }
+
+      // Auto-add https:// if it looks like a website
+      // Check: has a dot, more than 3 chars, and no protocol
+      if (value.includes('.') &&
+          value.length > 3 &&
+          !value.includes('://') &&
+          !value.startsWith('https://')) {
+        value = `https://${value}`;
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value || null, // Convert empty strings to null for API
@@ -90,10 +134,22 @@ const ProfilePage: React.FC = () => {
 
     // Website URL validation if provided
     if (formData.website_url && formData.website_url.trim()) {
-      try {
-        new URL(formData.website_url);
-      } catch {
-        newErrors.website_url = "Please enter a valid URL (e.g., https://example.com)";
+      const url = formData.website_url.trim();
+
+      // Block http:// for security
+      if (url.toLowerCase().startsWith('http://')) {
+        newErrors.website_url = "Insecure HTTP not allowed. Please use HTTPS.";
+      } else {
+        // Validate URL structure
+        try {
+          new URL(url);
+          // Additional check to ensure it's https
+          if (!url.toLowerCase().startsWith('https://')) {
+            newErrors.website_url = "Please use HTTPS for secure connections";
+          }
+        } catch {
+          newErrors.website_url = "Please enter a valid URL (e.g., https://example.com)";
+        }
       }
     }
 
@@ -180,10 +236,13 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 pt-24">
-      <div className="w-full max-w-2xl">
-        {/* Glass-morphism container matching LoginPage exactly */}
-        <div className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-3xl shadow-2xl shadow-gray-200/20 dark:shadow-gray-900/20 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 pt-24">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Profile Section - Takes 2/3 on desktop */}
+          <div className="lg:col-span-2">
+            {/* Glass-morphism container matching LoginPage exactly */}
+            <div className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-3xl shadow-2xl shadow-gray-200/20 dark:shadow-gray-900/20 p-8">
 
           {/* Header matching LoginPage typography */}
           <div className="text-center mb-8">
@@ -290,44 +349,49 @@ const ProfilePage: React.FC = () => {
 
             {/* Form Fields Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+              <LazySelect
                 label="Occupation"
                 name="occupation"
                 value={formData.occupation || ""}
                 onChange={handleChange}
-                placeholder="e.g., Student, Teacher"
+                placeholder="Select your occupation..."
                 disabled={saving}
                 error={errors.occupation}
+                choiceType="occupations"
               />
 
-              <Input
+              <LazySelect
                 label="Country"
                 name="country"
                 value={formData.country || ""}
                 onChange={handleChange}
-                placeholder="Country code (e.g., US, PS)"
+                placeholder="Select your country..."
                 disabled={saving}
                 error={errors.country}
+                choiceType="countries"
+                searchable={true}
               />
 
-              <Input
+              <LazySelect
                 label="Primary Language"
                 name="preferred_language"
                 value={formData.preferred_language || ""}
                 onChange={handleChange}
-                placeholder="Language code (e.g., en, ar)"
+                placeholder="Select your primary language..."
                 disabled={saving}
                 error={errors.preferred_language}
+                choiceType="languages"
               />
 
-              <Input
+              <LazySelect
                 label="Secondary Language"
                 name="secondary_language"
                 value={formData.secondary_language || ""}
                 onChange={handleChange}
-                placeholder="Language code (e.g., en, ar)"
+                placeholder="Select your secondary language..."
                 disabled={saving}
                 error={errors.secondary_language}
+                choiceType="languages"
               />
             </div>
 
@@ -337,63 +401,145 @@ const ProfilePage: React.FC = () => {
               type="url"
               value={formData.website_url || ""}
               onChange={handleChange}
-              placeholder="https://your-website.com"
+              placeholder="example.com or https://example.com"
               disabled={saving}
               error={errors.website_url}
             />
 
-            {/* Save Button - Matching LoginPage button style */}
+            {/* Save Button - Clean navbar style */}
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={saving}
-                className={`
-                  w-full px-6 py-4 text-lg font-light
-                  bg-blue-500/90 hover:bg-blue-600/90 dark:bg-blue-600/90 dark:hover:bg-blue-700/90
-                  text-white
-                  backdrop-blur-xl
-                  border border-blue-500/20 dark:border-blue-600/20
-                  rounded-2xl
-                  shadow-lg shadow-blue-500/20 dark:shadow-blue-600/20
-                  transition-all duration-300 ease-out
-
-                  focus:outline-none
-                  focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
-                  focus:shadow-xl focus:shadow-blue-500/30 dark:focus:shadow-blue-400/30
-                  focus:scale-[1.02]
-
-                  hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-blue-600/30
-                  hover:scale-[1.02]
-
-                  ${saving ? "opacity-60 cursor-not-allowed" : ""}
-                `}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 transition group cursor-pointer text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {saving ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Saving Changes...
-                  </div>
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span className="font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">Saving Changes...</span>
+                  </>
                 ) : (
-                  <div className="flex items-center justify-center">
-                    <FaSave className="mr-3" />
-                    Save Changes
-                  </div>
+                  <>
+                    <FaSave className="text-lg text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300" />
+                    <span className="font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">Save Changes</span>
+                  </>
                 )}
               </button>
             </div>
           </form>
 
-          {/* Logout Section - At bottom as specified in issue */}
-          <div className="mt-8 pt-6 border-t border-gray-200/30 dark:border-gray-700/30">
-            <button
-              onClick={handleLogout}
-              className="w-full px-6 py-4 text-lg font-light bg-red-500/90 hover:bg-red-600/90 dark:bg-red-600/90 dark:hover:bg-red-700/90 text-white backdrop-blur-xl border border-red-500/20 dark:border-red-600/20 rounded-2xl shadow-lg shadow-red-500/20 dark:shadow-red-600/20 transition-all duration-300 ease-out hover:shadow-xl hover:shadow-red-500/30 dark:hover:shadow-red-600/30 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:focus:ring-red-400/50 focus:shadow-xl focus:shadow-red-500/30 dark:focus:shadow-red-400/30 focus:scale-[1.02]"
-            >
-              <div className="flex items-center justify-center">
-                <FaSignOutAlt className="mr-3" />
-                Sign Out
+              {/* Logout Section - Clean navbar style */}
+              <div className="mt-8 pt-6 border-t border-gray-200/30 dark:border-gray-700/30">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-3 px-6 py-3 w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition group cursor-pointer text-white font-medium rounded-xl transition-all duration-200"
+                >
+                  <FaSignOutAlt className="text-lg text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300" />
+                  <span className="font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300">Sign Out</span>
+                </button>
               </div>
-            </button>
+            </div>
+          </div>
+
+          {/* Sidebar Section - Takes 1/3 on desktop, full width on mobile */}
+          <div className="lg:col-span-1">
+            <div className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-3xl shadow-2xl shadow-gray-200/20 dark:shadow-gray-900/20 p-6">
+
+              {/* Tab Navigation */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <button
+                  onClick={() => setActiveTab('friends')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                    activeTab === 'friends'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaUserFriends className="text-lg" />
+                  <span className="font-medium">Friends</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                    activeTab === 'settings'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaCog className="text-lg" />
+                  <span className="font-medium">Settings</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('notes')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                    activeTab === 'notes'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaStickyNote className="text-lg" />
+                  <span className="font-medium">Notes</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('chats')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                    activeTab === 'chats'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaComments className="text-lg" />
+                  <span className="font-medium">Chats</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('courses')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                    activeTab === 'courses'
+                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
+                  }`}
+                >
+                  <FaGraduationCap className="text-lg" />
+                  <span className="font-medium">Courses</span>
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
+                <div className="mb-4">
+                  {activeTab === 'friends' && <FaUserFriends className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {activeTab === 'settings' && <FaCog className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {activeTab === 'notes' && <FaStickyNote className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {activeTab === 'chats' && <FaComments className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {activeTab === 'courses' && <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                </div>
+
+                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2 capitalize">
+                  {activeTab} in Profile
+                </h3>
+
+                <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
+                  Coming Soon!
+                </p>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Visit{' '}
+                  <a
+                    href="https://github.com/ibrahim-sisar/EduLite"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                  >
+                    https://github.com/ibrahim-sisar/EduLite
+                  </a>
+                  {' '}if you want to contribute!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

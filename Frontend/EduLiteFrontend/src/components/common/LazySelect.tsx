@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Choice, ChoiceType, choicesService } from '../../services/choicesService';
+import { HiChevronDown, HiSearch, HiCheck } from 'react-icons/hi';
 
 interface LazySelectProps {
   label: string;
@@ -24,77 +25,77 @@ const LazySelect: React.FC<LazySelectProps> = ({
   error,
   choiceType,
   required = false,
-  searchable = false
+  searchable = true // Default to searchable for better UX
 }) => {
   const [choices, setChoices] = useState<Choice[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showTextInput, setShowTextInput] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-  const selectRef = useRef<HTMLSelectElement>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Check if we have offline choices available
-  const hasOfflineChoices = choicesService.hasOfflineChoices(choiceType);
-
-  // Load choices when component mounts if already cached
+  // Load choices immediately on mount (should already be cached from ProfilePage)
   useEffect(() => {
-    if (hasOfflineChoices && !hasAttemptedLoad) {
-      loadChoices();
+    loadChoices();
+  }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [hasOfflineChoices]);
+  }, [isOpen]);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen]);
 
   const loadChoices = async () => {
     if (loading || choices.length > 0) return;
 
     setLoading(true);
     setLoadError(null);
-    setHasAttemptedLoad(true);
 
     try {
       const data = await choicesService.getChoices(choiceType);
-      setChoices(data);
-
       if (data.length === 0) {
-        // If no choices loaded, show text input as fallback
         setShowTextInput(true);
-        setLoadError(`No ${choiceType} options available. You can type manually.`);
+        setLoadError(`No ${choiceType} options available.`);
+      } else {
+        setChoices(data);
       }
     } catch (error) {
       console.error(`Failed to load ${choiceType} choices:`, error);
-      setLoadError(`Failed to load ${choiceType} options. You can type manually.`);
+      setLoadError(`Failed to load ${choiceType} options.`);
       setShowTextInput(true);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load choices on first interaction (focus/click)
-  const handleInteraction = () => {
-    if (!hasAttemptedLoad) {
-      loadChoices();
-    }
-    setIsOpen(true);
-  };
-
-  // Filter choices for searchable selects
-  const filteredChoices = searchable && searchTerm
+  // Filter choices based on search term
+  const filteredChoices = searchTerm
     ? choices.filter(choice =>
         choice.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
         choice.value.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : choices;
-
-  // Toggle between select and text input
-  const toggleInputMode = () => {
-    setShowTextInput(!showTextInput);
-    if (!showTextInput) {
-      // Switching to text input, focus it
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
-  };
 
   // Get display value for current selection
   const getDisplayValue = () => {
@@ -103,23 +104,101 @@ const LazySelect: React.FC<LazySelectProps> = ({
     return choice ? choice.label : value;
   };
 
-  // Base classes for consistent styling with Input component
-  const baseClasses = `
-    w-full px-4 py-3
-    bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl
-    border border-gray-200/50 dark:border-gray-700/30
-    rounded-2xl
-    shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20
-    text-gray-900 dark:text-white
+  // Handle selection
+  const handleSelect = (selectedValue: string) => {
+    // Create a synthetic event to match the expected onChange signature
+    const syntheticEvent = {
+      target: {
+        name,
+        value: selectedValue
+      }
+    } as React.ChangeEvent<HTMLSelectElement>;
+
+    onChange(syntheticEvent);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setHighlightedIndex(prev =>
+          prev < filteredChoices.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setHighlightedIndex(prev => prev > 0 ? prev - 1 : 0);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (filteredChoices[highlightedIndex]) {
+          handleSelect(filteredChoices[highlightedIndex].value);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setIsOpen(false);
+        setSearchTerm('');
+        break;
+    }
+  };
+
+  // Base classes for consistent styling
+  const triggerClasses = `
+    w-full px-4 py-3 pr-10
+    bg-white dark:bg-gray-800
+    border border-gray-300 dark:border-gray-600
+    rounded-xl
+    shadow-sm
+    text-gray-700 dark:text-gray-200
     placeholder-gray-500 dark:placeholder-gray-400
-    focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
-    focus:shadow-xl focus:shadow-blue-500/30 dark:focus:shadow-blue-400/30
-    focus:scale-[1.02]
-    transition-all duration-300 ease-out
-    font-light
-    ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
-    ${error ? 'border-red-500/50 focus:ring-red-500/50' : ''}
+    focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+    focus:border-blue-500 dark:focus:border-blue-400
+    transition-all duration-200
+    font-medium text-left
+    ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400 dark:hover:border-gray-500'}
+    ${error ? 'border-red-500 focus:ring-red-500' : ''}
   `;
+
+  // Show text input fallback if loading failed
+  if (showTextInput) {
+    return (
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        <input
+          ref={inputRef}
+          type="text"
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={triggerClasses}
+          autoComplete="off"
+        />
+        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+        {loadError && (
+          <div className="text-amber-600 dark:text-amber-400 text-xs mt-1">
+            <p>{loadError}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2">
@@ -129,73 +208,113 @@ const LazySelect: React.FC<LazySelectProps> = ({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
 
-      <div className="relative">
-        {/* Show text input if fallback mode or user chose text input */}
-        {showTextInput ? (
-          <div className="space-y-2">
-            <input
-              ref={inputRef}
-              type="text"
-              name={name}
-              value={value}
-              onChange={onChange}
-              placeholder={placeholder}
-              disabled={disabled}
-              className={baseClasses}
-              autoComplete="off"
-            />
+      {/* Custom Dropdown */}
+      <div className="relative" ref={dropdownRef}>
+        {/* Trigger Button */}
+        <button
+          type="button"
+          onClick={() => !disabled && !loading && setIsOpen(!isOpen)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled || loading}
+          className={triggerClasses}
+        >
+          <span className={getDisplayValue() ? '' : 'text-gray-500 dark:text-gray-400'}>
+            {loading ? 'Loading options...' : (getDisplayValue() || placeholder)}
+          </span>
+          <HiChevronDown
+            className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+              isOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
 
-            {/* Toggle back to select if choices are available */}
-            {choices.length > 0 && (
-              <button
-                type="button"
-                onClick={toggleInputMode}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                disabled={disabled}
-              >
-                ← Switch to dropdown
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <select
-              ref={selectRef}
-              name={name}
-              value={value}
-              onChange={onChange}
-              onFocus={handleInteraction}
-              onClick={handleInteraction}
-              disabled={disabled || loading}
-              className={`${baseClasses} ${loading ? 'cursor-wait' : 'cursor-pointer'}`}
-            >
-              <option value="">
-                {loading ? 'Loading options...' : placeholder}
-              </option>
+        {/* Dropdown Panel */}
+        {isOpen && !loading && choices.length > 0 && (
+          <div className="
+            absolute z-50 mt-2 w-full
+            transform transition-all duration-200 ease-out origin-top
+          ">
+            <div className="
+              bg-white dark:bg-gray-800
+              rounded-xl
+              shadow-xl
+              border border-gray-200 dark:border-gray-600
+              overflow-hidden
+            ">
+              {/* Search Bar */}
+              {searchable && choices.length > 5 && (
+                <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="relative">
+                    <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setHighlightedIndex(0);
+                      }}
+                      placeholder="Search..."
+                      className="
+                        w-full pl-9 pr-3 py-2
+                        bg-gray-50 dark:bg-gray-900
+                        text-gray-700 dark:text-gray-200
+                        border border-gray-200 dark:border-gray-600
+                        rounded-lg text-sm
+                        placeholder-gray-500 dark:placeholder-gray-400
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                        focus:border-blue-500 dark:focus:border-blue-400
+                        transition-all duration-200
+                      "
+                      onKeyDown={handleKeyDown}
+                    />
+                  </div>
+                </div>
+              )}
 
-              {filteredChoices.map((choice) => (
-                <option key={choice.value} value={choice.value}>
-                  {choice.label}
-                </option>
-              ))}
-            </select>
-
-            {/* Loading indicator */}
-            {loading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              {/* Options List */}
+              <div className="max-h-64 overflow-y-auto">
+                {filteredChoices.length > 0 ? (
+                  filteredChoices.map((choice, index) => (
+                    <button
+                      key={choice.value}
+                      type="button"
+                      onClick={() => handleSelect(choice.value)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                      className={`
+                        w-full px-4 py-3 text-left
+                        flex items-center justify-between
+                        transition-colors duration-150
+                        text-gray-700 dark:text-gray-200
+                        cursor-pointer
+                        ${value === choice.value
+                          ? 'bg-blue-500 text-white hover:bg-blue-600'
+                          : highlightedIndex === index
+                          ? 'bg-gray-100 dark:bg-gray-700'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        }
+                      `}
+                    >
+                      <span className="font-medium">{choice.label}</span>
+                      {value === choice.value && (
+                        <HiCheck className="text-white text-lg" />
+                      )}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                    No options found for "{searchTerm}"
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Toggle to text input */}
-            <button
-              type="button"
-              onClick={toggleInputMode}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
-              disabled={disabled}
-            >
-              Type manually instead →
-            </button>
+        {/* Loading indicator */}
+        {loading && (
+          <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
           </div>
         )}
       </div>
@@ -205,7 +324,7 @@ const LazySelect: React.FC<LazySelectProps> = ({
         <p className="text-red-500 text-sm mt-1">{error}</p>
       )}
 
-      {/* Load error with retry option */}
+      {/* Load error with retry */}
       {loadError && !showTextInput && (
         <div className="text-amber-600 dark:text-amber-400 text-xs mt-1 space-y-1">
           <p>{loadError}</p>
@@ -213,7 +332,6 @@ const LazySelect: React.FC<LazySelectProps> = ({
             type="button"
             onClick={() => {
               setLoadError(null);
-              setHasAttemptedLoad(false);
               loadChoices();
             }}
             className="underline hover:no-underline"
@@ -222,13 +340,6 @@ const LazySelect: React.FC<LazySelectProps> = ({
             Retry loading options
           </button>
         </div>
-      )}
-
-      {/* Offline indicator */}
-      {hasOfflineChoices && !loading && choices.length > 0 && (
-        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-          ✓ Options cached offline
-        </p>
       )}
     </div>
   );

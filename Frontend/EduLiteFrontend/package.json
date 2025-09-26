@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npm run copy-choices && vite",
+    "build": "npm run copy-choices && vite build",
+    "copy-choices": "cp -r ../../project_choices_data public/",
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
