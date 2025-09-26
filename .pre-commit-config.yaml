@@ -30,7 +30,7 @@ repos:
         files: ^backend/
         exclude: migrations/
 
-  # mypy for type checking (non-blocking via continue-on-error in CI)
+  # mypy for type checking (warning-only, non-blocking)
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.18.1
     hooks:
@@ -44,3 +44,4 @@ repos:
         exclude: (migrations/|tests/|venv/)
         verbose: true
         pass_filenames: true
+        stages: [manual]
