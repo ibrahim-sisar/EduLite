@@ -39,8 +39,8 @@ class UserProfileModelTest(UsersModelTestCase):
         self.assertIsNone(profile.bio)
         self.assertIsNone(profile.occupation)
         self.assertIsNone(profile.country)
-        self.assertIsNone(profile.preferred_language)
-        self.assertIsNone(profile.secondary_language)
+        self.assertEqual(profile.preferred_language, "en")  # Default is "en"
+        self.assertEqual(profile.secondary_language, "ar")  # Default is "ar"
         self.assertFalse(profile.picture)
         self.assertIsNone(profile.website_url)
         self.assertEqual(profile.friends.count(), 0)

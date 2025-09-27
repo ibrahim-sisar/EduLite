@@ -110,7 +110,7 @@ const SignUpPage = () => {
         login(access, refresh);
 
         toast.success("Welcome to EduLite! 🚀");
-        navigate("/");
+        navigate("/profile");
       } catch (loginErr) {
         // If auto-login fails, redirect to login page
         toast.success("Please log in with your new account");

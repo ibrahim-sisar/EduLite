@@ -43,11 +43,11 @@ class UserProfile(models.Model):
     )
     # the website can load auto-translated based on preferred language
     preferred_language = models.CharField(
-        max_length=64, choices=LANGUAGE_CHOICES, blank=True, null=True
+        max_length=64, choices=LANGUAGE_CHOICES, blank=True, null=True, default="en"
     )
     # secondary language to fall back on
     secondary_language = models.CharField(
-        max_length=64, choices=LANGUAGE_CHOICES, blank=True, null=True
+        max_length=64, choices=LANGUAGE_CHOICES, blank=True, null=True, default="ar"
     )
     picture = models.ImageField(
         upload_to="profile_pics", blank=True, null=True

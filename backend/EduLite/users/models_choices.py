@@ -6,8 +6,8 @@ from django.conf import settings
 
 from typing import List
 
-# get the parent of the BASE_DIR
-CHOICES_DATA_DIR = Path(settings.BASE_DIR).parent / "project_choices_data"
+# get the parent of the parent of BASE_DIR (project root)
+CHOICES_DATA_DIR = Path(settings.BASE_DIR).parent.parent / "project_choices_data"
 
 
 def load_choices_from_json(filename: str) -> List[tuple]:

@@ -54,6 +54,38 @@ class ProfileSerializer(
         help_text="List of user IDs who are friends",
     )
 
+    # Explicitly define optional fields to allow empty strings and nulls
+    bio = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, max_length=1000
+    )
+    occupation = serializers.ChoiceField(
+        choices=UserProfile._meta.get_field("occupation").choices,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    country = serializers.ChoiceField(
+        choices=UserProfile._meta.get_field("country").choices,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    preferred_language = serializers.ChoiceField(
+        choices=UserProfile._meta.get_field("preferred_language").choices,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    secondary_language = serializers.ChoiceField(
+        choices=UserProfile._meta.get_field("secondary_language").choices,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    website_url = serializers.URLField(
+        required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = UserProfile
         fields = [
@@ -272,6 +304,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
         default=[],
         help_text="List of group IDs the user belongs to",
     )
+
+    # Explicitly define optional fields to allow empty strings and nulls
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
 
     class Meta:
         model = User

@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../contexts/AuthContext";
+import ConfirmationModal from "./common/ConfirmationModal";
 import {
   HiX,
   HiHome,
@@ -9,18 +12,30 @@ import {
   HiUser,
   HiCog,
 } from "react-icons/hi";
+import { FaSignOutAlt } from "react-icons/fa";
+import { HiArrowRightOnRectangle } from "react-icons/hi2";
 
 export default function SidebarMenu({ open, onClose }) {
   const { t, i18n } = useTranslation();
+  const { isLoggedIn, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const direction = i18n.dir();
   const side = direction === "rtl" ? "left-0" : "right-0";
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    onClose(); // Close sidebar after logout
+  };
 
   const menuItems = [
     { to: "/", label: t("nav.home"), icon: HiHome },
     { to: "/about", label: t("nav.about"), icon: HiInformationCircle },
     { to: "/conversations", label: t("nav.conversations"), icon: HiChatAlt2 },
     { to: "/chapters", label: t("nav.chapters"), icon: HiBookOpen },
-    { to: "/profile", label: t("nav.profile"), icon: HiUser },
     { to: "/settings", label: t("nav.settings"), icon: HiCog },
   ];
 
@@ -80,6 +95,38 @@ export default function SidebarMenu({ open, onClose }) {
           </nav>
         </div>
 
+        {/* Profile & Logout Section - Only show when logged in */}
+        {isLoggedIn && (
+          <div className="px-4 py-4 border-t border-gray-200/30 dark:border-gray-700/30 space-y-2">
+            {/* Profile Button */}
+            <Link
+              to="/profile"
+              onClick={onClose}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 transition group cursor-pointer"
+            >
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-500 transition">
+                <HiUser className="text-lg text-blue-600 dark:text-blue-400 group-hover:text-white" />
+              </div>
+              <span className="font-medium text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300">
+                {t("nav.profile")}
+              </span>
+            </Link>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 dark:bg-red-500/10 dark:hover:bg-red-500/20 transition group cursor-pointer"
+            >
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 group-hover:bg-red-500 transition">
+                <FaSignOutAlt className="text-lg text-red-600 dark:text-red-400 group-hover:text-white" />
+              </div>
+              <span className="font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300">
+                {t("nav.logout", "Sign Out")}
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200/30 dark:border-gray-700/30">
           <div className="text-center">
@@ -92,6 +139,19 @@ export default function SidebarMenu({ open, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+        icon={<HiArrowRightOnRectangle className="w-12 h-12 text-red-600 dark:text-red-400" />}
+      />
     </>
   );
 }

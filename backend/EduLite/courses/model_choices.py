@@ -25,7 +25,7 @@ COURSE_MEMBERSHIP_STATUS = [
     ("invited", "Invited"),
 ]
 
-CHOICES_DATA_DIR = Path(settings.BASE_DIR).parent / "project_choices_data"
+CHOICES_DATA_DIR = Path(settings.BASE_DIR).parent.parent / "project_choices_data"
 
 
 def load_choices_from_json(file_name: str) -> List[tuple]:

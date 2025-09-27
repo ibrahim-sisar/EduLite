@@ -98,7 +98,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               w-full px-6 ${compact ? "py-3" : "py-4"} text-lg font-light
               bg-white/80 dark:bg-gray-800/40
               backdrop-blur-xl
-              border border-gray-200/50 dark:border-gray-700/30
+              border ${className && className.includes('border-red') ? className : 'border-gray-200/50 dark:border-gray-700/30'}
               rounded-2xl
               shadow-lg shadow-gray-200/20 dark:shadow-gray-900/20
               transition-all duration-300 ease-out
@@ -125,6 +125,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ${
                 error
                   ? "border-red-500/50 dark:border-red-400/50 bg-red-50/50 dark:bg-red-900/10 focus:ring-red-500/50 dark:focus:ring-red-400/50 focus:border-red-500/50 dark:focus:border-red-400/50"
+                  : className && className.includes('border-red')
+                  ? ""
                   : ""
               }
             `}
