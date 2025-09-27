@@ -29,7 +29,11 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'friends' | 'notes' | 'chats' | 'courses' | 'settings'>('friends');
+  const [activeTab, setActiveTab] = useState<'friends' | 'notes' | 'chats' | 'courses' | 'settings'>(() => {
+    // Load saved tab from localStorage or default to 'friends'
+    const savedTab = localStorage.getItem('profileActiveTab');
+    return (savedTab as 'friends' | 'notes' | 'chats' | 'courses' | 'settings') || 'friends';
+  });
   const [showNavigationModal, setShowNavigationModal] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
@@ -77,6 +81,11 @@ const ProfilePage: React.FC = () => {
       blockerRef.current.reset();
     }
   };
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('profileActiveTab', activeTab);
+  }, [activeTab]);
 
   // Load user data on component mount
   useEffect(() => {

@@ -67,6 +67,7 @@ const RootLayout = () => {
         }}
       />
     </div>
+    </>
   );
 };
 
@@ -79,23 +80,23 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />
+        element: <Home />,
       },
       {
         path: "about",
-        element: <AboutPage />
+        element: <AboutPage />,
       },
       {
         path: "button-demo",
-        element: <ButtonDemo />
+        element: <ButtonDemo />,
       },
       {
         path: "login",
-        element: <LoginPage />
+        element: <LoginPage />,
       },
       {
         path: "signup",
-        element: <SignUpPage />
+        element: <SignUpPage />,
       },
       {
         path: "profile",
@@ -107,17 +108,15 @@ const router = createBrowserRouter([
       },
       {
         path: "input-demo",
-        element: <InputDemo />
+        element: <InputDemo />,
       },
-      {fuck
-1/1
-shit
+      {
         path: "input-component-doc",
-        element: <InputComponentDoc />
+        element: <InputComponentDoc />,
       },
       {
         path: "*",
-        element: <NotFoundPage />
+        element: <NotFoundPage />,
       }
     ]
   }

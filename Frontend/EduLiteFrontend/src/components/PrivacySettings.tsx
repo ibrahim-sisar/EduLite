@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaLock, FaEye, FaUserShield, FaEnvelope, FaUserPlus, FaComments } from "react-icons/fa";
 import toast from "react-hot-toast";
+import HardLoadSelect from "./common/HardLoadSelect";
 import {
   getPrivacySettings,
   updatePrivacySettings,
@@ -15,6 +16,7 @@ const PrivacySettings: React.FC = () => {
   const [choices, setChoices] = useState<PrivacyChoices | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadPrivacyData = async () => {
@@ -47,12 +49,18 @@ const PrivacySettings: React.FC = () => {
     }
   };
 
+  const handleBlur = (field: string) => {
+    setTouchedFields(prev => new Set(prev).add(field));
+  };
+
   const handleToggleChange = (field: keyof PrivacySettingsType) => {
     if (settings) {
       setSettings({
         ...settings,
         [field]: !settings[field]
       });
+      // Mark field as touched when toggled
+      setTouchedFields(prev => new Set(prev).add(field));
     }
   };
 
@@ -66,6 +74,7 @@ const PrivacySettings: React.FC = () => {
       const updatedSettings = await updatePrivacySettings(settings);
       setSettings(updatedSettings);
       setOriginalSettings(updatedSettings);
+      setTouchedFields(new Set()); // Clear touched fields after save
       toast.success("Privacy settings updated successfully!");
     } catch (error: any) {
       console.error("Failed to update privacy settings:", error);
@@ -78,6 +87,7 @@ const PrivacySettings: React.FC = () => {
   const handleReset = () => {
     if (originalSettings) {
       setSettings(originalSettings);
+      setTouchedFields(new Set()); // Clear touched fields on reset
     }
   };
 
