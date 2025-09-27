@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useNavigate, useBlocker } from "react-router-dom";
-import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap } from "react-icons/fa";
+import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap, FaChevronDown, FaChevronUp, FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
+import DeleteAccountModal from "../components/DeleteAccountModal";
 import PrivacySettings from "../components/PrivacySettings";
 import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
 import { choicesService } from "../services/choicesService";
@@ -14,6 +15,7 @@ import {
   getUserProfile,
   updateUserProfile,
   uploadProfilePicture,
+  deleteUserAccount,
   type User,
   type UserProfile,
   type ProfileUpdateRequest
@@ -36,6 +38,9 @@ const ProfilePage: React.FC = () => {
   });
   const [showNavigationModal, setShowNavigationModal] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+  const [showHiddenOptions, setShowHiddenOptions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Refs for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -299,6 +304,22 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteUserAccount();
+      toast.success("Account deleted successfully");
+      logout();
+      navigate("/");
+    } catch (error: any) {
+      console.error("Failed to delete account:", error);
+      toast.error(error.message || "Failed to delete account");
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   // Show loading spinner while fetching data (matching LoginPage pattern)
   if (loading) {
     return (
@@ -551,6 +572,38 @@ const ProfilePage: React.FC = () => {
                   <span className="font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300">Sign Out</span>
                 </button>
               </div>
+
+              {/* Hidden Options Section */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowHiddenOptions(!showHiddenOptions)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200"
+                >
+                  <span className="text-sm font-medium">Hidden Options</span>
+                  {showHiddenOptions ? (
+                    <FaChevronUp className="text-sm" />
+                  ) : (
+                    <FaChevronDown className="text-sm" />
+                  )}
+                </button>
+
+                {/* Collapsible content */}
+                <div className={`overflow-hidden transition-all duration-300 ${
+                  showHiddenOptions ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                  <div className="pt-4">
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-red-600/10 hover:bg-red-600/20 dark:bg-red-600/10 dark:hover:bg-red-600/20 transition group cursor-pointer"
+                    >
+                      <FaTrash className="text-lg text-red-700 dark:text-red-400 group-hover:text-red-800 dark:group-hover:text-red-300" />
+                      <span className="font-medium text-red-700 dark:text-red-400 group-hover:text-red-800 dark:group-hover:text-red-300">
+                        Delete Account
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -668,6 +721,14 @@ const ProfilePage: React.FC = () => {
         onConfirm={handleConfirmNavigation}
         onCancel={handleCancelNavigation}
         message="You have unsaved changes. Are you sure you want to leave?"
+      />
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        isDeleting={deleting}
       />
     </div>
   );

@@ -68,13 +68,13 @@ const HardLoadSelect: React.FC<HardLoadSelectProps> = ({
       <div className="relative">
         <select
           name={name}
-          value={value}
+          value={value || ''}
           onChange={onChange}
           onBlur={onBlur}
           disabled={disabled}
           className={selectClasses}
         >
-          {placeholder && (
+          {!value && placeholder && (
             <option value="" disabled>
               {placeholder}
             </option>

@@ -205,5 +205,16 @@ export const getPrivacyChoices = async (): Promise<PrivacyChoices> => {
   }
 };
 
+// Delete user account
+export const deleteUserAccount = async (): Promise<void> => {
+  try {
+    await axios.delete(`${API_BASE_URL}/users/me/`, {
+      timeout: 10000,
+    });
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || "Failed to delete account");
+  }
+};
+
 // Export types for use in components
 export type { User, UserProfile, ProfileData, ProfileUpdateRequest, PrivacySettings, PrivacyChoices };

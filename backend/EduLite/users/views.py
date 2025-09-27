@@ -1864,8 +1864,9 @@ class EmailVerificationView(UsersAppBaseAPIView):
 )
 class CurrentUserView(UsersAppBaseAPIView):
     """
-    API view to get the current authenticated user's information.
+    API view to get or delete the current authenticated user's information.
     - GET: Returns current user's basic info
+    - DELETE: Deletes the current user's account
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -1874,6 +1875,69 @@ class CurrentUserView(UsersAppBaseAPIView):
         """Get current user's basic information"""
         serializer = UserSerializer(request.user, context=self.get_serializer_context())
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary="Delete current user account",
+        description="Delete the authenticated user's account. This action is permanent and cannot be undone.",
+        responses={
+            202: OpenApiResponse(
+                description="Account deleted successfully",
+                response=inline_serializer(
+                    name="DeleteAccountSuccessResponse",
+                    fields={"message": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample(
+                        "Success",
+                        value={
+                            "message": "Your account has been deleted successfully."
+                        },
+                    )
+                ],
+            ),
+            401: OpenApiResponse(description="Unauthorized - authentication required"),
+            500: OpenApiResponse(
+                description="Server error",
+                response=inline_serializer(
+                    name="DeleteAccountErrorResponse",
+                    fields={"message": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample(
+                        "Delete Failed",
+                        value={
+                            "message": "Failed to delete account. Please try again."
+                        },
+                    )
+                ],
+            ),
+        },
+        tags=["Current User"],
+    )
+    def delete(self, request, *args, **kwargs):
+        """Delete current user's account"""
+        user = request.user
+        username = user.username  # Store for logging
+
+        try:
+            # Log the deletion attempt
+            logger.info(f"User {username} (ID: {user.id}) is deleting their account")
+
+            # Delete the user (this will cascade delete related objects)
+            user.delete()
+
+            logger.info(f"Successfully deleted account for user {username}")
+
+            return Response(
+                {"message": "Your account has been deleted successfully."},
+                status=status.HTTP_202_ACCEPTED,
+            )
+        except Exception as e:
+            logger.error(f"Failed to delete account for user {username}: {str(e)}")
+            return Response(
+                {"message": "Failed to delete account. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 @extend_schema(

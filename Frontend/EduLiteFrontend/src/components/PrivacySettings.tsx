@@ -126,42 +126,34 @@ const PrivacySettings: React.FC = () => {
 
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Search Visibility
-              </label>
-              <select
+              <HardLoadSelect
+                label="Search Visibility"
+                name="search_visibility"
                 value={settings.search_visibility}
                 onChange={(e) => handleSelectChange('search_visibility', e.target.value)}
+                onBlur={() => handleBlur('search_visibility')}
                 disabled={saving}
-                className="w-full px-3 py-2 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-all duration-200"
-              >
-                {choices.search_visibility.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                choices={choices.search_visibility}
+                hasChanged={settings.search_visibility !== originalSettings?.search_visibility}
+                isTouched={touchedFields.has('search_visibility')}
+              />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Who can find you through search
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Profile Visibility
-              </label>
-              <select
+              <HardLoadSelect
+                label="Profile Visibility"
+                name="profile_visibility"
                 value={settings.profile_visibility}
                 onChange={(e) => handleSelectChange('profile_visibility', e.target.value)}
+                onBlur={() => handleBlur('profile_visibility')}
                 disabled={saving}
-                className="w-full px-3 py-2 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50 transition-all duration-200"
-              >
-                {choices.profile_visibility.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                choices={choices.profile_visibility}
+                hasChanged={settings.profile_visibility !== originalSettings?.profile_visibility}
+                isTouched={touchedFields.has('profile_visibility')}
+              />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Who can view your profile
               </p>
@@ -193,10 +185,14 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('show_full_name')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
                   settings.show_full_name
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
+                } ${
+                  touchedFields.has('show_full_name') && settings.show_full_name !== originalSettings?.show_full_name
+                    ? 'ring-2 ring-red-300 dark:ring-red-500/50'
+                    : ''
                 }`}
               >
                 <span
@@ -223,10 +219,14 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('show_email')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
                   settings.show_email
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
+                } ${
+                  touchedFields.has('show_email') && settings.show_email !== originalSettings?.show_email
+                    ? 'ring-2 ring-red-300 dark:ring-red-500/50'
+                    : ''
                 }`}
               >
                 <span
@@ -263,10 +263,14 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('allow_friend_requests')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
                   settings.allow_friend_requests
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
+                } ${
+                  touchedFields.has('allow_friend_requests') && settings.allow_friend_requests !== originalSettings?.allow_friend_requests
+                    ? 'ring-2 ring-red-300 dark:ring-red-500/50'
+                    : ''
                 }`}
               >
                 <span
@@ -293,10 +297,14 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('allow_chat_invites')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
                   settings.allow_chat_invites
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
+                } ${
+                  touchedFields.has('allow_chat_invites') && settings.allow_chat_invites !== originalSettings?.allow_chat_invites
+                    ? 'ring-2 ring-red-300 dark:ring-red-500/50'
+                    : ''
                 }`}
               >
                 <span
