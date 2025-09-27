@@ -302,19 +302,24 @@ class CreateDummyUsersCommandTest(TestCase):
         new_users = User.objects.order_by("-date_joined")[:20]
 
         # Check that at least some users have optional fields
-        users_with_secondary_language = 0
+        users_with_non_default_secondary_language = 0
         users_with_picture = 0
 
         for user in new_users:
-            if user.profile.secondary_language:
-                users_with_secondary_language += 1
+            # Check for secondary languages that are not the default "ar"
+            if (
+                user.profile.secondary_language
+                and user.profile.secondary_language != "ar"
+            ):
+                users_with_non_default_secondary_language += 1
             if user.profile.picture:
                 users_with_picture += 1
 
         # With 20 users and 50% probability, we expect some to have these fields
         # But not all (very unlikely all 20 would have or not have them)
-        self.assertGreater(users_with_secondary_language, 0)
-        self.assertLess(users_with_secondary_language, 20)
+        # Note: All users now have secondary_language="ar" by default, so we check for non-default values
+        self.assertGreater(users_with_non_default_secondary_language, 0)
+        self.assertLess(users_with_non_default_secondary_language, 20)
 
     def test_command_output_format(self):
         """Test that command output follows expected format."""

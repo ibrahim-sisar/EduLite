@@ -1,7 +1,9 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const TOKEN_REFRESH_BUFFER = Number(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 30;
+const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === 'true';
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = "access";
@@ -13,6 +15,10 @@ let failedQueue: Array<{
   resolve: (token: string) => void;
   reject: (error: any) => void;
 }> = [];
+
+// Flags to prevent multiple logout notifications
+let hasShownSessionExpiredMessage = false;
+let logoutInProgress = false;
 
 // Process queued requests after token refresh
 const processQueue = (error: any, token: string | null = null) => {
@@ -27,22 +33,33 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// JWT token utilities
+// Select storage mechanism based on configuration
+const getStorage = () => {
+  return USE_SESSION_STORAGE ? sessionStorage : localStorage;
+};
+
+// JWT token utilities with configurable storage
 export const getStoredTokens = (): { access: string | null; refresh: string | null } => {
+  const storage = getStorage();
   return {
-    access: localStorage.getItem(ACCESS_TOKEN_KEY),
-    refresh: localStorage.getItem(REFRESH_TOKEN_KEY),
+    access: storage.getItem(ACCESS_TOKEN_KEY),
+    refresh: storage.getItem(REFRESH_TOKEN_KEY),
   };
 };
 
 export const setStoredTokens = (access: string, refresh: string): void => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, access);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+  const storage = getStorage();
+  storage.setItem(ACCESS_TOKEN_KEY, access);
+  storage.setItem(REFRESH_TOKEN_KEY, refresh);
+  // Reset the session expired flag when new tokens are set
+  hasShownSessionExpiredMessage = false;
+  logoutInProgress = false;
 };
 
 export const clearStoredTokens = (): void => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  const storage = getStorage();
+  storage.removeItem(ACCESS_TOKEN_KEY);
+  storage.removeItem(REFRESH_TOKEN_KEY);
 };
 
 // Check if a JWT token is expired
@@ -53,10 +70,10 @@ export const isTokenExpired = (token: string): boolean => {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Math.floor(Date.now() / 1000);
 
-    // Check if token expires in the next 30 seconds (proactive refresh)
-    return payload.exp < (currentTime + 30);
+    // Check if token expires in the next buffer time (proactive refresh)
+    return payload.exp < (currentTime + TOKEN_REFRESH_BUFFER);
   } catch (error) {
-    console.error("Error parsing JWT token:", error);
+    // Silent fail - token is considered expired if we can't parse it
     return true;
   }
 };
@@ -88,12 +105,11 @@ export const refreshAccessToken = async (): Promise<string> => {
     const { access } = response.data;
 
     // Update stored access token
-    localStorage.setItem(ACCESS_TOKEN_KEY, access);
+    const storage = getStorage();
+    storage.setItem(ACCESS_TOKEN_KEY, access);
 
     return access;
   } catch (error: any) {
-    console.error("Failed to refresh token:", error);
-
     // Clear tokens if refresh fails
     clearStoredTokens();
 
@@ -163,7 +179,6 @@ export const setupAxiosInterceptors = (): void => {
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (error) {
-        console.error("Failed to get valid access token:", error);
         // Don't block the request, let it fail naturally
       }
 
@@ -201,12 +216,22 @@ export const setupAxiosInterceptors = (): void => {
           // Retry the original request
           return axios(originalRequest);
         } catch (refreshError) {
-          console.error("Token refresh failed:", refreshError);
+          // Only show logout message once to prevent spam
+          if (onLogoutHandler && !logoutInProgress) {
+            logoutInProgress = true;
 
-          // If refresh fails, logout user
-          if (onLogoutHandler) {
+            if (!hasShownSessionExpiredMessage) {
+              hasShownSessionExpiredMessage = true;
+              toast.error("Session expired. Please log in again.");
+            }
+
             onLogoutHandler();
-            toast.error("Session expired. Please log in again.");
+
+            // Reset flags after a delay to allow for new sessions
+            setTimeout(() => {
+              hasShownSessionExpiredMessage = false;
+              logoutInProgress = false;
+            }, 3000);
           }
 
           return Promise.reject(refreshError);
@@ -238,4 +263,8 @@ export const shouldBeAuthenticated = (): boolean => {
 // Initialize token service (call this in app startup)
 export const initializeTokenService = (): void => {
   setupAxiosInterceptors();
+
+  // Reset flags on initialization
+  hasShownSessionExpiredMessage = false;
+  logoutInProgress = false;
 };

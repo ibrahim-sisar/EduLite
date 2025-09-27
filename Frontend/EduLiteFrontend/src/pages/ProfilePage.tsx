@@ -3,6 +3,7 @@ import { useNavigate, useBlocker } from "react-router-dom";
 import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap, FaChevronDown, FaChevronUp, FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import ConfirmationModal from "../components/common/ConfirmationModal";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
@@ -41,6 +42,8 @@ const ProfilePage: React.FC = () => {
   const [showHiddenOptions, setShowHiddenOptions] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showUnsavedLogoutModal, setShowUnsavedLogoutModal] = useState(false);
 
   // Refs for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,12 +111,15 @@ const ProfilePage: React.FC = () => {
         setProfileData(profileData);
 
         // Initialize form data with current profile values
+        // Use defaults for language fields if they're null/empty
         const initialFormData = {
+          first_name: userInfoData.first_name || '',
+          last_name: userInfoData.last_name || '',
           bio: profileData.bio || '',
           occupation: profileData.occupation || '',
           country: profileData.country || '',
-          preferred_language: profileData.preferred_language || '',
-          secondary_language: profileData.secondary_language || '',
+          preferred_language: profileData.preferred_language || 'en',
+          secondary_language: profileData.secondary_language || 'ar',
           website_url: profileData.website_url || ''
         };
 
@@ -292,16 +298,15 @@ const ProfilePage: React.FC = () => {
   const handleLogout = () => {
     // Check for unsaved changes before logout
     if (isDirty) {
-      // Use browser's native confirm dialog
-      const confirmed = window.confirm("You have unsaved changes. Are you sure you want to logout without saving?");
-      if (confirmed) {
-        logout();
-        navigate("/");
-      }
+      setShowUnsavedLogoutModal(true);
     } else {
-      logout();
-      navigate("/");
+      setShowLogoutModal(true);
     }
+  };
+
+  const confirmLogout = () => {
+    logout();
+    navigate("/");
   };
 
   // Handle account deletion
@@ -423,6 +428,43 @@ const ProfilePage: React.FC = () => {
 
           {/* Profile Form Section - Following LoginPage form patterns */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="First Name"
+                name="first_name"
+                type="text"
+                value={formData.first_name || ""}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="Optional"
+                disabled={saving}
+                error={errors.first_name}
+                className={
+                  touchedFields.has('first_name') && formData.first_name !== originalFormData.first_name
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
+              />
+
+              <Input
+                label="Last Name"
+                name="last_name"
+                type="text"
+                value={formData.last_name || ""}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="Optional"
+                disabled={saving}
+                error={errors.last_name}
+                className={
+                  touchedFields.has('last_name') && formData.last_name !== originalFormData.last_name
+                    ? 'border-red-300 dark:border-red-500/50'
+                    : ''
+                }
+              />
+            </div>
+
             {/* Bio Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -729,6 +771,30 @@ const ProfilePage: React.FC = () => {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteAccount}
         isDeleting={deleting}
+      />
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+      />
+
+      {/* Unsaved Changes Logout Modal */}
+      <ConfirmationModal
+        isOpen={showUnsavedLogoutModal}
+        onClose={() => setShowUnsavedLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to logout without saving?"
+        confirmText="Logout Without Saving"
+        cancelText="Go Back"
+        confirmButtonClass="bg-orange-600 hover:bg-orange-700 text-white"
       />
     </div>
   );

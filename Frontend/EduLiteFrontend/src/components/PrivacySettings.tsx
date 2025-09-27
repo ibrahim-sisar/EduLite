@@ -5,30 +5,39 @@ import HardLoadSelect from "./common/HardLoadSelect";
 import {
   getPrivacySettings,
   updatePrivacySettings,
-  getPrivacyChoices,
-  type PrivacySettings as PrivacySettingsType,
-  type PrivacyChoices
+  type PrivacySettings as PrivacySettingsType
 } from "../services/profileApi";
+
+// Hardcoded privacy choices based on backend models
+// These match the Django model definitions in users/models.py
+const PRIVACY_CHOICES = {
+  search_visibility: [
+    ['everyone', 'Everyone'],
+    ['friends_of_friends', 'Friends of Friends'],
+    ['friends_only', 'Friends Only'],
+    ['nobody', 'Nobody']
+  ] as Array<[string, string]>,
+  profile_visibility: [
+    ['public', 'Public'],
+    ['friends_only', 'Friends Only'],
+    ['private', 'Private']
+  ] as Array<[string, string]>
+};
 
 const PrivacySettings: React.FC = () => {
   const [settings, setSettings] = useState<PrivacySettingsType | null>(null);
   const [originalSettings, setOriginalSettings] = useState<PrivacySettingsType | null>(null);
-  const [choices, setChoices] = useState<PrivacyChoices | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const loadPrivacyData = async () => {
+    const loadPrivacySettings = async () => {
       try {
         setLoading(true);
-        const [settingsData, choicesData] = await Promise.all([
-          getPrivacySettings(),
-          getPrivacyChoices()
-        ]);
+        const settingsData = await getPrivacySettings();
         setSettings(settingsData);
         setOriginalSettings(settingsData);
-        setChoices(choicesData);
       } catch (error) {
         console.error("Failed to load privacy settings:", error);
         toast.error("Failed to load privacy settings");
@@ -37,7 +46,7 @@ const PrivacySettings: React.FC = () => {
       }
     };
 
-    loadPrivacyData();
+    loadPrivacySettings();
   }, []);
 
   const handleSelectChange = (field: keyof PrivacySettingsType, value: string) => {
@@ -99,7 +108,7 @@ const PrivacySettings: React.FC = () => {
     );
   }
 
-  if (!settings || !choices) {
+  if (!settings) {
     return (
       <div className="text-center p-8 text-gray-500 dark:text-gray-400">
         Failed to load privacy settings
@@ -133,7 +142,7 @@ const PrivacySettings: React.FC = () => {
                 onChange={(e) => handleSelectChange('search_visibility', e.target.value)}
                 onBlur={() => handleBlur('search_visibility')}
                 disabled={saving}
-                choices={choices.search_visibility}
+                choices={PRIVACY_CHOICES.search_visibility}
                 hasChanged={settings.search_visibility !== originalSettings?.search_visibility}
                 isTouched={touchedFields.has('search_visibility')}
               />
@@ -150,7 +159,7 @@ const PrivacySettings: React.FC = () => {
                 onChange={(e) => handleSelectChange('profile_visibility', e.target.value)}
                 onBlur={() => handleBlur('profile_visibility')}
                 disabled={saving}
-                choices={choices.profile_visibility}
+                choices={PRIVACY_CHOICES.profile_visibility}
                 hasChanged={settings.profile_visibility !== originalSettings?.profile_visibility}
                 isTouched={touchedFields.has('profile_visibility')}
               />
@@ -185,7 +194,7 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('show_full_name')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none disabled:opacity-50 cursor-pointer ${
                   settings.show_full_name
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
@@ -219,7 +228,7 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('show_email')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none disabled:opacity-50 cursor-pointer ${
                   settings.show_email
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
@@ -263,7 +272,7 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('allow_friend_requests')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none disabled:opacity-50 cursor-pointer ${
                   settings.allow_friend_requests
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'
@@ -297,7 +306,7 @@ const PrivacySettings: React.FC = () => {
                 type="button"
                 onClick={() => handleToggleChange('allow_chat_invites')}
                 disabled={saving}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 cursor-pointer ${
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none disabled:opacity-50 cursor-pointer ${
                   settings.allow_chat_invites
                     ? 'bg-blue-600'
                     : 'bg-gray-300 dark:bg-gray-600'

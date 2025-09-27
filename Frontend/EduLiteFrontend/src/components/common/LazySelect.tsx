@@ -82,7 +82,11 @@ const LazySelect: React.FC<LazySelectProps> = ({
         setShowTextInput(true);
         setLoadError(`No ${choiceType} options available.`);
       } else {
-        setChoices(data);
+        // Sort choices alphabetically by label for better UX
+        const sortedData = data.sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+        );
+        setChoices(sortedData);
       }
     } catch (error) {
       console.error(`Failed to load ${choiceType} choices:`, error);

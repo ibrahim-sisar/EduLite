@@ -6,7 +6,7 @@ interface HardLoadSelectProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onBlur?: (e: React.FocusEvent<HTMLSelectElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLSelectElement | HTMLButtonElement>) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
@@ -34,25 +34,43 @@ const HardLoadSelect: React.FC<HardLoadSelectProps> = ({
   hasChanged = false,
   isTouched = false
 }) => {
+  // Enhanced onChange handler that auto-triggers onBlur for better UX
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(e);
+    // Automatically trigger onBlur to mark field as touched immediately after selection
+    if (onBlur) {
+      // Create a synthetic blur event with proper name property for unsaved changes tracking
+      const syntheticEvent = {
+        ...e,
+        type: 'blur',
+        target: {
+          ...e.target,
+          name: name  // Ensure name is available for handleBlur in ProfilePage
+        }
+      } as React.FocusEvent<HTMLSelectElement>;
+      onBlur(syntheticEvent);
+    }
+  };
   // Determine border color based on state
   const getBorderClass = () => {
     if (error) return 'border-red-500 dark:border-red-500/50';
     if (isTouched && hasChanged) return 'border-red-300 dark:border-red-500/50';
-    return 'border-gray-200/50 dark:border-gray-700/30';
+    return 'border-gray-300 dark:border-gray-600';
   };
 
   const selectClasses = `
-    w-full px-3 py-2 pr-8
-    bg-white/80 dark:bg-gray-800/40
-    backdrop-blur-xl
+    w-full px-4 py-3 pr-10
+    bg-white dark:bg-gray-800
     border ${getBorderClass()}
     rounded-xl
-    text-gray-900 dark:text-white
+    shadow-sm
+    text-gray-700 dark:text-gray-200
     placeholder-gray-500 dark:placeholder-gray-400
-    focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-400/50
+    focus:outline-none
     transition-all duration-200
     appearance-none
-    ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+    font-medium
+    ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400 dark:hover:border-gray-500'}
     ${className}
   `;
 
@@ -69,7 +87,7 @@ const HardLoadSelect: React.FC<HardLoadSelectProps> = ({
         <select
           name={name}
           value={value || ''}
-          onChange={onChange}
+          onChange={handleChange}
           onBlur={onBlur}
           disabled={disabled}
           className={selectClasses}

@@ -261,7 +261,8 @@ class UserRegistrationViewTest(UsersAppTestCase):
         profile = user.profile
         self.assertIsNone(profile.bio)
         self.assertIsNone(profile.country)
-        self.assertIsNone(profile.preferred_language)
+        self.assertEqual(profile.preferred_language, "en")  # Default is "en"
+        self.assertEqual(profile.secondary_language, "ar")  # Default is "ar"
         self.assertEqual(profile.friends.count(), 0)
 
         # Privacy settings should exist with defaults

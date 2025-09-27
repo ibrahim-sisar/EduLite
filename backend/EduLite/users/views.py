@@ -1864,8 +1864,9 @@ class EmailVerificationView(UsersAppBaseAPIView):
 )
 class CurrentUserView(UsersAppBaseAPIView):
     """
-    API view to get or delete the current authenticated user's information.
+    API view to get, update, or delete the current authenticated user's information.
     - GET: Returns current user's basic info
+    - PATCH: Updates current user's basic info and profile
     - DELETE: Deletes the current user's account
     """
 
@@ -1936,6 +1937,167 @@ class CurrentUserView(UsersAppBaseAPIView):
             logger.error(f"Failed to delete account for user {username}: {str(e)}")
             return Response(
                 {"message": "Failed to delete account. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @extend_schema(
+        summary="Update current user info and profile",
+        description="Update the authenticated user's basic information and profile. Combines User model fields (first_name, last_name) and UserProfile fields in a single request.",
+        request=inline_serializer(
+            name="UserProfileUpdateRequest",
+            fields={
+                "first_name": serializers.CharField(
+                    required=False, help_text="User's first name"
+                ),
+                "last_name": serializers.CharField(
+                    required=False, help_text="User's last name"
+                ),
+                "bio": serializers.CharField(
+                    required=False, help_text="User bio/description"
+                ),
+                "occupation": serializers.CharField(
+                    required=False, help_text="User occupation"
+                ),
+                "country": serializers.CharField(
+                    required=False, help_text="Country code (e.g., 'US', 'AF')"
+                ),
+                "preferred_language": serializers.CharField(
+                    required=False, help_text="Language code (e.g., 'en', 'ar')"
+                ),
+                "secondary_language": serializers.CharField(
+                    required=False, help_text="Secondary language code"
+                ),
+                "website_url": serializers.URLField(
+                    required=False,
+                    help_text="Personal website URL (e.g., 'https://example.com')",
+                ),
+            },
+        ),
+        examples=[
+            OpenApiExample(
+                "Complete Update",
+                summary="Update both user and profile information",
+                description="Example of updating both User model fields and UserProfile fields",
+                value={
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "bio": "Computer Science student passionate about education technology",
+                    "occupation": "student",
+                    "country": "PS",
+                    "preferred_language": "ar",
+                    "secondary_language": "en",
+                    "website_url": "https://johndoe.example.com",
+                },
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="User and profile updated successfully",
+                response=UserSerializer,
+            ),
+            400: OpenApiResponse(description="Bad request - invalid data"),
+            401: OpenApiResponse(description="Unauthorized - authentication required"),
+        },
+        tags=["Current User"],
+    )
+    def patch(self, request, *args, **kwargs):
+        """Update current user's basic information and profile"""
+        user = request.user
+
+        # Debug logging
+        logger.info(f"PATCH /users/me/ - Request data: {request.data}")
+        print(f"DEBUG: PATCH /users/me/ - Request data: {request.data}")
+
+        # Separate user fields from profile fields
+        user_fields = {}
+        profile_fields = {}
+
+        # User model fields - convert None to empty string since User model doesn't accept null
+        if "first_name" in request.data:
+            value = request.data["first_name"]
+            user_fields["first_name"] = "" if value is None else value
+        if "last_name" in request.data:
+            value = request.data["last_name"]
+            user_fields["last_name"] = "" if value is None else value
+
+        # UserProfile model fields
+        for field in [
+            "bio",
+            "occupation",
+            "country",
+            "preferred_language",
+            "secondary_language",
+            "website_url",
+        ]:
+            if field in request.data:
+                profile_fields[field] = request.data[field]
+
+        logger.info(f"User fields to update: {user_fields}")
+        logger.info(f"Profile fields to update: {profile_fields}")
+        print(f"DEBUG: User fields: {user_fields}, Profile fields: {profile_fields}")
+
+        try:
+            # Update User model fields if provided
+            if user_fields:
+                user_serializer = UserSerializer(
+                    user,
+                    data=user_fields,
+                    partial=True,
+                    context=self.get_serializer_context(),
+                )
+                if user_serializer.is_valid():
+                    user_serializer.save()
+                    logger.info(f"User fields updated successfully")
+                else:
+                    logger.error(f"User serializer errors: {user_serializer.errors}")
+                    print(
+                        f"DEBUG: User serializer validation failed: {user_serializer.errors}"
+                    )
+                    return Response(
+                        user_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Update UserProfile fields if provided
+            if profile_fields:
+                from .models import UserProfile
+
+                profile = get_object_or_404(UserProfile, user=user)
+                profile_serializer = ProfileSerializer(
+                    profile,
+                    data=profile_fields,
+                    partial=True,
+                    context=self.get_serializer_context(),
+                )
+                if profile_serializer.is_valid():
+                    profile_serializer.save()
+                    logger.info(f"Profile fields updated successfully")
+                else:
+                    logger.error(
+                        f"Profile serializer errors: {profile_serializer.errors}"
+                    )
+                    print(
+                        f"DEBUG: Profile serializer validation failed: {profile_serializer.errors}"
+                    )
+                    return Response(
+                        profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # Return updated user data
+            user.refresh_from_db()
+            response_serializer = UserSerializer(
+                user, context=self.get_serializer_context()
+            )
+            logger.info(f"PATCH successful, returning updated user data")
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Failed to update user {user.username}: {str(e)}")
+            print(f"DEBUG: Exception in PATCH: {str(e)}")
+            import traceback
+
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
+            return Response(
+                {"message": "Failed to update user information. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

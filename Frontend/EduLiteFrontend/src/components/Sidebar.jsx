@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
+import ConfirmationModal from "./common/ConfirmationModal";
 import {
   HiX,
   HiHome,
@@ -11,14 +13,20 @@ import {
   HiCog,
 } from "react-icons/hi";
 import { FaSignOutAlt } from "react-icons/fa";
+import { HiArrowRightOnRectangle } from "react-icons/hi2";
 
 export default function SidebarMenu({ open, onClose }) {
   const { t, i18n } = useTranslation();
   const { isLoggedIn, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const direction = i18n.dir();
   const side = direction === "rtl" ? "left-0" : "right-0";
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     onClose(); // Close sidebar after logout
   };
@@ -131,6 +139,19 @@ export default function SidebarMenu({ open, onClose }) {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+        icon={<HiArrowRightOnRectangle className="w-12 h-12 text-red-600 dark:text-red-400" />}
+      />
     </>
   );
 }
