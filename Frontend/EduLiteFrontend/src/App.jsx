@@ -51,22 +51,22 @@ const RootLayout = () => {
         <Footer />
         <BackToTopButton />
 
-        {/* Toast notifications for login/logout feedback */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "16px",
-              color: "#374151",
-            },
-          }}
-        />
-      </div>
-    </>
+
+      {/* Toast notifications for login/logout feedback */}
+      <Toaster
+        position="bottom-left"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            borderRadius: "16px",
+            color: "#374151",
+          },
+        }}
+      />
+    </div>
   );
 };
 
@@ -109,7 +109,9 @@ const router = createBrowserRouter([
         path: "input-demo",
         element: <InputDemo />
       },
-      {
+      {fuck
+1/1
+shit
         path: "input-component-doc",
         element: <InputComponentDoc />
       },
