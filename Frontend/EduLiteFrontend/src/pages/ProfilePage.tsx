@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useNavigate, useBlocker } from "react-router-dom";
-import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap, FaLock } from "react-icons/fa";
+import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
+import PrivacySettings from "../components/PrivacySettings";
 import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
 import { choicesService } from "../services/choicesService";
 import {
@@ -28,7 +29,7 @@ const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'friends' | 'settings' | 'notes' | 'chats' | 'courses' | 'privacy'>('friends');
+  const [activeTab, setActiveTab] = useState<'friends' | 'notes' | 'chats' | 'courses' | 'settings'>('friends');
   const [showNavigationModal, setShowNavigationModal] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
@@ -563,18 +564,6 @@ const ProfilePage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
-                    activeTab === 'settings'
-                      ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                      : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
-                  }`}
-                >
-                  <FaCog className="text-lg" />
-                  <span className="font-medium">Settings</span>
-                </button>
-
-                <button
                   onClick={() => setActiveTab('notes')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
                     activeTab === 'notes'
@@ -611,49 +600,53 @@ const ProfilePage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('privacy')}
+                  onClick={() => setActiveTab('settings')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
-                    activeTab === 'privacy'
+                    activeTab === 'settings'
                       ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
                       : 'bg-gray-100/50 dark:bg-gray-700/30 text-gray-600 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-600/30'
                   }`}
                 >
-                  <FaLock className="text-lg" />
-                  <span className="font-medium">Privacy</span>
+                  <FaCog className="text-lg" />
+                  <span className="font-medium">Settings</span>
                 </button>
               </div>
 
               {/* Content Area */}
-              <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8">
-                <div className="mb-4">
-                  {activeTab === 'friends' && <FaUserFriends className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                  {activeTab === 'settings' && <FaCog className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                  {activeTab === 'notes' && <FaStickyNote className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                  {activeTab === 'chats' && <FaComments className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                  {activeTab === 'courses' && <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                  {activeTab === 'privacy' && <FaLock className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
-                </div>
+              <div className="min-h-[300px]">
+                {activeTab === 'settings' ? (
+                  <PrivacySettings />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center p-8">
+                    <div className="mb-4">
+                      {activeTab === 'friends' && <FaUserFriends className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                      {activeTab === 'notes' && <FaStickyNote className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                      {activeTab === 'chats' && <FaComments className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                      {activeTab === 'courses' && <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />}
+                    </div>
 
-                <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2 capitalize">
-                  {activeTab} in Profile
-                </h3>
+                    <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2 capitalize">
+                      {activeTab} in Profile
+                    </h3>
 
-                <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
-                  Coming Soon!
-                </p>
+                    <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
+                      Coming Soon!
+                    </p>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Visit{' '}
-                  <a
-                    href="https://github.com/ibrahim-sisar/EduLite"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                  >
-                    https://github.com/ibrahim-sisar/EduLite
-                  </a>
-                  {' '}if you want to contribute!
-                </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Visit{' '}
+                      <a
+                        href="https://github.com/ibrahim-sisar/EduLite"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                      >
+                        https://github.com/ibrahim-sisar/EduLite
+                      </a>
+                      {' '}if you want to contribute!
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

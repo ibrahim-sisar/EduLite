@@ -1,7 +1,10 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { FaHome, FaExclamationTriangle, FaArrowLeft, FaGithub } from "react-icons/fa";
+import { useAuth } from "../contexts/AuthContext";
 
-const NotFoundPage = () => {
+const NotFoundPage: React.FC = () => {
+  const { isLoggedIn } = useAuth();
   return (
     <div className="min-h-[60vh] bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 pt-24">
       <div className="text-center max-w-2xl mx-auto">
@@ -57,24 +60,29 @@ const NotFoundPage = () => {
             >
               About
             </Link>
-            <Link
-              to="/profile"
-              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
-            >
-              Profile
-            </Link>
-            <Link
-              to="/login"
-              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
-            >
-              Sign Up
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                to="/profile"
+                className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
+              >
+                Profile
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline font-light"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
 

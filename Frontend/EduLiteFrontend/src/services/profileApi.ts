@@ -130,5 +130,80 @@ export const deleteProfilePicture = async (): Promise<UserProfile> => {
   }
 };
 
+// Privacy Settings Types
+interface PrivacySettings {
+  search_visibility: string;
+  profile_visibility: string;
+  show_full_name: boolean;
+  show_email: boolean;
+  allow_friend_requests: boolean;
+  allow_chat_invites: boolean;
+}
+
+interface PrivacyChoices {
+  search_visibility: Array<[string, string]>;
+  profile_visibility: Array<[string, string]>;
+}
+
+// Get privacy settings
+export const getPrivacySettings = async (): Promise<PrivacySettings> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/privacy-settings/`, {
+      timeout: 10000,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || "Failed to fetch privacy settings");
+  }
+};
+
+// Update privacy settings
+export const updatePrivacySettings = async (settings: Partial<PrivacySettings>): Promise<PrivacySettings> => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/privacy-settings/`,
+      settings,
+      {
+        timeout: 10000,
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 400) {
+      throw new Error(error.response?.data?.detail || "Invalid privacy settings");
+    }
+    throw new Error(error.response?.data?.detail || "Failed to update privacy settings");
+  }
+};
+
+// Get privacy setting choices (for dropdown options)
+export const getPrivacyChoices = async (): Promise<PrivacyChoices> => {
+  try {
+    const response = await axios.options(`${API_BASE_URL}/privacy-settings/`, {
+      timeout: 10000,
+    });
+    // Extract choices from OPTIONS response
+    const actions = response.data?.actions?.PATCH || {};
+    return {
+      search_visibility: actions.search_visibility?.choices || [],
+      profile_visibility: actions.profile_visibility?.choices || []
+    };
+  } catch (error: any) {
+    // Fallback to default choices if OPTIONS request fails
+    return {
+      search_visibility: [
+        ['everyone', 'Everyone'],
+        ['friends', 'Friends Only'],
+        ['nobody', 'Nobody']
+      ],
+      profile_visibility: [
+        ['public', 'Public'],
+        ['friends', 'Friends Only'],
+        ['private', 'Private']
+      ]
+    };
+  }
+};
+
 // Export types for use in components
-export type { User, UserProfile, ProfileData, ProfileUpdateRequest };
+export type { User, UserProfile, ProfileData, ProfileUpdateRequest, PrivacySettings, PrivacyChoices };
