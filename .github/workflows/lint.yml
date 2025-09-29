@@ -33,7 +33,8 @@ jobs:
           pip install mypy django-stubs djangorestframework-stubs types-requests
 
       - name: Run mypy type check
-        run: mypy backend/ --config-file=pyproject.toml
+        run: mypy .
+        working-directory: backend/EduLite
 
   frontend-checks:
     name: Frontend (TypeScript)
