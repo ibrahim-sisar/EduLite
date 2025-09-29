@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  pre-commit:
-    name: Run pre-commit hooks (including mypy)
+  backend-checks:
+    name: Backend Lint and Type Check (Python)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,10 +41,9 @@ jobs:
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
-        continue-on-error: true  # Non-blocking for mypy errors initially
 
   frontend-checks:
-    name: Frontend Lint and Type Check
+    name: Frontend Lint and Type Check (TypeScript)
     runs-on: ubuntu-latest
     defaults:
       run:
