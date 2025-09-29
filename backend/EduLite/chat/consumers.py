@@ -104,7 +104,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.handle_typing_indicator(data)
             else:
                 logger.warning(
-                    f"Unsupported message type: {message_type} from user {self.user.id}"
+                    f"Unsupported message type: {message_type} from user {self.user.id}"  # type: ignore[union-attr]
                 )
                 await self.send_error("Unsupported message type")
 
@@ -119,7 +119,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message_content = data.get("message", "").strip()
 
         if not message_content:
-            logger.debug(f"Empty message received from user {self.user.id}")
+            logger.debug(f"Empty message received from user {self.user.id}")  # type: ignore[union-attr]
             await self.send_error("Message content cannot be empty")
             return
 
@@ -127,7 +127,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         max_length = 1000  # Maximum character limit
         if len(message_content) > max_length:
             logger.debug(
-                f"Message too long ({len(message_content)} chars) from user {self.user.id}"
+                f"Message too long ({len(message_content)} chars) from user {self.user.id}"  # type: ignore[union-attr]
             )
             await self.send_error(f"Message too long (maximum {max_length} characters)")
             return
@@ -135,7 +135,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Save message to database
         try:
             message = await self.save_message(message_content)
-            logger.debug(f"Message saved: {message.id} from user {self.user.id}")
+            logger.debug(f"Message saved: {message.id} from user {self.user.id}")  # type: ignore[union-attr]
         except Exception as e:
             logger.error(f"Failed to save message: {str(e)}")
             await self.send_error("Failed to save message")
@@ -163,12 +163,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "typing_indicator_broadcast",
-                "user_id": self.user.id,
+                "user_id": self.user.id,  # type: ignore[union-attr]
                 "username": getattr(self.user, "username", "Unknown"),
                 "is_typing": is_typing,
             },
         )
-        logger.debug(f"Typing indicator: user {self.user.id}, is_typing={is_typing}")
+        logger.debug(f"Typing indicator: user {self.user.id}, is_typing={is_typing}")  # type: ignore[union-attr]
 
     async def typing_indicator_broadcast(self, event):
         """Broadcast typing indicator to clients."""
@@ -197,7 +197,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def has_room_permission(self):
         """Check if user has permission to access room."""
         try:
-            return self.chat_room.participants.filter(id=self.user.id).exists()
+            return self.chat_room.participants.filter(id=self.user.id).exists()  # type: ignore[union-attr]
         except Exception:
             return False
 

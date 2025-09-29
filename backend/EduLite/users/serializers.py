@@ -665,7 +665,7 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at"]
 
-    def get_sender(self, obj: ProfileFriendRequest) -> dict:
+    def get_sender(self, obj: ProfileFriendRequest) -> dict | None:
         """Return basic sender user info."""
         if obj.sender and obj.sender.user:
             return {
@@ -676,7 +676,7 @@ class ProfileFriendRequestSerializer(serializers.ModelSerializer):
             }
         return None
 
-    def get_receiver(self, obj: ProfileFriendRequest) -> dict:
+    def get_receiver(self, obj: ProfileFriendRequest) -> dict | None:
         """Return basic receiver user info."""
         if obj.receiver and obj.receiver.user:
             return {

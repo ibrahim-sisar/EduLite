@@ -46,7 +46,7 @@ def validate_search_query(
 
 
 def build_privacy_aware_search_queryset(
-    search_query: str, requesting_user: Optional[User]
+    search_query: str, requesting_user: Optional[User]  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Creates a privacy-aware search queryset that only searches fields the requesting user can see.
@@ -83,7 +83,7 @@ def build_privacy_aware_search_queryset(
 
 
 def build_base_search_queryset(
-    search_query: str, requesting_user: Optional[User] = None
+    search_query: str, requesting_user: Optional[User] = None  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Creates the base search queryset with privacy-aware field searching.
@@ -100,7 +100,7 @@ def build_base_search_queryset(
 
 
 def apply_privacy_filters(
-    queryset: QuerySet, requesting_user: Optional[User]
+    queryset: QuerySet, requesting_user: Optional[User]  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Applies privacy settings to filter out users based on their privacy preferences
@@ -115,7 +115,7 @@ def apply_privacy_filters(
     Returns:
         QuerySet filtered according to privacy settings
     """
-    if not requesting_user or not requesting_user.is_authenticated:
+    if not requesting_user or not requesting_user.is_authenticated:  # type: ignore[attr-defined]
         # Anonymous users can only see users with 'everyone' search visibility
         return queryset.filter(profile__privacy_settings__search_visibility="everyone")
 
@@ -127,7 +127,7 @@ def apply_privacy_filters(
     # 4. search_visibility is 'friends_of_friends' AND they share mutual friends or are direct friends
 
     # Self visibility
-    self_filter = Q(id=requesting_user.id)
+    self_filter = Q(id=requesting_user.id)  # type: ignore[attr-defined]
 
     # Everyone visibility
     everyone_filter = Q(profile__privacy_settings__search_visibility="everyone")
@@ -147,13 +147,13 @@ def apply_privacy_filters(
     # Get the friend IDs once to avoid repeated queries
     if hasattr(requesting_user, "_prefetched_friend_ids"):
         # Use cached friend IDs if available
-        requesting_user_friend_ids = requesting_user._prefetched_friend_ids
+        requesting_user_friend_ids = requesting_user._prefetched_friend_ids  # type: ignore[attr-defined]
     else:
         # Fetch once and cache on the user object
         requesting_user_friend_ids = list(
-            requesting_user.profile.friends.values_list("id", flat=True)
+            requesting_user.profile.friends.values_list("id", flat=True)  # type: ignore[attr-defined]
         )
-        requesting_user._prefetched_friend_ids = requesting_user_friend_ids
+        requesting_user._prefetched_friend_ids = requesting_user_friend_ids  # type: ignore[attr-defined]
 
     mutual_friends_subquery = User.objects.filter(
         profile__friends=OuterRef(
@@ -214,7 +214,7 @@ def paginate_search_results(
 
 def execute_user_search(
     search_query: str,
-    requesting_user: Optional[User],
+    requesting_user: Optional[User],  # type: ignore[valid-type]
     request: HttpRequest,
     view_instance,
     min_query_length: int = 2,
@@ -263,7 +263,7 @@ def execute_user_search(
 
 
 def filter_user_display_data(
-    users_queryset: QuerySet, requesting_user: Optional[User]
+    users_queryset: QuerySet, requesting_user: Optional[User]  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Additional filtering to respect privacy settings for what user data is displayed
@@ -288,7 +288,7 @@ def filter_user_display_data(
     return users_queryset
 
 
-def get_user_friends_ids(user: User) -> set:
+def get_user_friends_ids(user: User) -> set:  # type: ignore[valid-type]
     """
     Get a set of user IDs that are friends with the given user.
 
@@ -298,19 +298,19 @@ def get_user_friends_ids(user: User) -> set:
     Returns:
         Set of user IDs that are friends with the given user
     """
-    if not user or not user.is_authenticated:
+    if not user or not user.is_authenticated:  # type: ignore[attr-defined]
         return set()
 
     try:
         # user.friend_profiles gives UserProfile objects that have this user as a friend
         # But we want the actual User IDs that are friends with this user
         # So we need to get the friends from the user's profile
-        return set(user.profile.friends.values_list("id", flat=True))
+        return set(user.profile.friends.values_list("id", flat=True))  # type: ignore[attr-defined]
     except AttributeError:
         return set()
 
 
-def have_mutual_friends(user1: User, user2: User) -> bool:
+def have_mutual_friends(user1: User, user2: User) -> bool:  # type: ignore[valid-type]
     """
     Check if two users have mutual friends.
 
@@ -324,13 +324,13 @@ def have_mutual_friends(user1: User, user2: User) -> bool:
     if (
         not user1
         or not user2
-        or not user1.is_authenticated
-        or not user2.is_authenticated
+        or not user1.is_authenticated  # type: ignore[attr-defined]
+        or not user2.is_authenticated  # type: ignore[attr-defined]
     ):
         return False
 
     # Same user cannot have mutual friends with themselves
-    if user1.id == user2.id:
+    if user1.id == user2.id:  # type: ignore[attr-defined]
         return False
 
     user1_friends = get_user_friends_ids(user1)

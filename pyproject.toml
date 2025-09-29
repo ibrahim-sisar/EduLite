@@ -95,6 +95,10 @@ ignore_errors = true
 module = "*.tests.*"
 ignore_errors = true
 
+# External library with incomplete type stubs
+[[tool.mypy.overrides]]
+module = "pikepdf.*"
+ignore_missing_imports = true
 
 # DRF permissions have metaclass issues
 [[tool.mypy.overrides]]

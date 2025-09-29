@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend-checks:
-    name: Backend Lint and Type Check (Python)
+    name: Backend (Python)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
         run: mypy backend/ --config-file=pyproject.toml
 
   frontend-checks:
-    name: Frontend Lint and Type Check (TypeScript)
+    name: Frontend (TypeScript)
     runs-on: ubuntu-latest
     defaults:
       run:
