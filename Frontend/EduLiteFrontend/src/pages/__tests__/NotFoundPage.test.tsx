@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderWithProviders, screen, within } from '@/test/utils';
+import { renderWithProviders, screen } from '@/test/utils';
 import NotFoundPage from '../NotFoundPage';
 
 describe('NotFoundPage', () => {
@@ -104,7 +104,7 @@ describe('NotFoundPage', () => {
     it('renders home icon in Go to Home link', () => {
       renderWithProviders(<NotFoundPage />);
       const homeLink = screen.getByRole('link', { name: /go to home/i });
-      const icon = within(homeLink).getByTestId = homeLink.querySelector('svg');
+      const icon = homeLink.querySelector('svg');
       expect(icon).toBeInTheDocument();
     });
 

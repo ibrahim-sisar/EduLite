@@ -378,7 +378,7 @@ describe('Input Component', () => {
       );
 
       expect(ref.current).toBeInstanceOf(HTMLInputElement);
-      expect(ref.current?.name).toBe('ref-test');
+      expect((ref.current as unknown as HTMLInputElement)?.name).toBe('ref-test');
     });
 
     it('allows focus via ref', () => {
@@ -393,7 +393,7 @@ describe('Input Component', () => {
         />
       );
 
-      ref.current?.focus();
+      (ref.current as unknown as HTMLInputElement)?.focus();
       expect(ref.current).toHaveFocus();
     });
   });

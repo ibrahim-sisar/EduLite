@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -16,7 +16,7 @@ import {
 
 // Mock axios
 vi.mock('axios');
-const mockedAxios = vi.mocked(axios);
+const mockedAxios = vi.mocked(axios, { deep: true });
 
 // Mock react-hot-toast
 vi.mock('react-hot-toast', () => ({
@@ -497,12 +497,12 @@ describe('tokenService - Axios Interceptors', () => {
         response: { status: 401 },
         config: {
           url: '/api/profile/',
-          headers: {},
+          headers: {} as Record<string, string>,
           _retry: false,
         },
       };
 
-      const result = await errorInterceptor(error);
+      await errorInterceptor(error);
 
       expect(error.config.headers.Authorization).toBe(`Bearer ${newAccessToken}`);
       expect(mockedAxios).toHaveBeenCalledWith(error.config);

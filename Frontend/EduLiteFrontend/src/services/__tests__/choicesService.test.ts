@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { choicesService, Choice, ChoiceType } from '../choicesService';
+import { choicesService, Choice } from '../choicesService';
 
 // Mock data
 const mockOccupations: Choice[] = [
@@ -42,7 +42,7 @@ describe('choicesService - Caching Strategy', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response);
+      } as unknown as Response);
 
       // First call - fetches from network
       const result1 = await choicesService.getChoices('occupations');
@@ -61,12 +61,12 @@ describe('choicesService - Caching Strategy', () => {
           ok: true,
           headers: { get: () => 'application/json' },
           text: async () => JSON.stringify(mockOccupations),
-        } as Response)
+        } as unknown as Response)
         .mockResolvedValueOnce({
           ok: true,
           headers: { get: () => 'application/json' },
           text: async () => JSON.stringify(mockCountries),
-        } as Response);
+        } as unknown as Response);
 
       await choicesService.getChoices('occupations');
       await choicesService.getChoices('countries');
@@ -100,7 +100,7 @@ describe('choicesService - Caching Strategy', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response);
+      } as unknown as Response);
 
       await choicesService.getChoices('countries');
 
@@ -117,7 +117,7 @@ describe('choicesService - Caching Strategy', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
-      } as Response);
+      } as unknown as Response);
 
       // Should remove corrupted cache and fetch fresh
       const result = await choicesService.getChoices('languages');
@@ -138,7 +138,7 @@ describe('choicesService - Caching Strategy', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response);
+      } as unknown as Response);
 
       const result = await choicesService.getChoices('occupations');
 
@@ -154,7 +154,7 @@ describe('choicesService - Caching Strategy', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response);
+      } as unknown as Response);
 
       await choicesService.getChoices('countries');
 
@@ -184,7 +184,7 @@ describe('choicesService - Fetch & Retry Logic', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('occupations');
 
@@ -199,13 +199,13 @@ describe('choicesService - Fetch & Retry Logic', () => {
         ok: true,
         headers: { get: () => 'text/html' },
         text: async () => '<html>404 page</html>',
-      } as Response)
+      } as unknown as Response)
       // Second attempt: JSON response
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response);
+      } as unknown as Response);
 
     const result = await choicesService.getChoices('countries');
 
@@ -221,7 +221,7 @@ describe('choicesService - Fetch & Retry Logic', () => {
       ok: true,
       headers: { get: () => 'text/html' },
       text: async () => '<html>404</html>',
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('languages');
 
@@ -240,7 +240,7 @@ describe('choicesService - Fetch & Retry Logic', () => {
       statusText: 'Not Found',
       headers: { get: () => 'application/json' },
       text: async () => 'Not found',
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('occupations');
 
@@ -271,12 +271,12 @@ describe('choicesService - Fetch & Retry Logic', () => {
         ok: true,
         headers: { get: () => 'text/html' },
         text: async () => '<html>404</html>',
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
-      } as Response);
+      } as unknown as Response);
 
     const promise = choicesService.getChoices('languages');
 
@@ -313,7 +313,7 @@ describe('choicesService - Data Validation', () => {
         { value: 'test1', label: 'Test 1' },
         { value: 'test2', label: 'Test 2' },
       ]),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('occupations');
 
@@ -330,7 +330,7 @@ describe('choicesService - Data Validation', () => {
         { label: 'Test 1' }, // Missing value
         { value: 'test2', label: 'Test 2' },
       ]),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('countries');
 
@@ -349,7 +349,7 @@ describe('choicesService - Data Validation', () => {
         { value: 'test1' }, // Missing label
         { value: 'test2', label: 'Test 2' },
       ]),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('languages');
 
@@ -361,7 +361,7 @@ describe('choicesService - Data Validation', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify({ error: 'Not an array' }),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('occupations');
 
@@ -373,7 +373,7 @@ describe('choicesService - Data Validation', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => '{invalid json{{',
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('countries');
 
@@ -389,7 +389,7 @@ describe('choicesService - Data Validation', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => '[]',
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('languages');
 
@@ -419,7 +419,7 @@ describe('choicesService - Convenience Methods', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getOccupationChoices();
 
@@ -435,7 +435,7 @@ describe('choicesService - Convenience Methods', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockCountries),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getCountryChoices();
 
@@ -451,7 +451,7 @@ describe('choicesService - Convenience Methods', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockLanguages),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getLanguageChoices();
 
@@ -483,12 +483,12 @@ describe('choicesService - Cache Management', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response);
+      } as unknown as Response);
 
     await choicesService.getChoices('occupations');
     await choicesService.getChoices('countries');
@@ -503,7 +503,7 @@ describe('choicesService - Cache Management', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     // Occupations should fetch again, countries should use cache
     await choicesService.getChoices('occupations');
@@ -519,17 +519,17 @@ describe('choicesService - Cache Management', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
-      } as Response);
+      } as unknown as Response);
 
     await choicesService.getChoices('occupations');
     await choicesService.getChoices('countries');
@@ -546,12 +546,12 @@ describe('choicesService - Cache Management', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response);
+      } as unknown as Response);
 
     // All should fetch again
     await choicesService.getChoices('occupations');
@@ -565,7 +565,7 @@ describe('choicesService - Cache Management', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     await choicesService.getChoices('occupations');
 
@@ -597,7 +597,7 @@ describe('choicesService - Offline Support', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     await choicesService.getChoices('occupations');
 
@@ -625,17 +625,17 @@ describe('choicesService - Offline Support', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockCountries),
-      } as Response)
+      } as unknown as Response)
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
-      } as Response);
+      } as unknown as Response);
 
     await choicesService.preloadAllChoices();
 
@@ -651,13 +651,13 @@ describe('choicesService - Offline Support', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockOccupations),
-      } as Response)
+      } as unknown as Response)
       .mockRejectedValueOnce(new Error('Network error')) // Countries fail
       .mockResolvedValueOnce({
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
-      } as Response);
+      } as unknown as Response);
 
     await choicesService.preloadAllChoices();
 
@@ -702,7 +702,7 @@ describe('choicesService - Edge Cases', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify(mockOccupations),
-    } as Response);
+    } as unknown as Response);
 
     // Make 3 concurrent requests
     const promises = [
@@ -727,7 +727,7 @@ describe('choicesService - Edge Cases', () => {
       ok: true,
       headers: { get: () => 'application/json' },
       text: async () => JSON.stringify([]),
-    } as Response);
+    } as unknown as Response);
 
     const result = await choicesService.getChoices('countries');
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderWithProviders, screen, waitFor } from '@/test/utils';
+import { renderWithProviders, screen } from '@/test/utils';
 import userEvent from '@testing-library/user-event';
 import Button from '../Button';
 

@@ -207,7 +207,7 @@ describe('Button Component', () => {
       renderWithProviders(<Button ref={ref}>Button with Ref</Button>);
 
       expect(ref.current).toBeInstanceOf(HTMLButtonElement);
-      expect(ref.current?.textContent).toBe('Button with Ref');
+      expect((ref.current as unknown as HTMLButtonElement)?.textContent).toBe('Button with Ref');
     });
   });
 

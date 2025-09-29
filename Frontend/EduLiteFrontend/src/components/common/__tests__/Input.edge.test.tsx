@@ -65,7 +65,7 @@ describe('Input Component - Edge Cases & Security', () => {
 
       const input = screen.getByPlaceholderText(/<img src=x onerror=alert\(1\)>/i);
       expect(input).toBeInTheDocument();
-      expect(input.placeholder).toBe('<img src=x onerror=alert(1)>');
+      expect((input as HTMLInputElement).placeholder).toBe('<img src=x onerror=alert(1)>');
     });
   });
 
@@ -407,7 +407,6 @@ describe('Input Component - Edge Cases & Security', () => {
       );
 
       // Empty error should not render the error paragraph
-      const input = screen.getByRole('textbox');
       const errorElements = document.querySelectorAll('.text-red-600');
 
       // Only label should have red color if error prop exists, but empty error shouldn't render <p>
