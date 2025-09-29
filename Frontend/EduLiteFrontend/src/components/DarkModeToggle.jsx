@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { HiOutlineMoon, HiOutlineSun } from "react-icons/hi";
 
-export default function DarkModeToggle() {
+export default function DarkModeToggle({ onClick } = {}) {
   const [isDark, setIsDark] = useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches
   );
@@ -16,13 +16,22 @@ export default function DarkModeToggle() {
     }
   }, [isDark]);
 
+  const toggleDarkMode = () => setIsDark(!isDark);
+
+  // If onClick is provided from parent, use it; otherwise use internal handler
+  const handleClick = onClick || toggleDarkMode;
+
   return (
     <button
-      onClick={() => setIsDark(!isDark)}
-      className="text-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+      onClick={handleClick}
+      className="p-1.5 sm:p-2 rounded-full hover:bg-white/60 dark:hover:bg-gray-700/60 transition-all duration-200 cursor-pointer group"
       aria-label="Toggle dark mode"
     >
-      {isDark ? <HiOutlineSun /> : <HiOutlineMoon />}
+      {isDark ? (
+        <HiOutlineSun className="text-lg text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" />
+      ) : (
+        <HiOutlineMoon className="text-lg text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200" />
+      )}
     </button>
   );
 }

@@ -6,6 +6,12 @@ from . import views
 urlpatterns = [
     # User URLs
     path("users/", views.UserListView.as_view(), name="user-list"),
+    path("users/me/", views.CurrentUserView.as_view(), name="current-user"),
+    path(
+        "users/me/profile/",
+        views.CurrentUserProfileView.as_view(),
+        name="current-user-profile",
+    ),
     path("users/<int:pk>/", views.UserRetrieveView.as_view(), name="user-detail"),
     path(
         "users/<int:pk>/update/",
