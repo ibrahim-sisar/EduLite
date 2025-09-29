@@ -33,7 +33,7 @@ jobs:
           pip install mypy django-stubs djangorestframework-stubs types-requests
 
       - name: Run mypy type check
-        run: mypy .
+        run: mypy . --config-file=../../pyproject.toml
         working-directory: backend/EduLite
 
   frontend-checks:
