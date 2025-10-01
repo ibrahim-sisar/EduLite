@@ -39,7 +39,7 @@ const SignUpPage = () => {
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): ValidationErrors => {
     const newErrors: ValidationErrors = {};
 
     if (!formData.username.trim()) {
@@ -64,14 +64,16 @@ const SignUpPage = () => {
       newErrors.password2 = "Passwords do not match";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
       toast.error("Please fix the errors below");
       return;
     }
@@ -189,7 +191,7 @@ const SignUpPage = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-2" noValidate>
             <Input
               label="Username"
               type="text"
