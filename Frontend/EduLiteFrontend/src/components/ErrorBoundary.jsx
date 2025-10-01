@@ -2,7 +2,7 @@ import { useRouteError, Link } from "react-router-dom";
 import { FaExclamationCircle, FaHome, FaRedo } from "react-icons/fa";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 const ErrorBoundary = () => {
   const error = useRouteError();

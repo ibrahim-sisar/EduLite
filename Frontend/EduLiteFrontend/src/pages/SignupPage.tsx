@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import Input from "../components/common/Input";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { API_BASE_URL } from "../services/tokenService";
 import type {
   SignupFormData,

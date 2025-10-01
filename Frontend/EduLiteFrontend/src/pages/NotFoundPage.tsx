@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaHome, FaExclamationTriangle, FaArrowLeft, FaGithub } from "react-icons/fa";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 const NotFoundPage: React.FC = () => {
   const { isLoggedIn } = useAuth();

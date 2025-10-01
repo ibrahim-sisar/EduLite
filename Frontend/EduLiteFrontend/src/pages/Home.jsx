@@ -1,4 +1,4 @@
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import {

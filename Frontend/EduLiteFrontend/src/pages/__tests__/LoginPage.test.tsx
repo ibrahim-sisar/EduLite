@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import LoginPage from '../LoginPage';
-import * as AuthContext from '../../contexts/AuthContext';
+import * as useAuthHook from '../../hooks/useAuth';
 import { API_BASE_URL } from '../../services/tokenService';
 
 // Mock dependencies
@@ -25,8 +25,8 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock AuthContext
-    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+    // Mock useAuth hook
+    vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
       login: mockLogin,
       logout: vi.fn(),
       isLoggedIn: false,
