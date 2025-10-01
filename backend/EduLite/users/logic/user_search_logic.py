@@ -199,7 +199,7 @@ def paginate_search_results(
         # Wrap Django HttpRequest in DRF Request
         drf_request = Request(request)
     else:
-        drf_request = request
+        drf_request = request  # type: ignore[assignment]
 
     page = paginator.paginate_queryset(queryset, drf_request, view=view_instance)
 

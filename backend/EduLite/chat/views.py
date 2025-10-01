@@ -73,7 +73,7 @@ class ChatRoomListCreateView(ChatAppBaseAPIView):
     def get_queryset(self):
         """ "Get the queryset of chat rooms where the user is a participant"""
         return (
-            ChatRoom.objects.filter(participants=self.request.user)
+            ChatRoom.objects.filter(participants=self.request.user)  # type: ignore[misc]
             .select_related("creator")
             .prefetch_related("editors", "participants")
         )

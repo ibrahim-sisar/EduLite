@@ -45,6 +45,7 @@ pretty = true
 show_error_codes = true
 show_column_numbers = true
 show_error_context = true
+plugins = ["mypy_django_plugin.main"]
 
 # Exclude patterns
 exclude = [
@@ -108,9 +109,23 @@ ignore_errors = true
 # Serializers often have complex type interactions
 [[tool.mypy.overrides]]
 module = "*.serializers"
-# Less strict for serializers but still check
-warn_return_any = false
-check_untyped_defs = false
+# Less strict for serializers - too many false positives with DRF stubs
+ignore_errors = true
+
+# Pagination classes have similar issues with DRF stubs
+[[tool.mypy.overrides]]
+module = "*.pagination"
+ignore_errors = true
+
+# Consumers use Channels which has incomplete type stubs
+[[tool.mypy.overrides]]
+module = "*.consumers"
+ignore_errors = true
+
+# Management commands have translation string type issues
+[[tool.mypy.overrides]]
+module = "*.management.commands.*"
+ignore_errors = true
 
 # Django-stubs configuration
 [tool.django-stubs]
