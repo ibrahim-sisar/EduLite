@@ -33,7 +33,7 @@ const InputDemo = () => {
     const value = e.target.value;
     setPhone(value);
     // Basic phone validation - you can customize this
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
     setPhoneError(
       value && !phoneRegex.test(value.replace(/\D/g, ""))
         ? "Please enter a valid phone number"

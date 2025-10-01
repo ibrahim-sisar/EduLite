@@ -208,7 +208,7 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-16">
             {Object.entries(t("home.features", { returnObjects: true }))
               .slice(0, 4)
-              .map(([key, value], index) => {
+              .map(([key], index) => {
                 const icons = [FaRocket, FaUsers, FaBookOpen, FaShieldAlt];
                 const colors = [
                   {
