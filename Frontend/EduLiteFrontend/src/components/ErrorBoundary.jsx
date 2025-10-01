@@ -2,7 +2,7 @@ import { useRouteError, Link } from "react-router-dom";
 import { FaExclamationCircle, FaHome, FaRedo } from "react-icons/fa";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 const ErrorBoundary = () => {
   const error = useRouteError();
@@ -42,7 +42,7 @@ const ErrorBoundary = () => {
           </p>
 
           {/* Error Details (in development) */}
-          {!is404 && error?.stack && process.env.NODE_ENV === 'development' && (
+          {!is404 && error?.stack && import.meta.env.MODE === 'development' && (
             <details className="mb-6 text-left">
               <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                 Technical details

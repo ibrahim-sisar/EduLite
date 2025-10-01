@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 const TOKEN_REFRESH_BUFFER = Number(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 30;
 const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === 'true';
 

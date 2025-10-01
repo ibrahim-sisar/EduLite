@@ -409,7 +409,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
         Determine if full name should be shown to the requesting user.
         """
         # User can always see their own name - fix the comparison
-        if requesting_user and obj.id == requesting_user.id:
+        if requesting_user and obj.id == requesting_user.id:  # type: ignore[attr-defined]
             return True
 
         # Admin users can see all names

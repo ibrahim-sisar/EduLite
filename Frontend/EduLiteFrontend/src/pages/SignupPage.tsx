@@ -1,30 +1,37 @@
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import Input from "../components/common/Input";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { API_BASE_URL } from "../services/tokenService";
+import type {
+  SignupFormData,
+  ValidationErrors,
+  LoginResponse,
+  BackendErrorResponse,
+} from "../types/auth.types";
 
 const SignUpPage = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SignupFormData>({
     username: "",
     email: "",
     password: "",
     password2: "",
   });
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
 
     // Clear specific field error when user starts typing
-    if (errors[e.target.name]) {
+    if (errors[e.target.name as keyof ValidationErrors]) {
       setErrors((prev) => ({
         ...prev,
         [e.target.name]: "",
@@ -32,8 +39,8 @@ const SignUpPage = () => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  const validateForm = (): ValidationErrors => {
+    const newErrors: ValidationErrors = {};
 
     if (!formData.username.trim()) {
       newErrors.username = "Username is required";
@@ -57,14 +64,16 @@ const SignUpPage = () => {
       newErrors.password2 = "Passwords do not match";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length > 0) {
       toast.error("Please fix the errors below");
       return;
     }
@@ -73,8 +82,8 @@ const SignUpPage = () => {
 
     try {
       // Register the user
-      const registerResponse = await axios.post(
-        "http://localhost:8000/api/register/",
+      await axios.post(
+        `${API_BASE_URL}/register/`,
         formData,
         {
           headers: {
@@ -84,7 +93,7 @@ const SignUpPage = () => {
         }
       );
 
-      if (process.env.NODE_ENV !== "production") {
+      if (import.meta.env.MODE !== "production") {
         console.log("Registration successful");
       }
 
@@ -92,8 +101,8 @@ const SignUpPage = () => {
 
       // Automatically log in the user after successful registration
       try {
-        const loginResponse = await axios.post(
-          "http://localhost:8000/api/token/",
+        const loginResponse = await axios.post<LoginResponse>(
+          `${API_BASE_URL}/token/`,
           {
             username: formData.username,
             password: formData.password,
@@ -111,22 +120,24 @@ const SignUpPage = () => {
 
         toast.success("Welcome to EduLite! 🚀");
         navigate("/profile");
-      } catch (loginErr) {
+      } catch (_loginErr) {
         // If auto-login fails, redirect to login page
         toast.success("Please log in with your new account");
         navigate("/login");
       }
     } catch (err) {
-      if (process.env.NODE_ENV !== "production") {
+      const error = err as AxiosError<BackendErrorResponse>;
+
+      if (import.meta.env.MODE !== "production") {
         console.error(
           "Registration failed - Status:",
-          err.response?.status || "Network Error"
+          error.response?.status || "Network Error"
         );
       }
 
-      if (err.response?.data) {
-        const backendErrors = err.response.data;
-        const newErrors = {};
+      if (error.response?.data) {
+        const backendErrors = error.response.data;
+        const newErrors: ValidationErrors = {};
 
         // Map backend errors to form fields
         if (backendErrors.username) {
@@ -152,9 +163,9 @@ const SignUpPage = () => {
 
         setErrors(newErrors);
         toast.error("Please fix the errors below");
-      } else if (err.code === "ECONNABORTED") {
+      } else if (error.code === "ECONNABORTED") {
         toast.error("Request timeout. Is your backend running?");
-      } else if (!err.response) {
+      } else if (!error.response) {
         toast.error(
           "Cannot connect to server. Is your backend running on port 8000?"
         );
@@ -180,7 +191,7 @@ const SignUpPage = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-2">
+          <form onSubmit={handleSubmit} className="space-y-2" noValidate>
             <Input
               label="Username"
               type="text"

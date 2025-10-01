@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useNavigate, useBlocker } from "react-router-dom";
 import { FaUser, FaCamera, FaSignOutAlt, FaSave, FaUserFriends, FaCog, FaStickyNote, FaComments, FaGraduationCap, FaChevronDown, FaChevronUp, FaTrash } from "react-icons/fa";
 import toast from "react-hot-toast";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import Input from "../components/common/Input";
 import LazySelect from "../components/common/LazySelect";

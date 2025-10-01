@@ -1,5 +1,5 @@
-// src/contexts/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from "react";
+// src/contexts/AuthContext.tsx
+import React, { createContext, useState, useEffect, ReactNode } from "react";
 import toast from "react-hot-toast";
 import {
   initializeTokenService,
@@ -9,22 +9,27 @@ import {
   shouldBeAuthenticated,
 } from "../services/tokenService";
 
-const AuthContext = createContext();
+// Type definition for the Auth context value
+export interface AuthContextType {
+  isLoggedIn: boolean;
+  login: (accessToken: string, refreshToken: string) => void;
+  logout: () => void;
+  loading: boolean;
+}
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// Type definition for AuthProvider props
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Logout function that clears tokens and updates state
-  const logout = () => {
+  const logout = (): void => {
     clearStoredTokens();
     setIsLoggedIn(false);
     toast.success("Logged out successfully 👋");
@@ -32,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on app start
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = (): void => {
       // Use token service to check if user should be authenticated
       const shouldAuth = shouldBeAuthenticated();
       setIsLoggedIn(shouldAuth);
@@ -48,13 +53,13 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus();
   }, []);
 
-  const login = (accessToken, refreshToken) => {
+  const login = (accessToken: string, refreshToken: string): void => {
     // Use token service to store tokens
     setStoredTokens(accessToken, refreshToken);
     setIsLoggedIn(true);
   };
 
-  const value = {
+  const value: AuthContextType = {
     isLoggedIn,
     login,
     logout,
@@ -63,3 +68,5 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthContext;
