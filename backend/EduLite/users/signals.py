@@ -11,7 +11,7 @@ from .models import UserProfile, ProfileFriendRequest, UserProfilePrivacySetting
 try:
     from notifications.models import Notification
 except ImportError:
-    Notification = None
+    Notification = None  # type: ignore[misc, assignment]
 
 User = get_user_model()
 

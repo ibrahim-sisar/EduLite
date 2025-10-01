@@ -7,6 +7,7 @@ from PIL import Image
 import pikepdf
 from .models import NotesFiles
 
+
 def compress_file_on_upload_logic(instance):
     """
     Actual compression logic separated from signal.
@@ -24,7 +25,9 @@ def compress_file_on_upload_logic(instance):
 
             # Save with reduced quality
             if ext in [".jpg", ".jpeg"]:
-                img.save(img_io, format="JPEG", optimize=True, quality=90)  # good balance
+                img.save(
+                    img_io, format="JPEG", optimize=True, quality=90
+                )  # good balance
             elif ext == ".png":
                 img.save(img_io, format="PNG", optimize=True)  # lossless
 
@@ -42,10 +45,10 @@ def compress_file_on_upload_logic(instance):
         try:
             output_path = file_path  # overwrite original file
             with pikepdf.open(file_path) as pdf:
-                pdf.save(
+                pdf.save(  # type: ignore[call-arg]
                     output_path,
-                    optimize_streams=True,   # remove unused objects
-                    compress_streams=True    # compress content streams
+                    optimize_streams=True,  # remove unused objects
+                    compress_streams=True,  # compress content streams
                 )
             print(f"Compressed PDF: {file_path}")
         except Exception as e:
@@ -54,6 +57,7 @@ def compress_file_on_upload_logic(instance):
     # Other files (DOCX, XLSX, TXT) → skip
     else:
         print(f"No compression applied for: {file_path}")
+
 
 @receiver(post_save, sender=NotesFiles)
 def compress_file_on_upload(sender, instance, **kwargs):

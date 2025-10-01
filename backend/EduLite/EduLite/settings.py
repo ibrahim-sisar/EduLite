@@ -37,7 +37,7 @@ SECRET_KEY = config("DJANGO_SECRET_KEY", default="default-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "chat",
     "notifications",
     "courses",
-    'notes',
+    "notes",
     # third-party apps
     "channels",
     "rest_framework",

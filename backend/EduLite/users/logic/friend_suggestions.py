@@ -30,7 +30,7 @@ def compute_friend_suggestions_for_user(user):
     scored_candidates = []
 
     for candidate in candidates:
-        score = 0
+        score: float = 0
         reasons = []
 
         # Mutual friends
