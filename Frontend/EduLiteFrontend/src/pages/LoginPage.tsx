@@ -1,38 +1,44 @@
-import { useState } from "react";
+import { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import toast from "react-hot-toast";
 import Input from "../components/common/Input";
 import { Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; // Import auth context
+import { useAuth } from "../contexts/AuthContext";
+import { API_BASE_URL } from "../services/tokenService";
+import type {
+  LoginFormData,
+  LoginResponse,
+  BackendErrorResponse,
+} from "../types/auth.types";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginFormData>({
     username: "",
     password: "",
   });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth(); // Get login function from context
+  const { login } = useAuth();
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     setError("");
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/token/",
+      const response = await axios.post<LoginResponse>(
+        `${API_BASE_URL}/token/`,
         formData,
         {
           headers: {
@@ -53,24 +59,28 @@ const LoginPage = () => {
       const from = location.state?.from?.pathname || "/profile";
       navigate(from);
     } catch (err) {
-      // Only log non-sensitive error information
-      console.error(
-        "Login failed - Status:",
-        err.response?.status || "Network Error"
-      );
+      const error = err as AxiosError<BackendErrorResponse>;
 
-      if (err.code === "ECONNABORTED") {
+      // Only log non-sensitive error information
+      if (import.meta.env.MODE !== "production") {
+        console.error(
+          "Login failed - Status:",
+          error.response?.status || "Network Error"
+        );
+      }
+
+      if (error.code === "ECONNABORTED") {
         setError("Request timeout. Is your backend running?");
-      } else if (err.response?.status === 401) {
+      } else if (error.response?.status === 401) {
         setError("Invalid credentials. Please try again.");
-      } else if (err.response?.status === 400) {
+      } else if (error.response?.status === 400) {
         setError("Bad request. Please check your input.");
-      } else if (!err.response) {
+      } else if (!error.response) {
         setError(
           "Cannot connect to server. Is your backend running on port 8000?"
         );
       } else {
-        setError(`Login failed: ${err.response?.data?.detail || err.message}`);
+        setError(`Login failed: ${error.response?.data?.detail || error.message}`);
       }
 
       toast.error("Login failed!");
