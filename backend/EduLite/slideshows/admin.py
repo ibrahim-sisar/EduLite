@@ -10,6 +10,18 @@ class SlideInline(admin.TabularInline):
     fields = ("order", "title", "content", "notes")
     ordering = ["order"]
 
+    def get_formset(self, request, obj=None, **kwargs):
+        """Enhance formset with helpful order field message"""
+        formset = super().get_formset(request, obj, **kwargs)
+        # Add additional help text for the order field
+        order_field = formset.form.base_fields.get("order")
+        if order_field:
+            order_field.help_text = (
+                "Leave blank to auto-assign the next available order. "
+                "Set a specific number to control slide position."
+            )
+        return formset
+
 
 @admin.register(Slideshow)
 class SlideshowAdmin(admin.ModelAdmin):

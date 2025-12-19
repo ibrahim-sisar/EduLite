@@ -92,7 +92,10 @@ class Slide(models.Model):
 
     # Ordering
     order = models.PositiveIntegerField(
-        default=0, help_text="Display order within the slideshow (0-indexed)"
+        default=None,
+        null=True,
+        blank=True,
+        help_text="Display order within the slideshow (leave blank to auto-assign next available order)",
     )
 
     # Content
@@ -129,7 +132,18 @@ class Slide(models.Model):
         verbose_name_plural = "Slides"
 
     def save(self, *args, **kwargs):
-        """Render markdown to HTML on save"""
+        """Render markdown to HTML and auto-assign order on save"""
+        # Auto-assign order for new slides if not explicitly set
+        if self.pk is None and self.order is None:
+            # Get current max order for this slideshow
+            max_order = Slide.objects.filter(slideshow=self.slideshow).aggregate(
+                models.Max("order")
+            )["order__max"]
+
+            # Assign next available order (0 if no slides exist)
+            self.order = (max_order + 1) if max_order is not None else 0
+
+        # Render markdown to HTML
         from django_spellbook.parsers import spellbook_render
 
         self.rendered_content = spellbook_render(self.content)

@@ -38,7 +38,6 @@ def create_user_profile_privacy_settings(sender, instance, created, **kwargs):
     if created:
         try:
             UserProfilePrivacySettings.objects.create(user_profile=instance)
-            logger.debug("Created privacy settings for user profile %s", instance.id)
         except Exception as e:
             logger.error(
                 "Failed to create privacy settings for user profile %s: %s",
@@ -101,14 +100,6 @@ def create_notification_on_friend_request(sender, instance, created, **kwargs):
             target=instance,
             description=description,
         )
-
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "Notification created for friend request %s from %s to %s",
-                instance.id,
-                instance.sender.user.username,
-                instance.receiver.user.username,
-            )
 
     except AttributeError as e:
         logger.error(

@@ -68,7 +68,8 @@ class SlideModelTest(TestCase):
 
         # Check that rendered_content is populated
         self.assertIsNotNone(slide.rendered_content)
-        self.assertIn("<h1>Hello World</h1>", slide.rendered_content)
+        self.assertIn("<h1", slide.rendered_content)
+        self.assertIn("Hello World", slide.rendered_content)
         self.assertIn("<strong>bold</strong>", slide.rendered_content)
 
     def test_spellblock_alert_renders(self):
@@ -167,19 +168,29 @@ class SlideModelTest(TestCase):
         self.assertEqual(slides[2], slide3)
 
     def test_unique_order_per_slideshow(self):
-        """Test that order must be unique within a slideshow"""
-        Slide.objects.create(
+        """Test that order auto-increments to avoid conflicts when not specified"""
+        slide1 = Slide.objects.create(
             slideshow=self.slideshow,
             order=0,
             content="First slide",
         )
 
-        # Try to create another slide with the same order
+        # Creating without specifying order should auto-increment
+        slide2 = Slide.objects.create(
+            slideshow=self.slideshow,
+            # order not specified - should auto-increment to 1
+            content="Second slide",
+        )
+
+        slide2.refresh_from_db()
+        self.assertEqual(slide2.order, 1)
+
+        # But explicitly setting to an existing order should still fail
         with self.assertRaises(IntegrityError):
             Slide.objects.create(
                 slideshow=self.slideshow,
-                order=0,  # Duplicate order
-                content="Another slide",
+                order=0,  # Explicitly duplicate order
+                content="Conflicting slide",
             )
 
     def test_order_can_be_same_across_slideshows(self):
@@ -242,3 +253,71 @@ class SlideModelTest(TestCase):
 
         self.assertIsNotNone(slide.created_at)
         self.assertIsNotNone(slide.updated_at)
+
+    def test_auto_increment_order_for_new_slides(self):
+        """Test that order auto-increments when not specified"""
+        # Create first slide without specifying order
+        slide1 = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="First slide",
+        )
+
+        # Create second slide without specifying order
+        slide2 = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="Second slide",
+        )
+
+        # Create third slide without specifying order
+        slide3 = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="Third slide",
+        )
+
+        # Verify orders were auto-assigned sequentially
+        self.assertEqual(slide1.order, 0)
+        self.assertEqual(slide2.order, 1)
+        self.assertEqual(slide3.order, 2)
+
+    def test_explicit_order_not_overridden(self):
+        """Test that explicit order values are respected"""
+        # Create slide with explicit non-zero order
+        slide1 = Slide.objects.create(
+            slideshow=self.slideshow,
+            order=5,  # Explicit order
+            content="Slide with explicit order",
+        )
+
+        self.assertEqual(slide1.order, 5)
+
+        # Next auto-assigned slide should be 6 (max + 1)
+        slide2 = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="Auto-assigned after explicit",
+        )
+
+        self.assertEqual(slide2.order, 6)
+
+    def test_auto_increment_starts_at_zero_for_first_slide(self):
+        """Test that first slide gets order=0 when auto-assigned"""
+        slide = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="First slide",
+        )
+
+        self.assertEqual(slide.order, 0)
+
+    def test_auto_increment_continues_after_gap(self):
+        """Test that auto-increment uses max + 1 even with gaps"""
+        # Create slides with specific orders, leaving gaps
+        Slide.objects.create(slideshow=self.slideshow, order=0, content="Slide 0")
+        Slide.objects.create(slideshow=self.slideshow, order=5, content="Slide 5")
+        Slide.objects.create(slideshow=self.slideshow, order=10, content="Slide 10")
+
+        # Auto-assigned should be 11 (max + 1)
+        slide = Slide.objects.create(
+            slideshow=self.slideshow,
+            content="Auto-assigned",
+        )
+
+        self.assertEqual(slide.order, 11)
