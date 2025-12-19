@@ -2006,7 +2006,6 @@ class CurrentUserView(UsersAppBaseAPIView):
 
         # Debug logging
         logger.info(f"PATCH /users/me/ - Request data: {request.data}")
-        print(f"DEBUG: PATCH /users/me/ - Request data: {request.data}")
 
         # Separate user fields from profile fields
         user_fields = {}
@@ -2034,7 +2033,6 @@ class CurrentUserView(UsersAppBaseAPIView):
 
         logger.info(f"User fields to update: {user_fields}")
         logger.info(f"Profile fields to update: {profile_fields}")
-        print(f"DEBUG: User fields: {user_fields}, Profile fields: {profile_fields}")
 
         try:
             # Update User model fields if provided
@@ -2050,9 +2048,6 @@ class CurrentUserView(UsersAppBaseAPIView):
                     logger.info(f"User fields updated successfully")
                 else:
                     logger.error(f"User serializer errors: {user_serializer.errors}")
-                    print(
-                        f"DEBUG: User serializer validation failed: {user_serializer.errors}"
-                    )
                     return Response(
                         user_serializer.errors, status=status.HTTP_400_BAD_REQUEST
                     )
@@ -2075,9 +2070,6 @@ class CurrentUserView(UsersAppBaseAPIView):
                     logger.error(
                         f"Profile serializer errors: {profile_serializer.errors}"
                     )
-                    print(
-                        f"DEBUG: Profile serializer validation failed: {profile_serializer.errors}"
-                    )
                     return Response(
                         profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST
                     )
@@ -2092,10 +2084,8 @@ class CurrentUserView(UsersAppBaseAPIView):
 
         except Exception as e:
             logger.error(f"Failed to update user {user.username}: {str(e)}")
-            print(f"DEBUG: Exception in PATCH: {str(e)}")
             import traceback
 
-            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return Response(
                 {"message": "Failed to update user information. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

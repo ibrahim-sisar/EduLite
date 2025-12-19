@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "notifications",
     "courses",
     "notes",
+    "slideshows",
     # third-party apps
     "channels",
     "rest_framework",
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "django_spellbook",
 ]
 
 LOGGING = {

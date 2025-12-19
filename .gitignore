@@ -35,11 +35,10 @@ pyrightconfig.json
 # Pyenv
 .python-version
 
-# Docker
-docker/.env
-docker/docker-compose.override.yml
+# mcp
 
-# Development tools & temp files
-.serena/
-_temp/
 opencode.jsonc
+/.serena
+
+# temporary files
+/_temp/
