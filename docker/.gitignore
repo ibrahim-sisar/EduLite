@@ -11,3 +11,6 @@ volumes/
 # Logs
 *.log
 logs/
+
+# Temporary files
+temp_secret.txt

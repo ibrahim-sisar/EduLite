@@ -38,3 +38,8 @@ pyrightconfig.json
 # Docker
 docker/.env
 docker/docker-compose.override.yml
+
+# Development tools & temp files
+.serena/
+_temp/
+opencode.jsonc
