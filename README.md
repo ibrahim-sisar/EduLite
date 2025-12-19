@@ -38,19 +38,6 @@ So I decided to build one — with you.
 
 ---
 
-## 🏗️ Project Status: `🚧 In Development`
-
-We are in the early planning phase. Currently working on:
-
-- 📋 Gathering contributors
-- 🧭 Writing full project vision
-- ✏️ Creating UI wireframes (coming soon)
-- 🧱 Starting backend models with Django
-- 🌐 Initial frontend setup with React
-- 🔜 Public demo (soon!)
-
----
-
 ## 🧑‍🤝‍🧑 Join the Team
 
 We welcome **everyone** – beginner or expert!
@@ -92,7 +79,7 @@ The easiest way to get started is using Docker. We provide a complete developmen
    make quickstart
    ```
    This will:
-   - Create the `.env` file with auto-generated secrets
+   - Create the `.env` file with auto-generated secrets (recommend to change these)
    - Build all Docker images
    - Start all services (backend, frontend, PostgreSQL, Redis)
    - Run database migrations
@@ -171,7 +158,7 @@ For detailed Docker documentation, see [docker/README.md](docker/README.md).
    - Using Docker (recommended): Run `make quickstart`
    - Manual setup: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions
 5. Make your changes and test them
-6. Commit your changes following our [coding standards](backend/CODING_STANDARDS.md)
+6. Commit your changes following our [coding standards](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Coding-Standards-Backend)
 7. Push & open a Pull Request
 8. We'll review it together!
 
