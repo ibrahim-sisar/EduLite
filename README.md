@@ -38,19 +38,6 @@ So I decided to build one — with you.
 
 ---
 
-## 🏗️ Project Status: `🚧 In Development`
-
-We are in the early planning phase. Currently working on:
-
-- 📋 Gathering contributors
-- 🧭 Writing full project vision
-- ✏️ Creating UI wireframes (coming soon)
-- 🧱 Starting backend models with Django
-- 🌐 Initial frontend setup with React
-- 🔜 Public demo (soon!)
-
----
-
 ## 🧑‍🤝‍🧑 Join the Team
 
 We welcome **everyone** – beginner or expert!
@@ -71,15 +58,84 @@ We welcome **everyone** – beginner or expert!
 
 ---
 
+## 🐋 Quick Start with Docker
+
+The easiest way to get started is using Docker. We provide a complete development environment with all services pre-configured.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- [Make](https://www.gnu.org/software/make/) (usually pre-installed on Linux/Mac)
+
+### Getting Started
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/ibrahim-sisar/EduLite.git
+   cd EduLite
+   ```
+
+2. **Quick start** (first time setup)
+   ```bash
+   make quickstart
+   ```
+   This will:
+   - Create the `.env` file with auto-generated secrets (recommend to change these)
+   - Build all Docker images
+   - Start all services (backend, frontend, PostgreSQL, Redis)
+   - Run database migrations
+   - Collect static files
+
+3. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - Health Check: http://localhost:8000/api/health/
+
+### Useful Commands
+
+```bash
+# Start all services
+make up
+
+# Stop all services
+make down
+
+# View logs
+make logs
+
+# Backend shell (Django)
+make shell
+
+# Run migrations
+make migrate
+
+# Create superuser
+make createsuperuser
+
+# Run backend tests
+make test
+
+# Rebuild containers
+make build
+
+# Clean everything (including volumes)
+make clean
+```
+
+For detailed Docker documentation, see [docker/README.md](docker/README.md).
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Tech |
 |-------|------|
-| Frontend | React + Tailwind CSS |
-| Backend | Django (Python) + DRF |
-| Database | PostgreSQL / SQLite (for dev) |
-| Auth | Django AllAuth or JWT |
+| Frontend | React + Vite + Tailwind CSS |
+| Backend | Django (Python) + DRF + Django Channels |
+| Database | PostgreSQL 16 |
+| Cache/WebSocket | Redis 7 |
+| Auth | JWT (djangorestframework-simplejwt) |
 | Deployment | Railway / Render / Vercel |
+| Development | Docker + Docker Compose |
 | Tools | Git, GitHub Projects, VSCode |
 
 ---
@@ -98,11 +154,15 @@ We welcome **everyone** – beginner or expert!
 1. Join a server or fill out a Google form
 2. When I give you the authority to modify the repository, you create a new branch in your name.
 3. Clone the repository to your machine and make sure you write to your branch.
-4. Commit your changes
-5. Push & open a Pull Request
-6. We’ll review it together!
+4. **Set up your development environment:**
+   - Using Docker (recommended): Run `make quickstart`
+   - Manual setup: See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions
+5. Make your changes and test them
+6. Commit your changes following our [coding standards](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Coding-Standards-Backend)
+7. Push & open a Pull Request
+8. We'll review it together!
 
-We’re using **GitHub Projects** to track tasks.
+We're using **GitHub Projects** to track tasks.
 Feel free to check our [Issues](https://github.com/ibrahim-sisar/EduLite/issues).
 
 ---

@@ -16,6 +16,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,7 +38,11 @@ SECRET_KEY = config("DJANGO_SECRET_KEY", default="default-secret-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = config(
+    "ALLOWED_HOSTS",
+    default="localhost,127.0.0.1",
+    cast=lambda v: [s.strip() for s in v.split(",")],
+)
 
 
 # Application definition
@@ -117,12 +122,12 @@ LOGGING = {
         # OR TO WARNING TO ONLY SEE FAILURES
         "chat.tests": {
             "handlers": ["console-tests"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
         "users.tests": {
             "handlers": ["console-tests"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
         # --- Channels and Websocket logging ---
@@ -175,7 +180,12 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [
+                (
+                    config("REDIS_HOST", default="127.0.0.1"),
+                    config("REDIS_PORT", default=6379, cast=int),
+                )
+            ],
         },
     },
 }
@@ -186,11 +196,13 @@ WSGI_APPLICATION = "EduLite.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Use DATABASE_URL if provided (Docker/production), otherwise fallback to SQLite
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
@@ -229,6 +241,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -287,10 +300,11 @@ SIMPLE_JWT = {
 BLOCKED_EMAIL_DOMAINS = ["test.com"]  # For testing
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:5173,http://127.0.0.1:5173",
+    cast=lambda v: [s.strip() for s in v.split(",")],
+)
 
 # Allow credentials to be included in CORS requests
 CORS_ALLOW_CREDENTIALS = True
