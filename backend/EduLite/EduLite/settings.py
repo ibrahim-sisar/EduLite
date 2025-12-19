@@ -122,12 +122,12 @@ LOGGING = {
         # OR TO WARNING TO ONLY SEE FAILURES
         "chat.tests": {
             "handlers": ["console-tests"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
         "users.tests": {
             "handlers": ["console-tests"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
         # --- Channels and Websocket logging ---
