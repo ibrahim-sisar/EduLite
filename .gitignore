@@ -34,3 +34,11 @@ pyrightconfig.json
 
 # Pyenv
 .python-version
+
+# mcp
+
+opencode.jsonc
+/.serena
+
+# temporary files
+/_temp/

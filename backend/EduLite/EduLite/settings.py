@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "notifications",
     "courses",
     "notes",
+    "slideshows",
     # third-party apps
     "channels",
     "rest_framework",

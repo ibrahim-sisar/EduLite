@@ -1,0 +1,94 @@
+from django.contrib import admin
+from .models import Slideshow, Slide
+
+
+class SlideInline(admin.TabularInline):
+    """Inline admin for editing slides within a slideshow"""
+
+    model = Slide
+    extra = 1
+    fields = ("order", "title", "content", "notes")
+    ordering = ["order"]
+
+
+@admin.register(Slideshow)
+class SlideshowAdmin(admin.ModelAdmin):
+    """Admin interface for Slideshow model"""
+
+    list_display = (
+        "title",
+        "course",
+        "created_by",
+        "is_published",
+        "version",
+        "updated_at",
+    )
+    list_filter = ("is_published", "course", "created_at")
+    search_fields = ("title", "description", "course__title")
+    readonly_fields = ("created_at", "updated_at", "version")
+    inlines = [SlideInline]
+
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "title",
+                    "description",
+                    "course",
+                    "created_by",
+                    "is_published",
+                )
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("version", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
+@admin.register(Slide)
+class SlideAdmin(admin.ModelAdmin):
+    """Admin interface for individual Slide management"""
+
+    list_display = ("slideshow", "order", "get_title", "updated_at")
+    list_filter = ("slideshow__course", "slideshow")
+    search_fields = ("title", "content", "slideshow__title")
+    readonly_fields = ("rendered_content", "created_at", "updated_at")
+    ordering = ["slideshow", "order"]
+
+    fieldsets = (
+        (
+            None,
+            {"fields": ("slideshow", "order", "title")},
+        ),
+        (
+            "Content",
+            {"fields": ("content", "notes")},
+        ),
+        (
+            "Rendered",
+            {
+                "fields": ("rendered_content",),
+                "classes": ("collapse",),
+                "description": "Automatically generated HTML from markdown",
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_title(self, obj):
+        """Display the slide title using get_title() method"""
+        return obj.get_title()
+
+    get_title.short_description = "Title"
