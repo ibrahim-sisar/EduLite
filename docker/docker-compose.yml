@@ -1,0 +1,137 @@
+services:
+  # PostgreSQL 16 - Primary database
+  postgres:
+    image: postgres:16-alpine
+    container_name: edulite-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: edulite
+      POSTGRES_USER: edulite_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"  # Using 5433 instead of 5432 (host has PostgreSQL running)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edulite_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - edulite-network
+
+  # Redis 7 - Channel layer for Django Channels (WebSocket)
+  redis:
+    image: redis:7-alpine
+    container_name: edulite-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6380:6379"  # Using 6380 instead of 6379 (host has Redis running)
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - edulite-network
+
+  # Django Backend - REST API + WebSocket via Daphne ASGI
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend/Dockerfile
+    container_name: edulite-backend
+    restart: unless-stopped
+    environment:
+      # Django
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      
+      # Database
+      DATABASE_URL: postgresql://edulite_user:${POSTGRES_PASSWORD}@postgres:5432/edulite
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      
+      # CORS
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      
+      # Email (optional - defaults to console backend)
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-EduLite <noreply@edulite.local>}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend/EduLite:/app
+      - ./backend/entrypoint.sh:/app/entrypoint.sh:ro
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+      - logs_data:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - edulite-network
+
+  # React Frontend - Vite dev server
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+    container_name: edulite-frontend
+    restart: unless-stopped
+    environment:
+      # API Configuration
+      VITE_API_BASE_URL: http://localhost:8000/api
+      VITE_WS_BASE_URL: ws://localhost:8000/ws
+      
+      # Token Configuration
+      VITE_TOKEN_REFRESH_BUFFER: 30
+      VITE_USE_SESSION_STORAGE: "true"
+    ports:
+      - "5173:5173"
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ../Frontend/EduLiteFrontend:/app
+      - ./frontend/entrypoint.sh:/app/entrypoint.sh:ro
+      # Prevent node_modules from being overwritten by host
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - edulite-network
+
+# Named volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  media_data:
+    driver: local
+  static_data:
+    driver: local
+  logs_data:
+    driver: local
+
+# Network for inter-service communication
+networks:
+  edulite-network:
+    driver: bridge

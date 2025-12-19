@@ -1,0 +1,13 @@
+# Environment variables (contains secrets)
+.env
+
+# Docker Compose override file (personal customizations)
+docker-compose.override.yml
+
+# Docker volumes (data directories if using bind mounts)
+data/
+volumes/
+
+# Logs
+*.log
+logs/

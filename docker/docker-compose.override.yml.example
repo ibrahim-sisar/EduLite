@@ -1,0 +1,137 @@
+# ===================================================================
+# Docker Compose Override File Example
+# ===================================================================
+# This file shows examples of how to customize your local Docker setup.
+# Copy this file to `docker-compose.override.yml` to use it.
+# (docker-compose.override.yml is gitignored and won't be committed)
+# ===================================================================
+#
+# Docker Compose automatically merges docker-compose.yml with
+# docker-compose.override.yml if the override file exists.
+#
+# Use this for:
+# - Changing ports to avoid conflicts
+# - Adding extra environment variables
+# - Mounting additional volumes
+# - Enabling debugging tools
+# - Personal development preferences
+#
+# ===================================================================
+
+services:
+  # -------------------------------------------------------------------
+  # Backend Service Customizations
+  # -------------------------------------------------------------------
+  backend:
+    # Change backend port (if 8000 is already in use)
+    ports:
+      - "8080:8000"  # Access backend on http://localhost:8080
+    
+    # Add custom environment variables
+    environment:
+      # Enable Django debug toolbar
+      - DEBUG_TOOLBAR=True
+      
+      # Change log level
+      - LOG_LEVEL=DEBUG
+      
+      # Add custom email settings
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_HOST_USER=your-email@gmail.com
+      - EMAIL_HOST_PASSWORD=your-app-password
+    
+    # Mount additional directories
+    volumes:
+      # Example: Mount a custom scripts directory
+      # - ./custom-scripts:/app/custom-scripts
+      
+      # Example: Mount host SSH keys for git operations
+      # - ~/.ssh:/root/.ssh:ro
+
+  # -------------------------------------------------------------------
+  # Frontend Service Customizations
+  # -------------------------------------------------------------------
+  frontend:
+    # Change frontend port (if 5173 is already in use)
+    ports:
+      - "3000:5173"  # Access frontend on http://localhost:3000
+    
+    # Add custom environment variables
+    environment:
+      # Enable Vite polling for file watching (some systems need this)
+      - CHOKIDAR_USEPOLLING=true
+      
+      # Change API URL if backend port changed
+      - VITE_API_BASE_URL=http://localhost:8080/api
+
+  # -------------------------------------------------------------------
+  # PostgreSQL Service Customizations
+  # -------------------------------------------------------------------
+  postgres:
+    # Change PostgreSQL port (if 5432 is already in use)
+    ports:
+      - "5433:5432"  # Access PostgreSQL on port 5433
+    
+    # Add custom PostgreSQL configuration
+    environment:
+      # Example: Change locale
+      # - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=en_US.UTF-8
+      pass
+
+  # -------------------------------------------------------------------
+  # Redis Service Customizations
+  # -------------------------------------------------------------------
+  redis:
+    # Change Redis port (if 6379 is already in use)
+    ports:
+      - "6380:6379"  # Access Redis on port 6380
+
+  # -------------------------------------------------------------------
+  # Additional Services (Optional)
+  # -------------------------------------------------------------------
+  # Uncomment to add additional services for development
+  
+  # # Adminer - Database management UI
+  # adminer:
+  #   image: adminer:latest
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8080"
+  #   environment:
+  #     ADMINER_DEFAULT_SERVER: postgres
+  #   depends_on:
+  #     - postgres
+  #   networks:
+  #     - edulite-network
+  
+  # # Mailhog - Email testing tool
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   restart: unless-stopped
+  #   ports:
+  #     - "1025:1025"  # SMTP
+  #     - "8025:8025"  # Web UI
+  #   networks:
+  #     - edulite-network
+
+# -------------------------------------------------------------------
+# Network Customizations
+# -------------------------------------------------------------------
+# networks:
+#   edulite-network:
+#     # Example: Use a specific subnet
+#     ipam:
+#       config:
+#         - subnet: 172.28.0.0/16
+
+# -------------------------------------------------------------------
+# Volume Customizations
+# -------------------------------------------------------------------
+# volumes:
+#   postgres_data:
+#     # Example: Use a bind mount instead of named volume
+#     driver_opts:
+#       type: none
+#       o: bind
+#       device: /path/to/your/postgres/data

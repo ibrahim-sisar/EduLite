@@ -7,6 +7,7 @@ certifi==2025.8.3
 cffi==1.17.1
 channels==4.2.2
 channels_redis==4.2.1
+dj-database-url==2.2.0
 charset-normalizer==3.4.3
 colorama==0.4.6
 colorlog==6.9.0
@@ -34,6 +35,7 @@ msgpack==1.1.1
 pikepdf==9.11.0
 pillow==11.2.1
 psutil==7.0.0
+psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 pycparser==2.22
