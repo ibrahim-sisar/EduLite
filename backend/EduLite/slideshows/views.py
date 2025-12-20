@@ -53,8 +53,13 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
         - Public published slideshows from others
         """
         from django.db.models import Q
+        from django.contrib.auth import get_user_model
 
+        User = get_user_model()
         user = self.request.user
+
+        # Type assertion: user is authenticated due to IsAuthenticated permission
+        assert isinstance(user, User)
 
         # Base queryset: user's own slideshows + public published ones
         queryset = Slideshow.objects.filter(
