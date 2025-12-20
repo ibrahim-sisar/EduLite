@@ -8,6 +8,7 @@ from .serializers import NotesSerializer, NotesCreateSerializer
 from .permissions import IsOwnerOrReadOnly
 from .download_zip_logic import prepare_note_files_response
 
+
 # Create your views here.
 class NotesListCreateView(generics.ListCreateAPIView):
     """
@@ -22,17 +23,18 @@ class NotesListCreateView(generics.ListCreateAPIView):
     """
 
     queryset = Notes.objects.all().order_by("uploaded_at")
-    #permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
         """Return different serializers for GET vs POST requests."""
         if self.request.method == "POST":
             return NotesCreateSerializer
         return NotesSerializer
-    
+
     def perform_create(self, serializer):
         """Save note with the logged-in user as uploader."""
         serializer.save(uploader=self.request.user)
+
 
 class NotesDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -46,14 +48,17 @@ class NotesDetailView(generics.RetrieveUpdateDestroyAPIView):
     - IsAuthenticated: user must be logged in.
     - IsOwnerOrReadOnly: only the owner can edit or delete.
     """
+
     queryset = Notes.objects.all()
     serializer_class = NotesSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
 
 class DownloadNoteFilesView(APIView):
     """
     Download all files for a specific note.
     """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request, note_id):
@@ -64,4 +69,3 @@ class DownloadNoteFilesView(APIView):
             return Response({"error": "No files found for this note"}, status=404)
         # prepare_note_files_response provides zip logic
         return prepare_note_files_response(note, files)
-    

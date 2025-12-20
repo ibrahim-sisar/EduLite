@@ -1,7 +1,7 @@
 import logging
 from typing import Any, cast
 
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import exceptions, generics, permissions, serializers
 from drf_spectacular.utils import (
@@ -13,6 +13,8 @@ from drf_spectacular.utils import (
 
 from .models import CourseMembership
 from .serializers import CourseSerializer
+
+User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +83,18 @@ class CourseCreateView(generics.CreateAPIView):
         course_serializer = cast(CourseSerializer, serializer)
         course = course_serializer.save()
         request_user = self.request.user
-        if not isinstance(request_user, AbstractBaseUser):
-            raise exceptions.NotAuthenticated("Authentication is required to create a course.")
+        if not isinstance(request_user, User):
+            raise exceptions.NotAuthenticated(
+                "Authentication is required to create a course."
+            )
         if not request_user.is_authenticated:
-            raise exceptions.NotAuthenticated("Authentication is required to create a course.")
+            raise exceptions.NotAuthenticated(
+                "Authentication is required to create a course."
+            )
 
-        logger.info("Course %s (%s) created by %s", course.title, course.pk, self.request.user)
+        logger.info(
+            "Course %s (%s) created by %s", course.title, course.pk, self.request.user
+        )
         CourseMembership.objects.create(
             course=course,
             user=request_user,
@@ -94,5 +102,7 @@ class CourseCreateView(generics.CreateAPIView):
             status="enrolled",
         )
         logger.debug(
-            "Teacher membership created for user %s in course %s", self.request.user, course.pk
+            "Teacher membership created for user %s in course %s",
+            self.request.user,
+            course.pk,
         )

@@ -5,6 +5,7 @@ This module provides a simple health check endpoint that Docker can use
 to verify the backend service is running and healthy.
 """
 
+from typing import Any, Dict
 from django.http import JsonResponse
 from django.db import connection
 from django.core.cache import cache
@@ -21,7 +22,11 @@ def health_check(request):
     - Database connectivity
     - Redis connectivity (via Django cache)
     """
-    status = {"status": "healthy", "service": "edulite-backend", "checks": {}}
+    status: Dict[str, Any] = {
+        "status": "healthy",
+        "service": "edulite-backend",
+        "checks": {},
+    }
 
     http_status = 200
 

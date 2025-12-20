@@ -50,17 +50,17 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DEBUG: "True"
       ALLOWED_HOSTS: localhost,127.0.0.1,backend
-      
+
       # Database
       DATABASE_URL: postgresql://edulite_user:${POSTGRES_PASSWORD}@postgres:5432/edulite
-      
+
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      
+
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
-      
+
       # Email (optional - defaults to console backend)
       EMAIL_HOST: ${EMAIL_HOST:-}
       EMAIL_PORT: ${EMAIL_PORT:-587}
@@ -101,7 +101,7 @@ services:
       # API Configuration
       VITE_API_BASE_URL: http://localhost:8000/api
       VITE_WS_BASE_URL: ws://localhost:8000/ws
-      
+
       # Token Configuration
       VITE_TOKEN_REFRESH_BUFFER: 30
       VITE_USE_SESSION_STORAGE: "true"

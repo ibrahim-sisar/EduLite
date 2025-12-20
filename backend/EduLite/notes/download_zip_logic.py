@@ -27,7 +27,5 @@ def prepare_note_files_response(note, files):
     buffer.seek(0)
 
     response = HttpResponse(buffer, content_type="application/zip")
-    response["Content-Disposition"] = (
-        f'attachment; filename="{note.title}_files.zip"'
-    )
+    response["Content-Disposition"] = f'attachment; filename="{note.title}_files.zip"'
     return response

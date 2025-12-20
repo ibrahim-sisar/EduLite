@@ -21,7 +21,9 @@ class CourseCreateAPITests(APITestCase):
         self.user_model = get_user_model()
 
     def _create_user(self, username: str, occupation: Optional[str] = None):
-        user = self.user_model.objects.create_user(username=username, password="test-pass-123")
+        user = self.user_model.objects.create_user(
+            username=username, password="test-pass-123"
+        )
         if occupation is not None:
             profile = user.profile
             profile.occupation = occupation

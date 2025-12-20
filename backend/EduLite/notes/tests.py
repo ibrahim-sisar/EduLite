@@ -10,16 +10,17 @@ from .models import Notes, NotesFiles
 
 User = get_user_model()
 
+
 def get_unique_username(base="user"):
     return f"{base}_{uuid.uuid4().hex[:6]}"
+
 
 class NoteFeatureTests(APITestCase):
 
     def setUp(self):
         # Create test user and JWT token
         self.user = User.objects.create_user(
-            username=get_unique_username("testuser"),
-            password="password123"
+            username=get_unique_username("testuser"), password="password123"
         )
         refresh = RefreshToken.for_user(self.user)
         self.token = str(refresh.access_token)
@@ -42,8 +43,8 @@ class NoteFeatureTests(APITestCase):
 
         data = {
             "title": "New Note",
-            "level": "high_school",   # Use choice values
-            "subject": "math",        # Use choice values
+            "level": "high_school",  # Use choice values
+            "subject": "math",  # Use choice values
             "notes_course": "algebra",
             "description": "Test description",
             "files": [file1, file2],
@@ -60,18 +61,16 @@ class NoteFeatureTests(APITestCase):
     def test_download_multiple_files_zips(self):
         # Attach files to note
         file1 = NotesFiles.objects.create(
-            note=self.note,
-            files=SimpleUploadedFile("file0.txt", b"File content 0")
+            note=self.note, files=SimpleUploadedFile("file0.txt", b"File content 0")
         )
         file2 = NotesFiles.objects.create(
-            note=self.note,
-            files=SimpleUploadedFile("file1.txt", b"File content 1")
+            note=self.note, files=SimpleUploadedFile("file1.txt", b"File content 1")
         )
 
         url = reverse("download_note_files", args=[self.note.id])  # Update URL
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response['Content-Type'], 'application/zip')
+        self.assertEqual(response["Content-Type"], "application/zip")
 
     def test_get_note_detail(self):
         url = reverse("note_detail", args=[self.note.id])  # Update URL
@@ -82,8 +81,7 @@ class NoteFeatureTests(APITestCase):
     def test_permission_update_note(self):
         # Create another user with unique username
         other_user = User.objects.create_user(
-            username=get_unique_username("otheruser"),
-            password="pass123"
+            username=get_unique_username("otheruser"), password="pass123"
         )
         refresh = RefreshToken.for_user(other_user)
         other_token = str(refresh.access_token)

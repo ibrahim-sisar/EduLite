@@ -46,7 +46,8 @@ def validate_search_query(
 
 
 def build_privacy_aware_search_queryset(
-    search_query: str, requesting_user: Optional[User]  # type: ignore[valid-type]
+    search_query: str,
+    requesting_user: Optional[User],  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Creates a privacy-aware search queryset that only searches fields the requesting user can see.
@@ -83,7 +84,8 @@ def build_privacy_aware_search_queryset(
 
 
 def build_base_search_queryset(
-    search_query: str, requesting_user: Optional[User] = None  # type: ignore[valid-type]
+    search_query: str,
+    requesting_user: Optional[User] = None,  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Creates the base search queryset with privacy-aware field searching.
@@ -100,7 +102,8 @@ def build_base_search_queryset(
 
 
 def apply_privacy_filters(
-    queryset: QuerySet, requesting_user: Optional[User]  # type: ignore[valid-type]
+    queryset: QuerySet,
+    requesting_user: Optional[User],  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Applies privacy settings to filter out users based on their privacy preferences
@@ -199,7 +202,7 @@ def paginate_search_results(
         # Wrap Django HttpRequest in DRF Request
         drf_request = Request(request)
     else:
-        drf_request = request  # type: ignore[assignment]
+        drf_request = request
 
     page = paginator.paginate_queryset(queryset, drf_request, view=view_instance)
 
@@ -263,7 +266,8 @@ def execute_user_search(
 
 
 def filter_user_display_data(
-    users_queryset: QuerySet, requesting_user: Optional[User]  # type: ignore[valid-type]
+    users_queryset: QuerySet,
+    requesting_user: Optional[User],  # type: ignore[valid-type]
 ) -> QuerySet:
     """
     Additional filtering to respect privacy settings for what user data is displayed

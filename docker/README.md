@@ -194,7 +194,7 @@ services:
     # Change ports
     ports:
       - "8080:8000"
-  
+
   frontend:
     # Mount additional directories
     volumes:

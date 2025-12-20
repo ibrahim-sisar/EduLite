@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Notes, NotesFiles
 
+
 class NotesFilesSerializer(serializers.ModelSerializer):
     """
     Serializer for NoteFile model.
@@ -12,6 +13,7 @@ class NotesFilesSerializer(serializers.ModelSerializer):
         model = NotesFiles
         fields = ["id", "files", "uploaded_at"]
 
+
 class NotesSerializer(serializers.ModelSerializer):
     """
     Read-only serializer for Note model.
@@ -20,6 +22,7 @@ class NotesSerializer(serializers.ModelSerializer):
     """
 
     files = NotesFilesSerializer(many=True, read_only=True)
+
     class Meta:
         model = Notes
         fields = [
@@ -34,7 +37,8 @@ class NotesSerializer(serializers.ModelSerializer):
             "files",
         ]
         read_only_fields = ["uploader", "uploaded_at"]
-        
+
+
 class NotesCreateSerializer(serializers.ModelSerializer):
     """
     Write-only serializer for creating Note objects with file uploads.
