@@ -1,11 +1,9 @@
 # Unit tests for the Slide model
 
-from datetime import datetime, timedelta
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
-from courses.models import Course
 from slideshows.models import Slideshow, Slide
 
 User = get_user_model()
@@ -19,26 +17,14 @@ class SlideModelTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        """Create test user, course, and slideshow for slide tests"""
+        """Create test user and slideshow for slide tests"""
         cls.user = User.objects.create_user(
             username="test_teacher", email="teacher@test.com", password="testpass123"
         )
 
-        cls.course = Course.objects.create(
-            title="Test Course",
-            outline="Test course outline",
-            language="en",
-            country="US",
-            subject="physics",
-            visibility="public",
-            start_date=datetime.now(),
-            end_date=datetime.now() + timedelta(days=90),
-            is_active=True,
-        )
-
         cls.slideshow = Slideshow.objects.create(
             title="Test Slideshow",
-            course=cls.course,
+            visibility="public",
             created_by=cls.user,
         )
 
@@ -197,7 +183,7 @@ class SlideModelTest(TestCase):
         """Test that order can be the same across different slideshows"""
         slideshow2 = Slideshow.objects.create(
             title="Second Slideshow",
-            course=self.course,
+            visibility="public",
             created_by=self.user,
         )
 

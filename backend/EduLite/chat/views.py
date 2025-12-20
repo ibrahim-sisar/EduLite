@@ -72,8 +72,11 @@ class ChatRoomListCreateView(ChatAppBaseAPIView):
 
     def get_queryset(self):
         """ "Get the queryset of chat rooms where the user is a participant"""
+        # User is guaranteed to be authenticated due to IsAuthenticated permission
+        user = self.request.user
+        assert not user.is_anonymous  # nosec B101
         return (
-            ChatRoom.objects.filter(participants=self.request.user)
+            ChatRoom.objects.filter(participants=user)
             .select_related("creator")
             .prefetch_related("editors", "participants")
         )

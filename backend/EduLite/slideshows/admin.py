@@ -29,14 +29,22 @@ class SlideshowAdmin(admin.ModelAdmin):
 
     list_display = (
         "title",
-        "course",
         "created_by",
+        "visibility",
+        "subject",
         "is_published",
         "version",
         "updated_at",
     )
-    list_filter = ("is_published", "course", "created_at")
-    search_fields = ("title", "description", "course__title")
+    list_filter = (
+        "is_published",
+        "visibility",
+        "subject",
+        "language",
+        "country",
+        "created_at",
+    )
+    search_fields = ("title", "description", "created_by__username")
     readonly_fields = ("created_at", "updated_at", "version")
     inlines = [SlideInline]
 
@@ -47,10 +55,17 @@ class SlideshowAdmin(admin.ModelAdmin):
                 "fields": (
                     "title",
                     "description",
-                    "course",
                     "created_by",
                     "is_published",
+                    "visibility",
                 )
+            },
+        ),
+        (
+            "Categorization",
+            {
+                "fields": ("subject", "language", "country"),
+                "classes": ("collapse",),
             },
         ),
         (
@@ -68,7 +83,7 @@ class SlideAdmin(admin.ModelAdmin):
     """Admin interface for individual Slide management"""
 
     list_display = ("slideshow", "order", "get_title", "updated_at")
-    list_filter = ("slideshow__course", "slideshow")
+    list_filter = ("slideshow",)
     search_fields = ("title", "content", "slideshow__title")
     readonly_fields = ("rendered_content", "created_at", "updated_at")
     ordering = ["slideshow", "order"]

@@ -1,7 +1,7 @@
 # backend/EduLite/users/logic/user_search_logic.py
 # Contains logic functions for user search functionality with privacy controls
 
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, Union
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet, Q, Exists, OuterRef
 from django.http import HttpRequest
@@ -178,14 +178,17 @@ def apply_privacy_filters(
 
 
 def paginate_search_results(
-    queryset: QuerySet, request: HttpRequest, view_instance, page_size: int = 10
+    queryset: QuerySet,
+    request: Union[HttpRequest, Request],
+    view_instance,
+    page_size: int = 10,
 ) -> Tuple[QuerySet, Optional[PageNumberPagination]]:
     """
     Handles pagination of search results.
 
     Args:
         queryset: The filtered queryset to paginate
-        request: The HTTP request object
+        request: The HTTP request object (Django HttpRequest or DRF Request)
         view_instance: The view instance for pagination context
         page_size: Number of results per page
 
@@ -198,11 +201,11 @@ def paginate_search_results(
     paginator.page_size = page_size
 
     # Ensure we have a DRF Request object for pagination compatibility
-    if not hasattr(request, "query_params"):
+    if isinstance(request, Request):
+        drf_request = request
+    else:
         # Wrap Django HttpRequest in DRF Request
         drf_request = Request(request)
-    else:
-        drf_request = request
 
     page = paginator.paginate_queryset(queryset, drf_request, view=view_instance)
 
