@@ -203,3 +203,100 @@ class SlideshowListCreateViewTestCase(TestCase):
         self.assertEqual(response.data["title"], "Minimal Slideshow")
         self.assertEqual(response.data["visibility"], "private")  # Default
         self.assertFalse(response.data["is_published"])  # Default
+
+    def test_list_pagination_structure(self):
+        """Test that list endpoint returns paginated response structure."""
+        self.client.force_authenticate(user=self.teacher)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Check pagination structure
+        self.assertIn("results", response.data)
+        self.assertIn("count", response.data)
+        self.assertIn("next", response.data)
+        self.assertIn("previous", response.data)
+        self.assertIn("total_pages", response.data)
+        self.assertIn("current_page", response.data)
+        self.assertIn("page_size", response.data)
+
+    def test_list_pagination_default_page_size(self):
+        """Test that default page size is 20."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Create 25 slideshows to test pagination
+        for i in range(25):
+            Slideshow.objects.create(
+                title=f"Test Slideshow {i}",
+                visibility="public",
+                created_by=self.teacher,
+                is_published=True,
+            )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["page_size"], 20)
+        self.assertEqual(len(response.data["results"]), 20)
+        self.assertEqual(response.data["count"], 28)  # 25 new + 3 from setUp
+        self.assertIsNotNone(response.data["next"])  # Should have next page
+        self.assertIsNone(response.data["previous"])  # First page has no previous
+
+    def test_list_pagination_custom_page_size(self):
+        """Test that custom page size can be specified."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Create 15 more slideshows (total will be 18 with setUp)
+        for i in range(15):
+            Slideshow.objects.create(
+                title=f"Test Slideshow {i}",
+                visibility="public",
+                created_by=self.teacher,
+                is_published=True,
+            )
+
+        response = self.client.get(f"{self.url}?page_size=10")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["page_size"], 10)
+        self.assertEqual(len(response.data["results"]), 10)
+        self.assertEqual(response.data["count"], 18)
+        self.assertIsNotNone(response.data["next"])
+
+    def test_list_pagination_page_navigation(self):
+        """Test navigating through pages."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Create 25 slideshows
+        for i in range(25):
+            Slideshow.objects.create(
+                title=f"Test Slideshow {i}",
+                visibility="public",
+                created_by=self.teacher,
+                is_published=True,
+            )
+
+        # Get first page
+        response = self.client.get(f"{self.url}?page_size=10")
+        self.assertEqual(response.data["current_page"], 1)
+        self.assertEqual(len(response.data["results"]), 10)
+
+        # Get second page
+        response = self.client.get(f"{self.url}?page=2&page_size=10")
+        self.assertEqual(response.data["current_page"], 2)
+        self.assertEqual(len(response.data["results"]), 10)
+
+        # Get third page (should have remaining items)
+        response = self.client.get(f"{self.url}?page=3&page_size=10")
+        self.assertEqual(response.data["current_page"], 3)
+        self.assertEqual(len(response.data["results"]), 8)  # 28 total, 10+10+8
+
+    def test_list_pagination_max_page_size(self):
+        """Test that page size cannot exceed maximum (100)."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Try to request 200 items per page (should be capped at 100)
+        response = self.client.get(f"{self.url}?page_size=200")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Should be capped at max_page_size of 100
+        self.assertEqual(response.data["page_size"], 100)
