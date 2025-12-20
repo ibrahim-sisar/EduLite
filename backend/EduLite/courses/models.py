@@ -111,9 +111,9 @@ class CourseModule(models.Model):
     )
 
     # the content_type and object_id are used to link the module to a specific content object
-    # example: Lecture, Quiz, Assignment, etc.
+    # example: Lecture, Slideshow, Quiz, Assignment, etc.
     content_type = models.ForeignKey(
-        ContentType,
+        ContentType,  # link to any model (SlideShow, Quiz, Video)
         on_delete=models.CASCADE,
         related_name="course_contents",
         help_text="The type of the content object",

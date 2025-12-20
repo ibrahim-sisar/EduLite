@@ -5,13 +5,31 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
+from .model_choices import (
+    SLIDESHOW_VISIBILITY_CHOICES,
+    LANGUAGE_CHOICES,
+    COUNTRY_CHOICES,
+    SUBJECT_CHOICES,
+)
+
 User = get_user_model()
 
 
 class Slideshow(models.Model):
     """
-    A markdown-based slideshow presentation belonging to a course.
-    Teachers create and edit, students view when published.
+    A standalone markdown-based slideshow presentation.
+
+    Slideshows are created and owned by users independently.
+    They can optionally be attached to courses via CourseModule's GenericForeignKey.
+
+    Visibility controls who can view the slideshow:
+    - public: Discoverable and viewable by anyone (if published)
+    - unlisted: Not discoverable, but viewable with direct link (if published)
+    - private: Only the owner can view
+
+    The is_published flag controls draft vs ready state:
+    - False: Draft mode, only owner can view regardless of visibility
+    - True: Ready for viewing, respects visibility settings
     """
 
     title = models.CharField(
@@ -28,24 +46,51 @@ class Slideshow(models.Model):
         help_text="Brief description of the slideshow content",
     )
 
-    # Relationships
-    course = models.ForeignKey(
-        "courses.Course",
-        on_delete=models.CASCADE,
-        related_name="slideshows",
-        help_text="The course this slideshow belongs to",
-    )
-
+    # Ownership (replaces course-based permissions)
     created_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="created_slideshows",
-        help_text="The teacher who created this slideshow",
+        help_text="The user who created this slideshow",
+    )
+
+    # Visibility & discoverability
+    visibility = models.CharField(
+        max_length=64,
+        choices=SLIDESHOW_VISIBILITY_CHOICES,
+        default="private",
+        help_text="Who can view this slideshow (public/unlisted/private)",
+    )
+
+    # Metadata for organization and search
+    language = models.CharField(
+        max_length=64,
+        choices=LANGUAGE_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Primary language of the slideshow content",
+    )
+
+    country = models.CharField(
+        max_length=64,
+        choices=COUNTRY_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Country/region this content is relevant to",
+    )
+
+    subject = models.CharField(
+        max_length=64,
+        choices=SUBJECT_CHOICES,
+        blank=True,
+        null=True,
+        help_text="Subject area of the slideshow",
     )
 
     # State management
     is_published = models.BooleanField(
-        default=False, help_text="Whether the slideshow is visible to students"
+        default=False,
+        help_text="Whether the slideshow is ready for viewing (draft vs published)",
     )
 
     version = models.PositiveIntegerField(
@@ -60,9 +105,10 @@ class Slideshow(models.Model):
     class Meta:
         ordering = ["-updated_at"]
         indexes = [
-            models.Index(fields=["course", "-updated_at"]),
             models.Index(fields=["created_by", "-updated_at"]),
-            models.Index(fields=["is_published", "course"]),
+            models.Index(fields=["visibility", "-updated_at"]),
+            models.Index(fields=["subject", "-updated_at"]),
+            models.Index(fields=["is_published", "visibility"]),
         ]
         verbose_name = "Slideshow"
         verbose_name_plural = "Slideshows"
@@ -73,7 +119,7 @@ class Slideshow(models.Model):
             raise ValidationError("Title cannot be all spaces")
 
     def __str__(self):
-        return f"{self.title} - {self.course.title}"
+        return self.title
 
 
 class Slide(models.Model):
@@ -113,9 +159,9 @@ class Slide(models.Model):
         blank=True, help_text="Cached HTML rendered from markdown via Spellbook"
     )
 
-    # Speaker notes (teachers only)
+    # Speaker notes (owner only)
     notes = models.TextField(
-        blank=True, null=True, help_text="Speaker notes visible only to teachers"
+        blank=True, null=True, help_text="Speaker notes visible only to slideshow owner"
     )
 
     # Timestamps
