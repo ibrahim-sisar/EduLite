@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 
@@ -30,9 +31,10 @@ class UserRetrieveViewTest(UsersAppTestCase):
         # Authenticate as Ahmad
         self.authenticate_as(self.ahmad)
 
-        # Retrieve Marie's details
+        # Retrieve Marie's details with performance monitoring
         url = reverse("user-detail", kwargs={"pk": self.marie.pk})
-        response = self.client.get(url)
+        with monitor(response_time_ms=80, query_count=3):
+            response = self.client.get(url)
 
         # Should return 200 OK
         self.assert_response_success(response, status.HTTP_200_OK)

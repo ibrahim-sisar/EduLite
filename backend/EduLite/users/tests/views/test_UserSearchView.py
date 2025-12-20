@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 
@@ -99,7 +100,8 @@ class UserSearchViewTest(UsersAppTestCase):
         self.authenticate_as(self.ahmad)
 
         # Search for 'marie' should find marie_student
-        response = self.client.get(self.url, {"q": "marie"})
+        with monitor(response_time_ms=20, query_count=5):
+            response = self.client.get(self.url, {"q": "marie"})
         self.assert_response_success(response, status.HTTP_200_OK)
 
         usernames = [u["username"] for u in response.data["results"]]
@@ -375,18 +377,11 @@ class UserSearchViewTest(UsersAppTestCase):
 
         self.authenticate_as(self.ahmad)
 
-        import time
-
-        start_time = time.time()
-
-        # Search for common term
-        response = self.client.get(self.url, {"q": "perf"})
-
-        end_time = time.time()
-        duration = end_time - start_time
+        # Search for common term with performance monitoring
+        with monitor(response_time_ms=2000, query_count=10):
+            response = self.client.get(self.url, {"q": "perf"})
 
         self.assert_response_success(response, status.HTTP_200_OK)
-        self.assertLess(duration, 2.0, "Search took too long")
 
         # Verify we got paginated results
         self.assertLessEqual(len(response.data["results"]), 10)

@@ -42,3 +42,6 @@ opencode.jsonc
 
 # temporary files
 /_temp/
+
+# Mercury performance test reports
+mercury_report*.html

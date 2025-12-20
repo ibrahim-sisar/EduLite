@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django_mercury import monitor
 
 from courses.models import Course, CourseMembership
 
@@ -50,7 +51,9 @@ class CourseCreateAPITests(APITestCase):
             "allow_join_requests": True,
         }
 
-        response = self.client.post(self.url, payload, format="json")
+        # Monitor course creation with auto-membership
+        with monitor(response_time_ms=150, query_count=6):
+            response = self.client.post(self.url, payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("id", response.data)

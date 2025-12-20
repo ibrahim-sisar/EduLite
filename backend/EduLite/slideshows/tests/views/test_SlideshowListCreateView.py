@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from django_mercury import monitor
 
 from slideshows.models import Slideshow, Slide
 
@@ -59,7 +60,9 @@ class SlideshowListCreateViewTestCase(TestCase):
     def test_list_users_see_public_published_and_own(self):
         """Test that users see public published slideshows and their own."""
         self.client.force_authenticate(user=self.student)
-        response = self.client.get(self.url)
+
+        with monitor(response_time_ms=100, query_count=5):
+            response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should see only the public published slideshow
@@ -150,7 +153,9 @@ class SlideshowListCreateViewTestCase(TestCase):
             "subject": "cs",
             "is_published": False,
         }
-        response = self.client.post(self.url, data, format="json")
+
+        with monitor(response_time_ms=200, query_count=10):
+            response = self.client.post(self.url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "Student's Slideshow")

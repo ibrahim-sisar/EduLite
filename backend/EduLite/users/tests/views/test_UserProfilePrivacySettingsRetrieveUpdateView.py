@@ -4,13 +4,12 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
+from django_mercury import monitor
 
 from ...models import UserProfile, UserProfilePrivacySettings
 
-from django_mercury import DjangoPerformanceAPITestCase
 
-
-class UserProfilePrivacySettingsRetrieveUpdateViewTest(DjangoPerformanceAPITestCase):
+class UserProfilePrivacySettingsRetrieveUpdateViewTest(APITestCase):
     """Test cases for the UserProfilePrivacySettingsRetrieveUpdateView API endpoint."""
 
     def setUp(self):
@@ -378,26 +377,17 @@ class UserProfilePrivacySettingsRetrieveUpdateViewTest(DjangoPerformanceAPITestC
         """Test performance of privacy settings updates."""
         self.client.force_authenticate(user=self.ahmad)
 
-        import time
-
-        start_time = time.time()
-
-        # Make multiple updates
-        for i in range(5):
+        # Test a single update with performance monitoring
+        with monitor(response_time_ms=100, query_count=3):
             response = self.client.patch(
                 self.url,
                 {
-                    "show_email": i % 2 == 0,  # Toggle between True/False
-                    "show_full_name": i % 2 == 1,
+                    "show_email": True,
+                    "show_full_name": False,
                 },
             )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        end_time = time.time()
-        duration = end_time - start_time
-
-        # Should complete quickly
-        self.assertLess(duration, 2.0, "Privacy settings update too slow")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # --- Edge Cases ---
 
@@ -484,7 +474,9 @@ class UserProfilePrivacySettingsRetrieveUpdateViewTest(DjangoPerformanceAPITestC
 
         # Try to set boolean field to an invalid string (not 'true'/'false')
         response = self.client.patch(
-            self.url, {"show_email": "invalid_bool"}, format="json"  # Should be boolean
+            self.url,
+            {"show_email": "invalid_bool"},
+            format="json",  # Should be boolean
         )
 
         # DRF might coerce 'invalid_bool' to True (any non-empty string)
