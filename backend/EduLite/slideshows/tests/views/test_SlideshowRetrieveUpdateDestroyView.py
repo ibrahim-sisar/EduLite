@@ -91,7 +91,7 @@ class SlideshowRetrieveUpdateDestroyViewTestCase(TestCase):
         self.client.force_authenticate(user=self.teacher)
         data = {"title": "Updated Title"}
 
-        with monitor(response_time_ms=150, query_count=8):
+        with monitor(response_time_ms=20, query_count=8):
             response = self.client.patch(self.url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

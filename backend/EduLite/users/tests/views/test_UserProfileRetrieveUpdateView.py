@@ -3,6 +3,7 @@
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 
@@ -39,7 +40,9 @@ class UserProfileRetrieveUpdateViewTest(UsersAppTestCase):
         self.authenticate_as(self.ahmad)
         url = self.get_url(self.ahmad.id)
 
-        response = self.client.get(url)
+        # Monitor profile retrieval with user + profile + privacy_settings joins
+        with monitor(response_time_ms=100, query_count=4):
+            response = self.client.get(url)
         self.assert_response_success(response, status.HTTP_200_OK)
 
         # Should get profile data (specific fields tested in serializer tests)

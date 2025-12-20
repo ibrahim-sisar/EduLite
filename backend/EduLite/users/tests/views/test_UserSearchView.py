@@ -100,7 +100,7 @@ class UserSearchViewTest(UsersAppTestCase):
         self.authenticate_as(self.ahmad)
 
         # Search for 'marie' should find marie_student
-        with monitor(response_time_ms=100, query_count=5):
+        with monitor(response_time_ms=20, query_count=5):
             response = self.client.get(self.url, {"q": "marie"})
         self.assert_response_success(response, status.HTTP_200_OK)
 

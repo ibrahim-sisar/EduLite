@@ -3,6 +3,7 @@
 from django.contrib.auth.models import User, Group
 from django.urls import reverse
 from rest_framework import status
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 
@@ -43,7 +44,9 @@ class GroupListCreateViewTest(UsersAppTestCase):
         """Test that regular users can list groups."""
         self.authenticate_as(self.ahmad)
 
-        response = self.client.get(self.url)
+        # Monitor group list with potential permissions prefetch
+        with monitor(response_time_ms=100, query_count=3):
+            response = self.client.get(self.url)
         self.assert_response_success(response, status.HTTP_200_OK)
 
         # Should return paginated results
@@ -232,7 +235,8 @@ class GroupListCreateViewTest(UsersAppTestCase):
         self.authenticate_as(self.sarah_teacher)
 
         response = self.client.post(
-            self.url, {"name": "طلاب متقدمون"}  # Arabic for "Advanced Students"
+            self.url,
+            {"name": "طلاب متقدمون"},  # Arabic for "Advanced Students"
         )
 
         self.assert_response_success(response, status.HTTP_201_CREATED)
