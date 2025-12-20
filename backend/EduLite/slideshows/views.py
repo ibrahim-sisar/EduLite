@@ -17,6 +17,7 @@ from .serializers import (
     SlideSerializer,
 )
 from .permissions import IsOwnerOrReadOnly
+from .pagination import SlideshowPagination
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
          - User's own slideshows (any visibility)
          - Public published slideshows from other users
          - Supports filtering by ?visibility=, ?subject=, ?language=, ?mine=true
+         - Paginated results (default 20 per page)
 
     POST: Create a new slideshow
           - Automatically sets created_by to the current user
@@ -36,6 +38,7 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
     """
 
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = SlideshowPagination
 
     def get_serializer_class(self):
         """Use list serializer for GET, detail serializer for POST."""
@@ -87,9 +90,22 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
         description=(
             "Returns slideshows visible to the user. "
             "Users see their own slideshows (any visibility) and public published slideshows from others. "
-            "Supports filtering by visibility, subject, language, country."
+            "Supports filtering by visibility, subject, language, country. "
+            "Results are paginated (default 20 per page, max 100)."
         ),
         parameters=[
+            OpenApiParameter(
+                "page",
+                int,
+                description="Page number for pagination",
+                required=False,
+            ),
+            OpenApiParameter(
+                "page_size",
+                int,
+                description="Number of results per page (default 20, max 100)",
+                required=False,
+            ),
             OpenApiParameter(
                 "visibility",
                 str,

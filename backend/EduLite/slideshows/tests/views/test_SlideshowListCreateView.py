@@ -63,8 +63,8 @@ class SlideshowListCreateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should see only the public published slideshow
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["title"], "Published Slideshow")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["title"], "Published Slideshow")
 
     def test_list_owners_see_all_their_slideshows(self):
         """Test that owners see all their own slideshows."""
@@ -73,7 +73,7 @@ class SlideshowListCreateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should see all 3 slideshows (owner can see private and unpublished)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data["results"]), 3)
 
     def test_list_filters_by_visibility(self):
         """Test filtering slideshows by visibility."""
@@ -82,7 +82,7 @@ class SlideshowListCreateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should only see public slideshows
-        for slideshow in response.data:
+        for slideshow in response.data["results"]:
             self.assertEqual(slideshow["visibility"], "public")
 
     def test_list_filters_by_subject(self):
@@ -99,8 +99,8 @@ class SlideshowListCreateViewTestCase(TestCase):
         response = self.client.get(f"{self.url}?subject=math")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["subject"], "math")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["subject"], "math")
 
     def test_list_mine_only_filter(self):
         """Test filtering for only user's own slideshows."""
@@ -117,7 +117,7 @@ class SlideshowListCreateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should only see teacher's slideshows
-        for slideshow in response.data:
+        for slideshow in response.data["results"]:
             self.assertEqual(slideshow["created_by"], self.teacher.id)
 
     def test_list_non_owner_sees_only_public_published(self):
@@ -127,8 +127,8 @@ class SlideshowListCreateViewTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should only see the public published slideshow
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["title"], "Published Slideshow")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["title"], "Published Slideshow")
 
     def test_create_requires_authentication(self):
         """Test that creating slideshows requires authentication."""
