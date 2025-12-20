@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_spellbook",
+    "django_mercury",
 ]
 
 LOGGING = {
@@ -258,7 +259,7 @@ REST_FRAMEWORK = {
 }
 
 #  Speed up Tests
-if "test" in sys.argv and DEBUG == True:
+if "test" or "mercury_test" in sys.argv and DEBUG == True:
     # Use in-memory database for ALL database operations during tests
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.sqlite3",

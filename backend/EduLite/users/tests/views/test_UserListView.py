@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 
@@ -29,8 +30,9 @@ class UserListViewTest(UsersAppTestCase):
         # Reuse existing persona for authentication
         self.authenticate_as(self.ahmad)
 
-        # Make request
-        response = self.client.get(self.url)
+        # Make request with performance monitoring
+        with monitor(response_time_ms=100, query_count=5):
+            response = self.client.get(self.url)
 
         # Should return 200 OK
         self.assert_response_success(response, status.HTTP_200_OK)
@@ -218,7 +220,6 @@ class UserListViewTest(UsersAppTestCase):
 
     def test_list_users_performance_with_many_users(self):
         """Test that user list performs well with many users."""
-        # This would normally use Mercury, but we'll just ensure it completes
         # Create many users
         users = []
         for i in range(100):
@@ -229,8 +230,9 @@ class UserListViewTest(UsersAppTestCase):
         auth_user = self.create_test_user(username="auth_user_perf")
         self.authenticate_as(auth_user)
 
-        # Make request and ensure it completes
-        response = self.client.get(self.url, {"page_size": 50})
+        # Make request with performance monitoring
+        with monitor(response_time_ms=200, query_count=10):
+            response = self.client.get(self.url, {"page_size": 50})
         self.assert_response_success(response)
 
         # Should return data

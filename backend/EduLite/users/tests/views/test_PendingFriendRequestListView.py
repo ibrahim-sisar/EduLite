@@ -3,6 +3,7 @@
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
+from django_mercury import monitor
 
 from .. import UsersAppTestCase
 from ...models import ProfileFriendRequest
@@ -53,7 +54,8 @@ class PendingFriendRequestListViewTest(UsersAppTestCase):
         """Test listing pending friend requests received by user."""
         self.authenticate_as(self.ahmad)
 
-        response = self.client.get(self.url)
+        with monitor(response_time_ms=100, query_count=5):
+            response = self.client.get(self.url)
         self.assert_response_success(response, status.HTTP_200_OK)
 
         # Should have pagination
@@ -207,17 +209,10 @@ class PendingFriendRequestListViewTest(UsersAppTestCase):
 
         self.authenticate_as(self.ahmad)
 
-        import time
-
-        start_time = time.time()
-
-        response = self.client.get(self.url)
-
-        end_time = time.time()
-        duration = end_time - start_time
+        with monitor(response_time_ms=2000, query_count=10):
+            response = self.client.get(self.url)
 
         self.assert_response_success(response, status.HTTP_200_OK)
-        self.assertLess(duration, 2.0, "Listing pending requests too slow")
 
         # Verify we got paginated results
         self.assertEqual(len(response.data["results"]), 10)  # Default page size

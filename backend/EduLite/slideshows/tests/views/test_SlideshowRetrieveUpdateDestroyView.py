@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from django_mercury import monitor
 
 from slideshows.models import Slideshow, Slide
 
@@ -47,7 +48,9 @@ class SlideshowRetrieveUpdateDestroyViewTestCase(TestCase):
     def test_detail_initial_param_limits_slides(self):
         """Test that ?initial=N limits slides returned."""
         self.client.force_authenticate(user=self.teacher)
-        response = self.client.get(f"{self.url}?initial=3")
+
+        with monitor(response_time_ms=100, query_count=5):
+            response = self.client.get(f"{self.url}?initial=3")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["slides"]), 3)
@@ -87,7 +90,9 @@ class SlideshowRetrieveUpdateDestroyViewTestCase(TestCase):
 
         self.client.force_authenticate(user=self.teacher)
         data = {"title": "Updated Title"}
-        response = self.client.patch(self.url, data, format="json")
+
+        with monitor(response_time_ms=150, query_count=8):
+            response = self.client.patch(self.url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["version"], original_version + 1)
