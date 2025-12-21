@@ -38,8 +38,8 @@ WORKDIR /app
 # -------------------------------------------------------------------
 FROM base as dependencies
 
-# Copy requirements.txt from build context root (/backend/requirements.txt)
-COPY requirements.txt /requirements.txt
+# Copy requirements.txt from backend directory (build context is now repo root)
+COPY backend/requirements.txt /requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r /requirements.txt
@@ -49,8 +49,12 @@ RUN pip install --no-cache-dir -r /requirements.txt
 # -------------------------------------------------------------------
 FROM dependencies as runtime
 
-# Copy Django project from EduLite/ subdirectory
-COPY EduLite/ /app/
+# Copy Django project from backend/EduLite/ subdirectory
+COPY backend/EduLite/ /app/
+
+# Copy project choices data to container root for production deployments
+# (Development uses volume mount from docker-compose.yml)
+COPY project_choices_data/ /project_choices_data/
 
 # Note: entrypoint.sh will be bind-mounted via docker-compose.yml
 # This allows for easy editing without rebuilding the image

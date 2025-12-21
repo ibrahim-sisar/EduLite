@@ -41,8 +41,8 @@ services:
   # Django Backend - REST API + WebSocket via Daphne ASGI
   backend:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: ..
+      dockerfile: docker/backend/Dockerfile
     container_name: edulite-backend
     restart: unless-stopped
     environment:
@@ -73,6 +73,7 @@ services:
     volumes:
       - ../backend/EduLite:/app
       - ./backend/entrypoint.sh:/app/entrypoint.sh:ro
+      - ../project_choices_data:/project_choices_data:ro
       - media_data:/app/media
       - static_data:/app/staticfiles
       - logs_data:/app/logs
