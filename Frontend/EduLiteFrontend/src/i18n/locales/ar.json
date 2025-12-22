@@ -172,5 +172,32 @@
     "closeMenu": "إغلاق القائمة",
     "version": "EduLite الإصدار 1.0",
     "description": "منصة تعليمية حديثة"
+  },
+  "slideshow": {
+    "viewer": {
+      "loading": "جاري تحميل العرض التقديمي...",
+      "loadingSlide": "جاري تحميل الشريحة {{slideNumber}} من {{totalSlides}}...",
+      "slideOf": "الشريحة {{current}} من {{total}}",
+      "speakerNotes": "ملاحظات المتحدث",
+      "toggleNotes": "إظهار/إخفاء الملاحظات",
+      "nextSlide": "الشريحة التالية",
+      "previousSlide": "الشريحة السابقة",
+      "exitPresentation": "خروج",
+      "enterFullscreen": "ملء الشاشة",
+      "exitFullscreen": "إنهاء ملء الشاشة",
+      "goBack": "رجوع",
+      "errorLoadingTitle": "خطأ في تحميل العرض التقديمي",
+      "errorLoadingMessage": "فشل تحميل العرض التقديمي. يرجى المحاولة مرة أخرى.",
+      "shortcuts": {
+        "space": "التالي",
+        "backspace": "السابق",
+        "escape": "خروج",
+        "n": "الملاحظات",
+        "f": "ملء الشاشة",
+        "home": "الشريحة الأولى",
+        "end": "الشريحة الأخيرة",
+        "numbers": "الانتقال إلى الشريحة 1-9"
+      }
+    }
   }
 }

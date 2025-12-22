@@ -172,5 +172,32 @@
     "closeMenu": "Close menu",
     "version": "EduLite v1.0",
     "description": "Modern Education Platform"
+  },
+  "slideshow": {
+    "viewer": {
+      "loading": "Loading presentation...",
+      "loadingSlide": "Loading slide {{slideNumber}} of {{totalSlides}}...",
+      "slideOf": "Slide {{current}} of {{total}}",
+      "speakerNotes": "Speaker Notes",
+      "toggleNotes": "Toggle Notes",
+      "nextSlide": "Next Slide",
+      "previousSlide": "Previous Slide",
+      "exitPresentation": "Exit",
+      "enterFullscreen": "Enter fullscreen",
+      "exitFullscreen": "Exit fullscreen",
+      "goBack": "Go Back",
+      "errorLoadingTitle": "Error Loading Slideshow",
+      "errorLoadingMessage": "Failed to load slideshow. Please try again.",
+      "shortcuts": {
+        "space": "Next",
+        "backspace": "Previous",
+        "escape": "Exit",
+        "n": "Notes",
+        "f": "Fullscreen",
+        "home": "First slide",
+        "end": "Last slide",
+        "numbers": "Jump to slide 1-9"
+      }
+    }
   }
 }
