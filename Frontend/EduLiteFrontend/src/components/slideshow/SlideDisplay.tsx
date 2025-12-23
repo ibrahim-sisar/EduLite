@@ -87,13 +87,13 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
       const scrollPosition = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
-      const scrollThreshold = 100; // Hide hint after scrolling 100px
+      const scrollThreshold = 200; // Hide hint after scrolling 200px
 
       // Calculate distance from bottom
       const distanceFromBottom = scrollHeight - scrollPosition - clientHeight;
 
-      // Only hide if scrolled down AND close to bottom (within 50px)
-      if (scrollPosition > scrollThreshold && distanceFromBottom < 50) {
+      // Only hide if scrolled down AND very close to bottom (within 20px)
+      if (scrollPosition > scrollThreshold && distanceFromBottom < 20) {
         setShowScrollHint(false);
       } else if (scrollPosition < scrollThreshold) {
         setShowScrollHint(true);
@@ -143,9 +143,20 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
 
       {/* Scroll Hint - Shows when content overflows */}
       {isOverflowing && showScrollHint && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 animate-bounce pointer-events-none z-10">
-          <HiChevronDown className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-        </div>
+        <button
+          onClick={() => {
+            if (containerRef.current) {
+              containerRef.current.scrollTo({
+                top: containerRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
+          }}
+          className="fixed bottom-8 right-8 z-10 p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer shadow-lg"
+          aria-label="Scroll to bottom"
+        >
+          <HiChevronDown className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+        </button>
       )}
     </div>
   );

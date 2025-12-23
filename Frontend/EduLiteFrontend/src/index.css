@@ -126,7 +126,6 @@
 
 .slide-content ul,
 .slide-content ol {
-  padding-left: 2em;
   text-align: left;
   display: block;
   list-style-position: outside;
@@ -136,10 +135,12 @@
 
 .slide-content ul {
   list-style-type: disc;
+  padding-left: 2em;
 }
 
 .slide-content ol {
   list-style-type: decimal;
+  padding-left: -4.4em;
 }
 
 .slide-content li {
@@ -148,49 +149,45 @@
 }
 
 /* ========== Slide Scrollbar Styling ========== */
-/* Custom scrollbar for overflowing slides */
+/* Custom scrollbar for overflowing slides - Made more prominent and obvious */
 .overflow-y-auto::-webkit-scrollbar {
-  width: 12px;
+  width: 14px !important;
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
+  background: #e5e7eb !important;
+  border-radius: 8px !important;
 }
 
 .dark .overflow-y-auto::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: #374151 !important;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: #60a5fa !important;
+  border-radius: 8px !important;
+  border: 2px solid #e5e7eb !important;
 }
 
 .dark .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: #2563eb !important;
+  border: 2px solid #374151 !important;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-  background-clip: padding-box;
+  background: #3b82f6 !important;
 }
 
 .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-  background-clip: padding-box;
+  background: #1d4ed8 !important;
 }
 
-/* Firefox scrollbar */
+/* Firefox scrollbar - More prominent */
 .overflow-y-auto {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+  scrollbar-width: auto; /* Use auto instead of thin for better visibility */
+  scrollbar-color: rgba(59, 130, 246, 0.7) rgba(0, 0, 0, 0.1); /* Blue thumb, gray track */
 }
 
 .dark .overflow-y-auto {
-  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(96, 165, 250, 0.7) rgba(255, 255, 255, 0.1);
 }

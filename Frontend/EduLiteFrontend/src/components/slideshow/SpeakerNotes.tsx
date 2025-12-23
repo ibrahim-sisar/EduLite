@@ -29,7 +29,7 @@ const SpeakerNotes: React.FC<SpeakerNotesProps> = ({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-6 py-3 bg-gray-100 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/30 hover:bg-gray-200 dark:hover:bg-gray-900/90 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between px-6 py-3 bg-gray-200 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/30 hover:bg-gray-300 dark:hover:bg-gray-900/90 transition-colors cursor-pointer"
         aria-label={isVisible ? "Hide speaker notes" : "Show speaker notes"}
       >
         <div className="flex items-center gap-2">
