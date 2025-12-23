@@ -16,3 +16,165 @@
 .animate-scale-fade {
   animation: scale-fade 0.15s ease-out;
 }
+
+/* ========== Slideshow Content Auto-Scaling ========== */
+/* Very short content (< 100 chars) - Large and impactful */
+.slide-text-xl .slide-title {
+  font-size: 4rem; /* 64px */
+  line-height: 1.2;
+  margin-bottom: 2rem;
+}
+
+.slide-text-xl .slide-content {
+  font-size: 2.5rem; /* 40px */
+  line-height: 1.6;
+}
+
+/* Short content (100-300 chars) - Comfortable reading */
+.slide-text-lg .slide-title {
+  font-size: 3.5rem; /* 56px */
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+.slide-text-lg .slide-content {
+  font-size: 2rem; /* 32px */
+  line-height: 1.7;
+}
+
+/* Medium content (300-600 chars) - Balanced */
+.slide-text-md .slide-title {
+  font-size: 2.5rem; /* 40px */
+  line-height: 1.3;
+  margin-bottom: 1.25rem;
+}
+
+.slide-text-md .slide-content {
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.7;
+}
+
+/* Long content (600-1000 chars) - Compact but readable */
+.slide-text-sm .slide-title {
+  font-size: 2rem; /* 32px */
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.slide-text-sm .slide-content {
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.75;
+}
+
+/* Very long content (> 1000 chars) - Maximum density */
+.slide-text-xs .slide-title {
+  font-size: 1.75rem; /* 28px */
+  line-height: 1.3;
+  margin-bottom: 0.75rem;
+}
+
+.slide-text-xs .slide-content {
+  font-size: 1.1rem; /* 17.6px */
+  line-height: 1.8;
+}
+
+/* Scale alert/callout/card content too */
+.slide-text-xl .sb-alert,
+.slide-text-xl .sb-callout,
+.slide-text-xl .sb-card {
+  font-size: 2.25rem;
+}
+
+.slide-text-lg .sb-alert,
+.slide-text-lg .sb-callout,
+.slide-text-lg .sb-card {
+  font-size: 1.75rem;
+}
+
+.slide-text-md .sb-alert,
+.slide-text-md .sb-callout,
+.slide-text-md .sb-card {
+  font-size: 1.35rem;
+}
+
+.slide-text-sm .sb-alert,
+.slide-text-sm .sb-callout,
+.slide-text-sm .sb-card {
+  font-size: 1.15rem;
+}
+
+.slide-text-xs .sb-alert,
+.slide-text-xs .sb-callout,
+.slide-text-xs .sb-card {
+  font-size: 1rem;
+}
+
+/* Ensure nested elements inherit and scale properly */
+.slide-content p,
+.slide-content ul,
+.slide-content ol,
+.slide-content blockquote,
+.slide-content h1,
+.slide-content h2,
+.slide-content h3,
+.slide-content h4,
+.slide-content h5,
+.slide-content h6 {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.slide-content ul,
+.slide-content ol {
+  padding-left: 1.5em;
+  text-align: left;
+  display: inline-block;
+}
+
+/* ========== Slide Scrollbar Styling ========== */
+/* Custom scrollbar for overflowing slides */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 12px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  background-clip: padding-box;
+}
+
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: padding-box;
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+}
+
+.dark .overflow-y-auto {
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+}

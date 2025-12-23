@@ -388,23 +388,23 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
           />
         </div>
 
-        {/* Navigation Arrows (visible on hover on desktop) */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+        {/* Navigation Arrows (always visible on desktop) */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block">
           <button
             onClick={goToPreviousSlide}
             disabled={currentIndex === 0}
-            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
             aria-label="Previous slide"
           >
             <HiArrowLeft className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
           <button
             onClick={goToNextSlide}
             disabled={currentIndex === slideCount - 1}
-            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
             aria-label="Next slide"
           >
             <HiArrowRight className="w-6 h-6" />

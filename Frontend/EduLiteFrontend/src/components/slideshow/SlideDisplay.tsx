@@ -1,11 +1,34 @@
-import React from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
+import { HiChevronDown } from "react-icons/hi2";
 import type { SlideDisplayProps } from "./types";
+
+/**
+ * Calculate content length from HTML string (strips tags)
+ */
+const getContentLength = (html: string): number => {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  return tmp.textContent?.length || 0;
+};
+
+/**
+ * Determine font size class based on content length
+ */
+const getFontSizeClass = (contentLength: number): string => {
+  if (contentLength < 100) return "slide-text-xl"; // Very short: 2.5rem (40px)
+  if (contentLength < 300) return "slide-text-lg"; // Short: 2rem (32px)
+  if (contentLength < 600) return "slide-text-md"; // Medium: 1.5rem (24px)
+  if (contentLength < 1000) return "slide-text-sm"; // Long: 1.25rem (20px)
+  return "slide-text-xs"; // Very long: 1.1rem (17.6px)
+};
 
 /**
  * SlideDisplay Component
  *
  * Renders a single slide's HTML content in the presentation viewer.
  * Shows loading state for slides that haven't been fetched yet.
+ * Auto-scales font size based on content length.
+ * Detects overflow and enables scrolling with visual indicators.
  */
 const SlideDisplay: React.FC<SlideDisplayProps> = ({
   slide,
@@ -13,12 +36,80 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
   slideNumber,
   totalSlides,
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
+
+  // Calculate content length and determine font size class
+  const fontSizeClass = useMemo(() => {
+    if (!slide) return "slide-text-lg";
+
+    const titleLength = slide.title?.length || 0;
+    const contentLength = getContentLength(slide.rendered_content);
+    const totalLength = titleLength + contentLength;
+
+    return getFontSizeClass(totalLength);
+  }, [slide]);
+
+  // Check for overflow and reset scroll position when slide changes
+  useEffect(() => {
+    if (!contentRef.current || !containerRef.current) return;
+
+    // Reset scroll to top
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+      setShowScrollHint(true);
+    }
+
+    // Check if content overflows container
+    const checkOverflow = () => {
+      if (contentRef.current && containerRef.current) {
+        const isContentOverflowing =
+          contentRef.current.scrollHeight > containerRef.current.clientHeight;
+        setIsOverflowing(isContentOverflowing);
+      }
+    };
+
+    // Check immediately and after a short delay (for content to render)
+    checkOverflow();
+    const timer = setTimeout(checkOverflow, 100);
+
+    return () => clearTimeout(timer);
+  }, [slide, fontSizeClass]);
+
+  // Hide scroll hint when user scrolls
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollPosition = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      const scrollThreshold = 100; // Hide hint after scrolling 100px
+
+      // Calculate distance from bottom
+      const distanceFromBottom = scrollHeight - scrollPosition - clientHeight;
+
+      // Only hide if scrolled down AND close to bottom (within 50px)
+      if (scrollPosition > scrollThreshold && distanceFromBottom < 50) {
+        setShowScrollHint(false);
+      } else if (scrollPosition < scrollThreshold) {
+        setShowScrollHint(true);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
   if (isLoading || !slide) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         {/* Loading spinner */}
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mb-6"></div>
-        <p className="text-xl text-gray-300 font-light">
+        <p className="text-xl text-gray-300 dark:text-gray-400 font-light">
           Loading slide {slideNumber} of {totalSlides}...
         </p>
       </div>
@@ -26,32 +117,36 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
   }
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="w-full max-w-6xl px-16 text-center space-y-12">
+    <div
+      ref={containerRef}
+      className={`absolute inset-0 ${
+        isOverflowing ? "overflow-y-auto pt-8 pb-64 flex justify-center" : "overflow-hidden flex items-center justify-center"
+      }`}
+    >
+      <div
+        ref={contentRef}
+        className={`w-full max-w-6xl px-16 text-center space-y-8 ${fontSizeClass}`}
+      >
         {/* Slide Title (if present) */}
         {slide.title && (
-          <h1 className="text-7xl font-bold text-gray-900 dark:text-white mb-16">
+          <h1 className="font-bold text-gray-900 dark:text-white slide-title">
             {slide.title}
           </h1>
         )}
 
         {/* Slide Content */}
         <div
-          className="text-gray-900 dark:text-white text-5xl leading-relaxed prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white"
-          style={{
-            fontSize: '3rem',
-            lineHeight: '1.8'
-          }}
+          className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white"
           dangerouslySetInnerHTML={{ __html: slide.rendered_content }}
         />
       </div>
 
-      {/* Slide Number Indicator */}
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2">
-        <span className="text-xl text-gray-500 dark:text-gray-400">
-          {slideNumber} / {totalSlides}
-        </span>
-      </div>
+      {/* Scroll Hint - Shows when content overflows */}
+      {isOverflowing && showScrollHint && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 animate-bounce pointer-events-none z-10">
+          <HiChevronDown className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+        </div>
+      )}
     </div>
   );
 };
