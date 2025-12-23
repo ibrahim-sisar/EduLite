@@ -812,3 +812,128 @@
     padding: 1rem;
   }
 }
+
+/* ========== Accordion Component ========== */
+.sb-accordion {
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .sb-accordion {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sb-accordion-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.sb-accordion-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .sb-accordion-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sb-accordion-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.dark .sb-accordion-title {
+  color: #ffffff;
+}
+
+.sb-accordion-icon {
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.dark .sb-accordion-icon {
+  color: #9ca3af;
+}
+
+/* Show plus icon when collapsed, minus when expanded */
+.sb-accordion-toggle[aria-expanded="false"] .sb-icon-minus {
+  display: none;
+}
+
+.sb-accordion-toggle[aria-expanded="true"] .sb-icon-plus {
+  display: none;
+}
+
+.sb-accordion-toggle[aria-expanded="true"] .sb-accordion-icon {
+  transform: rotate(180deg);
+}
+
+.sb-accordion-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.sb-accordion-content[aria-hidden="true"] {
+  max-height: 0;
+  opacity: 0;
+}
+
+.sb-accordion-content[aria-hidden="false"] {
+  max-height: 1000px;
+  opacity: 1;
+}
+
+.sb-accordion-body {
+  padding: 1rem 1.5rem 1.5rem;
+  color: #374151;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .sb-accordion-body {
+  color: #d1d5db;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sb-accordion-body p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.sb-accordion-body ol,
+.sb-accordion-body ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.sb-accordion-body li {
+  margin: 0.25rem 0;
+  line-height: 1.6;
+}
+
+.sb-accordion-body code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #374151;
+}
+
+.dark .sb-accordion-body code {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}

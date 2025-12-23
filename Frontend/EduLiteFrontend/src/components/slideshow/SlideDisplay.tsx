@@ -87,6 +87,65 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
   codeBlocks,
   isDarkMode,
 }) => {
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+  const accordionStatesRef = useRef<Map<number, boolean>>(new Map());
+
+  // Add accordion functionality and remove inline onclick handlers
+  useEffect(() => {
+    if (!contentContainerRef.current) return;
+
+    const container = contentContainerRef.current;
+
+    // Remove inline onclick attributes from accordion buttons and restore state
+    const accordionButtons = container.querySelectorAll('.sb-accordion-toggle');
+    accordionButtons.forEach((button, index) => {
+      button.removeAttribute('onclick');
+
+      // Restore previous state if it exists
+      const savedState = accordionStatesRef.current.get(index);
+      if (savedState !== undefined) {
+        button.setAttribute('aria-expanded', savedState ? 'true' : 'false');
+        const content = button.nextElementSibling;
+        if (content && content.classList.contains('sb-accordion-content')) {
+          content.setAttribute('aria-hidden', savedState ? 'false' : 'true');
+        }
+      }
+    });
+
+    const handleAccordionClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('.sb-accordion-toggle');
+
+      if (button) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        const newState = !isExpanded;
+
+        button.setAttribute('aria-expanded', newState ? 'true' : 'false');
+
+        const content = button.nextElementSibling;
+        if (content && content.classList.contains('sb-accordion-content')) {
+          content.setAttribute('aria-hidden', newState ? 'false' : 'true');
+        }
+
+        // Save the state
+        const allButtons = Array.from(container.querySelectorAll('.sb-accordion-toggle'));
+        const index = allButtons.indexOf(button as Element);
+        if (index !== -1) {
+          accordionStatesRef.current.set(index, newState);
+        }
+      }
+    };
+
+    container.addEventListener('click', handleAccordionClick);
+
+    return () => {
+      container.removeEventListener('click', handleAccordionClick);
+    };
+  }, [processedHtml, isDarkMode]); // Re-run when theme changes
+
   // Split HTML by code block placeholders and render parts with code blocks
   const parts = useMemo(() => {
     const result: React.ReactNode[] = [];
@@ -145,7 +204,7 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
     return result;
   }, [processedHtml, codeBlocks, isDarkMode]);
 
-  return <>{parts}</>;
+  return <div ref={contentContainerRef}>{parts}</div>;
 };
 
 /**

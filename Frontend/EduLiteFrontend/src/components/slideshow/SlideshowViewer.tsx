@@ -119,6 +119,20 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
 
+  // Auto-hide settings (default to true)
+  const [autoHideTopBar, setAutoHideTopBar] = useState<boolean>(() => {
+    const saved = localStorage.getItem('slideshow-auto-hide-top');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [autoHideBottomBar, setAutoHideBottomBar] = useState<boolean>(() => {
+    const saved = localStorage.getItem('slideshow-auto-hide-bottom');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Hover state for auto-hide
+  const [isTopBarHovered, setIsTopBarHovered] = useState<boolean>(false);
+  const [isBottomBarHovered, setIsBottomBarHovered] = useState<boolean>(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get current slide
@@ -135,6 +149,49 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   };
 
   const subjectName = getSubjectName(subject);
+
+  // Save auto-hide settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('slideshow-auto-hide-top', JSON.stringify(autoHideTopBar));
+  }, [autoHideTopBar]);
+
+  useEffect(() => {
+    localStorage.setItem('slideshow-auto-hide-bottom', JSON.stringify(autoHideBottomBar));
+  }, [autoHideBottomBar]);
+
+  // Track mouse position for auto-hide
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const baseThreshold = 100; // pixels from edge to trigger show
+
+      // Top bar
+      if (autoHideTopBar) {
+        setIsTopBarHovered(e.clientY < baseThreshold);
+      } else {
+        setIsTopBarHovered(true);
+      }
+
+      // Bottom bar - adjust threshold based on notes being open
+      if (autoHideBottomBar) {
+        // When notes are open, extend threshold to cover:
+        // - Notes content: max-h-80 (320px) + padding/borders (~20px)
+        // - Toggle button: ~48px
+        // - Progress bar: ~50px
+        // Total: ~440px, use 450px to be safe
+        const bottomThreshold = showNotes ? 450 : baseThreshold;
+        setIsBottomBarHovered(e.clientY > window.innerHeight - bottomThreshold);
+      } else {
+        setIsBottomBarHovered(true);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [autoHideTopBar, autoHideBottomBar, showNotes]);
+
+  // Determine if bars should be visible
+  const shouldShowTopBar = !autoHideTopBar || isTopBarHovered || settingsOpen || helpOpen;
+  const shouldShowBottomBar = !autoHideBottomBar || isBottomBarHovered;
 
   /**
    * Initial load: Fetch first 3 slides immediately
@@ -389,7 +446,9 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       className="min-h-screen bg-white dark:bg-black flex flex-col"
     >
       {/* Header / Controls */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30">
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30 transition-transform duration-300 ${
+        shouldShowTopBar ? 'translate-y-0' : '-translate-y-full'
+      }`}>
         {/* Title, Author, and Subject */}
         <div className="flex flex-col max-w-md">
           <h2 className="text-xl font-light text-gray-900 dark:text-white truncate">
@@ -489,7 +548,11 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+      <div className={`flex-1 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${
+        !autoHideTopBar && shouldShowTopBar ? 'pt-20' : 'pt-0'
+      } ${
+        !autoHideBottomBar && shouldShowBottomBar ? 'pb-24' : 'pb-0'
+      }`}>
         <div className="w-full h-full">
           {/* Slide Display */}
           <SlideDisplay
@@ -524,25 +587,34 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         </div>
       </div>
 
-      {/* Speaker Notes Panel */}
-      <SpeakerNotes
-        notes={currentSlideNotes}
-        isVisible={showNotes}
-        onToggle={toggleNotes}
-      />
+      {/* Bottom Bar Container (Speaker Notes + Progress) */}
+      <div className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        shouldShowBottomBar ? 'translate-y-0' : 'translate-y-full'
+      }`}>
+        {/* Speaker Notes Panel */}
+        <SpeakerNotes
+          notes={currentSlideNotes}
+          isVisible={showNotes}
+          onToggle={toggleNotes}
+        />
 
-      {/* Progress Bar */}
-      <SlideProgress
-        currentIndex={currentIndex}
-        totalSlides={slideCount}
-        loadedSlides={loadedSlides}
-        onSlideClick={goToSlide}
-      />
+        {/* Progress Bar */}
+        <SlideProgress
+          currentIndex={currentIndex}
+          totalSlides={slideCount}
+          loadedSlides={loadedSlides}
+          onSlideClick={goToSlide}
+        />
+      </div>
 
       {/* Settings Modal */}
       <PresentationSettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        autoHideTopBar={autoHideTopBar}
+        autoHideBottomBar={autoHideBottomBar}
+        onAutoHideTopBarChange={setAutoHideTopBar}
+        onAutoHideBottomBarChange={setAutoHideBottomBar}
       />
 
       {/* Help Modal */}
