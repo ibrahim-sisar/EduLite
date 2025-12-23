@@ -1,2 +1,18 @@
  @import "tailwindcss";
  @custom-variant dark (&:where(.dark, .dark *));
+
+/* Context Menu Animation */
+@keyframes scale-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-fade {
+  animation: scale-fade 0.15s ease-out;
+}

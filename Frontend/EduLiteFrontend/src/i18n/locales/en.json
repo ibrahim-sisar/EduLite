@@ -1,9 +1,18 @@
 {
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm"
+  },
   "nav": {
     "home": "Home",
     "about": "About",
     "conversations": "Conversations",
     "chapters": "Chapters",
+    "slideshows": "Slideshows",
     "profile": "Profile",
     "settings": "Settings",
     "menu": "Menu",
@@ -174,6 +183,65 @@
     "description": "Modern Education Platform"
   },
   "slideshow": {
+    "list": {
+      "title": "My Slideshows",
+      "myTitle": "My Slideshows",
+      "publicTitle": "Public Slideshows",
+      "subtitle": "Manage and present your slideshows",
+      "mySubtitle": "Manage and present your slideshows",
+      "publicSubtitle": "Discover and explore public slideshows",
+      "viewPublic": "View Public",
+      "viewMine": "View Mine",
+      "createButton": "Create Slideshow",
+      "comingSoon": "Slideshow editor coming soon!",
+      "emptyTitle": "No slideshows yet",
+      "emptyMessage": "Create your first slideshow to get started",
+      "loading": "Loading slideshows...",
+      "errorLoading": "Failed to load slideshows",
+      "titleColumn": "Title",
+      "subjectColumn": "Subject",
+      "languageColumn": "Language",
+      "slidesColumn": "Slides",
+      "updatedColumn": "Updated",
+      "slideCount": "{{count}} slide",
+      "slideCount_plural": "{{count}} slides",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{{count}} days ago",
+      "showing": "Showing {{start}}-{{end}} of {{total}}",
+      "pageOf": "Page {{current}} of {{total}}",
+      "noSlidesError": "Need at least 1 slide. Editor coming soon!"
+    },
+    "contextMenu": {
+      "actions": "Actions",
+      "present": "Present",
+      "edit": "Edit",
+      "details": "Details",
+      "delete": "Delete",
+      "editComingSoon": "Slideshow editor coming soon!",
+      "deleteSuccess": "Slideshow deleted successfully",
+      "deleteError": "Failed to delete slideshow",
+      "deleteConfirmTitle": "Delete Slideshow",
+      "deleteConfirmMessage": "Are you sure you want to delete \"{{title}}\"? This action cannot be undone.",
+      "deleteConfirmButton": "Delete"
+    },
+    "details": {
+      "title": "Slideshow Details",
+      "slideshowTitle": "Title",
+      "subject": "Subject",
+      "language": "Language",
+      "visibility": "Visibility",
+      "slideCount": "Number of Slides",
+      "created": "Created",
+      "updated": "Last Updated",
+      "openEditor": "Open in Editor"
+    },
+    "view": {
+      "invalidId": "Invalid slideshow ID",
+      "notFound": "Slideshow not found",
+      "noPermission": "You don't have permission to view this slideshow",
+      "errorLoading": "Failed to load slideshow"
+    },
     "viewer": {
       "loading": "Loading presentation...",
       "loadingSlide": "Loading slide {{slideNumber}} of {{totalSlides}}...",
@@ -198,6 +266,16 @@
         "end": "Last slide",
         "numbers": "Jump to slide 1-9"
       }
+    },
+    "settings": {
+      "title": "Presentation Settings",
+      "theme": "Theme",
+      "themeDescription": "Switch between light and dark mode"
+    },
+    "help": {
+      "title": "Keyboard Shortcuts",
+      "keyboardShortcuts": "Keyboard Shortcuts",
+      "footer": "Press ? to open this help menu anytime"
     }
   }
 }

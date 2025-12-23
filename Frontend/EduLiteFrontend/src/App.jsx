@@ -16,6 +16,8 @@ import InputDemo from "./pages/InputDemo";
 import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
+import SlideshowListPage from "./pages/SlideshowListPage";
+import SlideshowViewPage from "./pages/SlideshowViewPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -108,6 +110,31 @@ const router = createBrowserRouter([
         )
       },
       {
+        path: "slideshows",
+        element: (
+          <ProtectedRoute>
+            <SlideshowListPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "slideshows/me",
+        element: (
+          <ProtectedRoute>
+            <SlideshowListPage view="me" />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "slideshows/public",
+        element: (
+          <ProtectedRoute>
+            <SlideshowListPage view="public" />
+          </ProtectedRoute>
+        )
+      },
+
+      {
         path: "input-demo",
         element: <InputDemo />,
       },
@@ -120,6 +147,14 @@ const router = createBrowserRouter([
         element: <NotFoundPage />,
       }
     ]
+  },
+  {
+    path: "/slideshows/:id",
+    element: (
+      <ProtectedRoute>
+        <SlideshowViewPage />
+      </ProtectedRoute>
+    )
   }
 ]);
 

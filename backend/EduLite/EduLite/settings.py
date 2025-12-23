@@ -259,7 +259,7 @@ REST_FRAMEWORK = {
 }
 
 #  Speed up Tests
-if "test" or "mercury_test" in sys.argv and DEBUG == True:
+if ("test" in sys.argv or "mercury_test" in sys.argv) and DEBUG == True:
     # Use in-memory database for ALL database operations during tests
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.sqlite3",

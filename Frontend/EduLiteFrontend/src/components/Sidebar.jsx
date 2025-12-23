@@ -13,7 +13,7 @@ import {
   HiCog,
 } from "react-icons/hi";
 import { FaSignOutAlt } from "react-icons/fa";
-import { HiArrowRightOnRectangle } from "react-icons/hi2";
+import { HiArrowRightOnRectangle, HiPresentationChartBar } from "react-icons/hi2";
 
 export default function SidebarMenu({ open, onClose }) {
   const { t, i18n } = useTranslation();
@@ -36,6 +36,7 @@ export default function SidebarMenu({ open, onClose }) {
     { to: "/about", label: t("nav.about"), icon: HiInformationCircle },
     { to: "/conversations", label: t("nav.conversations"), icon: HiChatAlt2 },
     { to: "/chapters", label: t("nav.chapters"), icon: HiBookOpen },
+    { to: "/slideshows", label: t("nav.slideshows"), icon: HiPresentationChartBar },
     { to: "/settings", label: t("nav.settings"), icon: HiCog },
   ];
 

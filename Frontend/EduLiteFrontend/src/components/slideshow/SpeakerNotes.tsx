@@ -29,29 +29,29 @@ const SpeakerNotes: React.FC<SpeakerNotesProps> = ({
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-6 py-3 bg-gray-800/80 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-700/30 hover:bg-gray-800/90 dark:hover:bg-gray-900/90 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between px-6 py-3 bg-gray-100 dark:bg-gray-900/80 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/30 hover:bg-gray-200 dark:hover:bg-gray-900/90 transition-colors cursor-pointer"
         aria-label={isVisible ? "Hide speaker notes" : "Show speaker notes"}
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-300">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Speaker Notes
           </span>
-          <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-mono bg-gray-700/50 text-gray-400 rounded border border-gray-600/50">
+          <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-mono bg-white dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 rounded border border-gray-300 dark:border-gray-600/50">
             N
           </kbd>
         </div>
         {isVisible ? (
-          <HiChevronDown className="w-5 h-5 text-gray-400" />
+          <HiChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         ) : (
-          <HiChevronUp className="w-5 h-5 text-gray-400" />
+          <HiChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         )}
       </button>
 
       {/* Notes Content */}
       {isVisible && (
-        <div className="px-6 py-4 bg-gray-800/60 dark:bg-gray-900/60 backdrop-blur-lg border-t border-gray-700/20 overflow-y-auto max-h-80">
-          <div className="prose prose-sm prose-invert max-w-none">
-            <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/60 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700/20 overflow-y-auto max-h-80">
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
               {notes}
             </p>
           </div>

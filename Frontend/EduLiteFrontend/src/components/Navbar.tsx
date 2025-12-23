@@ -56,6 +56,7 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
                 { to: "/about", label: t("nav.about") },
                 { to: "/conversations", label: t("nav.conversations") },
                 { to: "/chapters", label: t("nav.chapters") },
+                { to: "/slideshows", label: t("nav.slideshows") },
               ].map((link) => (
                 <Link
                   key={link.to}

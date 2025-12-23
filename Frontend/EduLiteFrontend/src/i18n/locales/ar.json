@@ -1,9 +1,18 @@
 {
+  "common": {
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تحرير",
+    "confirm": "تأكيد"
+  },
   "nav": {
     "home": "الرئيسية",
     "about": "حول المنصة",
     "conversations": "المحادثات",
     "chapters": "الفصول",
+    "slideshows": "العروض التقديمية",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
     "menu": "القائمة",
@@ -174,6 +183,66 @@
     "description": "منصة تعليمية حديثة"
   },
   "slideshow": {
+    "list": {
+      "title": "عروضي التقديمية",
+      "myTitle": "عروضي التقديمية",
+      "publicTitle": "العروض التقديمية العامة",
+      "subtitle": "إدارة وعرض العروض التقديمية الخاصة بك",
+      "mySubtitle": "إدارة وعرض العروض التقديمية الخاصة بك",
+      "publicSubtitle": "اكتشف واستكشف العروض التقديمية العامة",
+      "viewPublic": "عرض العامة",
+      "viewMine": "عرض الخاصة بي",
+      "createButton": "إنشاء عرض تقديمي",
+      "comingSoon": "محرر العروض التقديمية قادم قريباً!",
+      "emptyTitle": "لا توجد عروض تقديمية بعد",
+      "emptyMessage": "أنشئ عرضك التقديمي الأول للبدء",
+      "loading": "جارٍ تحميل العروض التقديمية...",
+      "errorLoading": "فشل تحميل العروض التقديمية",
+      "titleColumn": "العنوان",
+      "subjectColumn": "الموضوع",
+      "languageColumn": "اللغة",
+      "slidesColumn": "الشرائح",
+      "updatedColumn": "آخر تحديث",
+      "slideCount": "{{count}} شريحة",
+      "slideCount_plural": "{{count}} شرائح",
+      "today": "اليوم",
+      "yesterday": "أمس",
+      "daysAgo": "منذ {{count}} يوم",
+      "daysAgo_plural": "منذ {{count}} أيام",
+      "showing": "عرض {{start}}-{{end}} من {{total}}",
+      "pageOf": "صفحة {{current}} من {{total}}",
+      "noSlidesError": "يجب أن يحتوي على شريحة واحدة على الأقل. المحرر قادم قريباً!"
+    },
+    "contextMenu": {
+      "actions": "إجراءات",
+      "present": "عرض",
+      "edit": "تحرير",
+      "details": "التفاصيل",
+      "delete": "حذف",
+      "editComingSoon": "محرر العروض التقديمية قادم قريباً!",
+      "deleteSuccess": "تم حذف العرض التقديمي بنجاح",
+      "deleteError": "فشل حذف العرض التقديمي",
+      "deleteConfirmTitle": "حذف العرض التقديمي",
+      "deleteConfirmMessage": "هل أنت متأكد من رغبتك في حذف \"{{title}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteConfirmButton": "حذف"
+    },
+    "details": {
+      "title": "تفاصيل العرض التقديمي",
+      "slideshowTitle": "العنوان",
+      "subject": "الموضوع",
+      "language": "اللغة",
+      "visibility": "الظهور",
+      "slideCount": "عدد الشرائح",
+      "created": "تاريخ الإنشاء",
+      "updated": "آخر تحديث",
+      "openEditor": "فتح في المحرر"
+    },
+    "view": {
+      "invalidId": "معرّف العرض التقديمي غير صالح",
+      "notFound": "العرض التقديمي غير موجود",
+      "noPermission": "ليس لديك إذن لعرض هذا العرض التقديمي",
+      "errorLoading": "فشل تحميل العرض التقديمي"
+    },
     "viewer": {
       "loading": "جاري تحميل العرض التقديمي...",
       "loadingSlide": "جاري تحميل الشريحة {{slideNumber}} من {{totalSlides}}...",
@@ -198,6 +267,16 @@
         "end": "الشريحة الأخيرة",
         "numbers": "الانتقال إلى الشريحة 1-9"
       }
+    },
+    "settings": {
+      "title": "إعدادات العرض التقديمي",
+      "theme": "المظهر",
+      "themeDescription": "التبديل بين الوضع الفاتح والداكن"
+    },
+    "help": {
+      "title": "اختصارات لوحة المفاتيح",
+      "keyboardShortcuts": "اختصارات لوحة المفاتيح",
+      "footer": "اضغط ؟ لفتح قائمة المساعدة في أي وقت"
     }
   }
 }

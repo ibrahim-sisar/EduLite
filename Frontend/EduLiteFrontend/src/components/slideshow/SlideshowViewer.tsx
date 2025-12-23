@@ -6,13 +6,17 @@ import {
   HiArrowRight,
   HiArrowsPointingOut,
   HiArrowsPointingIn,
+  HiPencil,
 } from "react-icons/hi2";
+import { HiCog, HiQuestionMarkCircle } from "react-icons/hi";
 import { getSlideshowDetail, getSlide } from "../../services/slideshowApi";
 import type { Slide, SlideViewOnly } from "../../types/slideshow.types";
 import type { SlideshowViewerProps } from "./types";
 import SlideDisplay from "./SlideDisplay";
 import SlideProgress from "./SlideProgress";
 import SpeakerNotes from "./SpeakerNotes";
+import PresentationSettingsModal from "./PresentationSettingsModal";
+import PresentationHelpModal from "./PresentationHelpModal";
 
 /**
  * SlideshowViewer Component
@@ -41,6 +45,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const [slideCount, setSlideCount] = useState<number>(0);
   const [slideshowTitle, setSlideshowTitle] = useState<string>("");
   const [remainingSlideIds, setRemainingSlideIds] = useState<number[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [helpOpen, setHelpOpen] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -144,6 +150,15 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const toggleNotes = useCallback(() => {
     setShowNotes((prev) => !prev);
   }, []);
+
+  const handleEdit = useCallback(() => {
+    // TODO: Navigate to editor when implemented
+    // navigate(`/slideshows/${slideshowId}/edit`);
+    toast("Editor coming soon!", {
+      icon: "✏️",
+      duration: 3000,
+    });
+  }, [slideshowId]);
 
   /**
    * Fullscreen handling
@@ -290,22 +305,52 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-gray-900 dark:bg-black flex flex-col"
+      className="min-h-screen bg-white dark:bg-black flex flex-col"
     >
       {/* Header / Controls */}
-      <div className="flex items-center justify-between px-6 py-4 bg-gray-900/80 dark:bg-black/80 backdrop-blur-lg border-b border-gray-700/30">
+      <div className="flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30">
         {/* Title */}
-        <h2 className="text-xl font-light text-gray-100 dark:text-white truncate max-w-md">
+        <h2 className="text-xl font-light text-gray-900 dark:text-white truncate max-w-md">
           {slideshowTitle}
         </h2>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
+          {/* Edit Button (Always show, TODO: check ownership on backend when editor exists) */}
+          <button
+            onClick={handleEdit}
+            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-blue-500 dark:hover:bg-blue-600 text-gray-700 dark:text-gray-300 hover:text-white transition-colors cursor-pointer"
+            aria-label="Edit slideshow"
+            title="Edit slideshow"
+          >
+            <HiPencil className="w-5 h-5" />
+          </button>
+
+          {/* Settings Button */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            aria-label="Settings"
+            title="Settings"
+          >
+            <HiCog className="w-5 h-5" />
+          </button>
+
+          {/* Help Button */}
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
+            aria-label="Help"
+            title="Help"
+          >
+            <HiQuestionMarkCircle className="w-5 h-5" />
+          </button>
+
           {/* Fullscreen Toggle */}
           {allowFullscreen && (
             <button
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
               aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               title={isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"}
             >
@@ -321,7 +366,7 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
           {onExit && (
             <button
               onClick={onExit}
-              className="p-2 rounded-lg bg-gray-800 hover:bg-red-700 text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-red-600 dark:hover:bg-red-700 text-gray-700 dark:text-gray-300 hover:text-white transition-colors cursor-pointer"
               aria-label="Exit presentation"
               title="Exit (Esc)"
             >
@@ -332,40 +377,38 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <div className="w-full max-w-6xl h-full flex flex-col">
+      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+        <div className="w-full h-full">
           {/* Slide Display */}
-          <div className="flex-1 flex items-center justify-center">
-            <SlideDisplay
-              slide={currentSlide}
-              isLoading={isCurrentSlideLoading}
-              slideNumber={currentIndex + 1}
-              totalSlides={slideCount}
-            />
-          </div>
+          <SlideDisplay
+            slide={currentSlide}
+            isLoading={isCurrentSlideLoading}
+            slideNumber={currentIndex + 1}
+            totalSlides={slideCount}
+          />
+        </div>
 
-          {/* Navigation Arrows (visible on hover on desktop) */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
-            <button
-              onClick={goToPreviousSlide}
-              disabled={currentIndex === 0}
-              className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              aria-label="Previous slide"
-            >
-              <HiArrowLeft className="w-6 h-6" />
-            </button>
-          </div>
+        {/* Navigation Arrows (visible on hover on desktop) */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+          <button
+            onClick={goToPreviousSlide}
+            disabled={currentIndex === 0}
+            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            aria-label="Previous slide"
+          >
+            <HiArrowLeft className="w-6 h-6" />
+          </button>
+        </div>
 
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
-            <button
-              onClick={goToNextSlide}
-              disabled={currentIndex === slideCount - 1}
-              className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              aria-label="Next slide"
-            >
-              <HiArrowRight className="w-6 h-6" />
-            </button>
-          </div>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+          <button
+            onClick={goToNextSlide}
+            disabled={currentIndex === slideCount - 1}
+            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            aria-label="Next slide"
+          >
+            <HiArrowRight className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
@@ -382,6 +425,19 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         totalSlides={slideCount}
         loadedSlides={loadedSlides}
         onSlideClick={goToSlide}
+      />
+
+      {/* Settings Modal */}
+      <PresentationSettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
+
+      {/* Help Modal */}
+      <PresentationHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        allowFullscreen={allowFullscreen}
       />
     </div>
   );
