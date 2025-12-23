@@ -18,6 +18,75 @@ import SpeakerNotes from "./SpeakerNotes";
 import PresentationSettingsModal from "./PresentationSettingsModal";
 import PresentationHelpModal from "./PresentationHelpModal";
 
+// Subject name mappings
+const SUBJECTS: Record<string, string> = {
+  math: "Mathematics",
+  physics: "Physics",
+  chemistry: "Chemistry",
+  biology: "Biology",
+  cs: "Computer Science",
+  it: "Information Technology",
+  engineering: "Engineering",
+  datasci: "Data Science",
+  ai: "Artificial Intelligence",
+  envsci: "Environmental Science",
+  astronomy: "Astronomy",
+  stats: "Statistics",
+  robotics: "Robotics",
+  electronics: "Electronics",
+  psych: "Psychology",
+  sociology: "Sociology",
+  polisci: "Political Science",
+  economics: "Economics",
+  anthropology: "Anthropology",
+  intlrel: "International Relations",
+  criminology: "Criminology",
+  history: "History",
+  philosophy: "Philosophy",
+  literature: "Literature",
+  linguistics: "Linguistics",
+  religion: "Religious Studies",
+  cultural: "Cultural Studies",
+  classics: "Classics",
+  visualart: "Visual Arts",
+  music: "Music",
+  performing: "Performing Arts",
+  architecture: "Architecture",
+  design: "Graphic Design",
+  film: "Film & Media Studies",
+  photo: "Photography",
+  fashion: "Fashion Design",
+  business: "Business Administration",
+  accounting: "Accounting",
+  finance: "Finance",
+  marketing: "Marketing",
+  hrm: "Human Resource Management",
+  entrepreneurship: "Entrepreneurship",
+  project: "Project Management",
+  supplychain: "Supply Chain Management",
+  education: "Education",
+  earlyedu: "Early Childhood Education",
+  specialedu: "Special Education",
+  english: "English Language",
+  foreignlang: "Foreign Languages",
+  translation: "Translation Studies",
+  tesol: "TESOL / ESL",
+  law: "Law",
+  legal: "Legal Studies",
+  constitutional: "Constitutional Law",
+  publicpolicy: "Public Policy",
+  politicaltheory: "Political Theory",
+  medicine: "Medicine",
+  nursing: "Nursing",
+  pharmacy: "Pharmacy",
+  publichealth: "Public Health",
+  nutrition: "Nutrition",
+  veterinary: "Veterinary Science",
+  dentistry: "Dentistry",
+  biomed: "Biomedical Science",
+  physicaltherapy: "Physical Therapy",
+};
+
 /**
  * SlideshowViewer Component
  *
@@ -44,6 +113,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [slideCount, setSlideCount] = useState<number>(0);
   const [slideshowTitle, setSlideshowTitle] = useState<string>("");
+  const [createdByUsername, setCreatedByUsername] = useState<string>("");
+  const [subject, setSubject] = useState<string | null>(null);
   const [remainingSlideIds, setRemainingSlideIds] = useState<number[]>([]);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
@@ -56,6 +127,14 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
     currentSlide && "notes" in currentSlide
       ? (currentSlide.notes as string | null)
       : null;
+
+  // Get readable subject name
+  const getSubjectName = (code: string | null): string | null => {
+    if (!code) return null;
+    return SUBJECTS[code] || code;
+  };
+
+  const subjectName = getSubjectName(subject);
 
   /**
    * Initial load: Fetch first 3 slides immediately
@@ -72,6 +151,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         // Store slideshow metadata
         setSlideCount(data.slide_count);
         setSlideshowTitle(data.title);
+        setCreatedByUsername(data.created_by_username);
+        setSubject(data.subject);
         setRemainingSlideIds(data.remaining_slide_ids);
 
         // Store initial slides in Map (indexed by order)
@@ -309,10 +390,41 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
     >
       {/* Header / Controls */}
       <div className="flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30">
-        {/* Title */}
-        <h2 className="text-xl font-light text-gray-900 dark:text-white truncate max-w-md">
-          {slideshowTitle}
-        </h2>
+        {/* Title, Author, and Subject */}
+        <div className="flex flex-col max-w-md">
+          <h2 className="text-xl font-light text-gray-900 dark:text-white truncate">
+            {slideshowTitle}
+          </h2>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            {createdByUsername && (
+              <a
+                href={`/profile/${createdByUsername}`}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/profile/${createdByUsername}`;
+                }}
+              >
+                by {createdByUsername}
+              </a>
+            )}
+            {subjectName && subject && (
+              <>
+                {createdByUsername && <span>•</span>}
+                <a
+                  href={`/slideshows/public?subject=${subject}`}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = `/slideshows/public?subject=${subject}`;
+                  }}
+                >
+                  {subjectName}
+                </a>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
