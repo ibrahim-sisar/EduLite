@@ -16,7 +16,7 @@ cryptography==45.0.5
 daphne==4.2.1
 Django==5.2.1
 django-cors-headers==4.7.0
-django-mercury-performance==0.1.2
+django-mercury-performance==0.1.3b6
 django-spellbook==0.2.5b2
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
