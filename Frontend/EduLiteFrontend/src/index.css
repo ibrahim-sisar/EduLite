@@ -126,9 +126,25 @@
 
 .slide-content ul,
 .slide-content ol {
-  padding-left: 1.5em;
+  padding-left: 2em;
   text-align: left;
-  display: inline-block;
+  display: block;
+  list-style-position: outside;
+  margin: 1em auto;
+  max-width: fit-content;
+}
+
+.slide-content ul {
+  list-style-type: disc;
+}
+
+.slide-content ol {
+  list-style-type: decimal;
+}
+
+.slide-content li {
+  margin: 0.5em 0;
+  text-align: left;
 }
 
 /* ========== Slide Scrollbar Styling ========== */
