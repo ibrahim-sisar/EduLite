@@ -12,8 +12,6 @@ import {
   HiEye,
   HiEyeSlash,
   HiLockClosed,
-  HiBookOpen,
-  HiLanguage,
   HiRectangleStack,
 } from "react-icons/hi2";
 import { FaSave } from "react-icons/fa";
@@ -22,82 +20,6 @@ import type { SlideshowDetail } from "../types/slideshow.types";
 import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
 import LazySelect from "../components/common/LazySelect";
-
-// Subject name mappings (same as in SlideshowListPage)
-const SUBJECTS: Record<string, string> = {
-  math: "Mathematics",
-  physics: "Physics",
-  chemistry: "Chemistry",
-  biology: "Biology",
-  cs: "Computer Science",
-  it: "Information Technology",
-  engineering: "Engineering",
-  datasci: "Data Science",
-  ai: "Artificial Intelligence",
-  envsci: "Environmental Science",
-  astronomy: "Astronomy",
-  stats: "Statistics",
-  robotics: "Robotics",
-  electronics: "Electronics",
-  psych: "Psychology",
-  sociology: "Sociology",
-  polisci: "Political Science",
-  economics: "Economics",
-  anthropology: "Anthropology",
-  intlrel: "International Relations",
-  criminology: "Criminology",
-  history: "History",
-  philosophy: "Philosophy",
-  literature: "Literature",
-  linguistics: "Linguistics",
-  religion: "Religious Studies",
-  cultural: "Cultural Studies",
-  classics: "Classics",
-  visualart: "Visual Arts",
-  music: "Music",
-  performing: "Performing Arts",
-  architecture: "Architecture",
-  design: "Graphic Design",
-  film: "Film & Media Studies",
-  photo: "Photography",
-  fashion: "Fashion Design",
-  business: "Business Administration",
-  accounting: "Accounting",
-  finance: "Finance",
-  marketing: "Marketing",
-  hrm: "Human Resource Management",
-  entrepreneurship: "Entrepreneurship",
-  project: "Project Management",
-  supplychain: "Supply Chain Management",
-  education: "Education",
-  earlyedu: "Early Childhood Education",
-  specialedu: "Special Education",
-  english: "English Language",
-  foreignlang: "Foreign Languages",
-  translation: "Translation Studies",
-  tesol: "TESOL / ESL",
-  law: "Law",
-  legal: "Legal Studies",
-  constitutional: "Constitutional Law",
-  publicpolicy: "Public Policy",
-  politicaltheory: "Political Theory",
-  medicine: "Medicine",
-  nursing: "Nursing",
-  pharmacy: "Pharmacy",
-  publichealth: "Public Health",
-  nutrition: "Nutrition",
-  veterinary: "Veterinary Science",
-  dentistry: "Dentistry",
-  biomed: "Biomedical Science",
-  physicaltherapy: "Physical Therapy",
-};
-
-const LANGUAGES: Record<string, string> = {
-  en: "English",
-  fr: "French",
-  es: "Spanish",
-  ar: "Arabic",
-};
 
 interface FormData {
   title: string;
@@ -285,16 +207,6 @@ const SlideshowDetailPage = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const getSubjectName = (code: string | null) => {
-    if (!code) return null;
-    return SUBJECTS[code] || code;
-  };
-
-  const getLanguageName = (code: string | null) => {
-    if (!code) return null;
-    return LANGUAGES[code] || code;
   };
 
   const formatDate = (dateString: string) => {
