@@ -35,7 +35,6 @@ class SlideSerializerTestCase(TestCase):
         self.slide = Slide.objects.create(
             slideshow=self.slideshow,
             order=0,
-            title="Test Slide",
             content="# Test Content\n\nHello world",
             notes="Speaker notes here",
         )
@@ -78,7 +77,6 @@ class SlideSerializerTestCase(TestCase):
         """Test that certain fields are read-only."""
         data = {
             "order": 1,
-            "title": "Updated Title",
             "content": "# Updated Content",
             "id": 999,  # Should be ignored
             "rendered_content": "<p>Fake HTML</p>",  # Should be ignored
