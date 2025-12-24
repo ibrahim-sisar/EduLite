@@ -145,13 +145,6 @@ class Slide(models.Model):
     )
 
     # Content
-    title = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        help_text="Optional slide title (if empty, extracted from first H1 or 'Slide {order}')",
-    )
-
     content = models.TextField(help_text="Markdown content with SpellBlock support")
 
     # Rendered HTML (cached on save)
@@ -197,11 +190,8 @@ class Slide(models.Model):
 
     def get_title(self):
         """
-        Get slide title: explicit title, or extracted from first H1, or fallback
+        Get slide title: extracted from first H1, or fallback
         """
-        if self.title:
-            return self.title
-
         # Try to extract from first H1 in rendered content
         match = re.search(r"<h1[^>]*>(.*?)</h1>", self.rendered_content)
         if match:

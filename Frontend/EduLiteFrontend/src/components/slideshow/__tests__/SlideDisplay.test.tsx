@@ -7,7 +7,6 @@ describe('SlideDisplay Component', () => {
   const mockSlide: Slide = {
     id: 1,
     order: 0,
-    title: 'Test Slide',
     content: '# Test Content',
     rendered_content: '<h1>Test Content</h1><p>This is a test slide.</p>',
     notes: 'Test notes',

@@ -17,6 +17,7 @@ import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import SlideshowListPage from "./pages/SlideshowListPage";
+import SlideshowDetailPage from "./pages/SlideshowDetailPage";
 import SlideshowViewPage from "./pages/SlideshowViewPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -143,13 +144,21 @@ const router = createBrowserRouter([
         element: <InputComponentDoc />,
       },
       {
+        path: "slideshows/:id",
+        element: (
+          <ProtectedRoute>
+            <SlideshowDetailPage />
+          </ProtectedRoute>
+        )
+      },
+      {
         path: "*",
         element: <NotFoundPage />,
       }
     ]
   },
   {
-    path: "/slideshows/:id",
+    path: "/slideshows/:id/present",
     element: (
       <ProtectedRoute>
         <SlideshowViewPage />

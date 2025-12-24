@@ -26,7 +26,6 @@ describe('SlideshowViewer Component', () => {
       {
         id: 1,
         order: 0,
-        title: 'Slide 1',
         content: '# Slide 1\n\nWelcome to the presentation',
         rendered_content: '<p>Welcome to the presentation</p>',
         notes: 'Notes for slide 1',
@@ -36,7 +35,6 @@ describe('SlideshowViewer Component', () => {
       {
         id: 2,
         order: 1,
-        title: 'Slide 2',
         content: '# Slide 2\n\nMiddle slide content',
         rendered_content: '<p>Middle slide content</p>',
         notes: null,
@@ -46,7 +44,6 @@ describe('SlideshowViewer Component', () => {
       {
         id: 3,
         order: 2,
-        title: 'Slide 3',
         content: '# Slide 3\n\nThank you for watching',
         rendered_content: '<p>Thank you for watching</p>',
         notes: 'Notes for slide 3',

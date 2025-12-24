@@ -255,11 +255,8 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
   const fontSizeClass = useMemo(() => {
     if (!slide) return "slide-text-lg";
 
-    const titleLength = slide.title?.length || 0;
     const contentLength = getContentLength(slide.rendered_content);
-    const totalLength = titleLength + contentLength;
-
-    return getFontSizeClass(totalLength);
+    return getFontSizeClass(contentLength);
   }, [slide]);
 
   // Check for overflow and reset scroll position when slide changes
@@ -335,15 +332,8 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
     >
       <div
         ref={contentRef}
-        className={`w-full max-w-6xl px-16 text-center space-y-8 ${fontSizeClass}`}
+        className={`w-full max-w-6xl px-16 text-center ${fontSizeClass}`}
       >
-        {/* Slide Title (if present) */}
-        {slide.title && (
-          <h1 className="font-bold text-gray-900 dark:text-white slide-title">
-            {slide.title}
-          </h1>
-        )}
-
         {/* Slide Content */}
         <div className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white">
           <SlideContentWithCodeBlocks

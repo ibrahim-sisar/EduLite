@@ -451,9 +451,20 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       }`}>
         {/* Title, Author, and Subject */}
         <div className="flex flex-col max-w-md">
-          <h2 className="text-xl font-light text-gray-900 dark:text-white truncate">
+          <a
+            href={`/slideshows/${slideshowId}`}
+            className="text-xl font-light text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onExit) {
+                onExit();
+              } else {
+                window.location.href = `/slideshows/${slideshowId}`;
+              }
+            }}
+          >
             {slideshowTitle}
-          </h2>
+          </a>
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             {createdByUsername && (
               <a

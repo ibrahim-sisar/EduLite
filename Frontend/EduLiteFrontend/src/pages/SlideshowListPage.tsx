@@ -21,7 +21,6 @@ import type {
   PaginatedResponse,
 } from "../types/slideshow.types";
 import ContextMenu, { type ContextMenuItem } from "../components/common/ContextMenu";
-import SlideshowDetailsModal from "../components/common/SlideshowDetailsModal";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 
 // Lookup maps for readable names
@@ -169,8 +168,6 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
   const [selectedSlideshow, setSelectedSlideshow] = useState<SlideshowListItem | null>(null);
 
   // Modal state
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [detailsSlideshow, setDetailsSlideshow] = useState<SlideshowListItem | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteSlideshow, setDeleteSlideshow] = useState<SlideshowListItem | null>(null);
 
@@ -227,17 +224,7 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
   };
 
   const handleSlideshowClick = (slideshow: SlideshowListItem) => {
-    // Check if slideshow has any slides
-    if (slideshow.slide_count === 0) {
-      toast.error(t("slideshow.list.noSlidesError"), {
-        icon: "🚧",
-        duration: 3000,
-      });
-      // TODO: When editor is implemented, route to editor instead:
-      // navigate(`/slideshows/${slideshow.id}/edit`);
-      return;
-    }
-
+    // Navigate to detail page
     navigate(`/slideshows/${slideshow.id}`);
   };
 
@@ -273,7 +260,7 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
       });
       return;
     }
-    navigate(`/slideshows/${selectedSlideshow.id}`);
+    navigate(`/slideshows/${selectedSlideshow.id}/present`);
   };
 
   const handleEditClick = () => {
@@ -287,8 +274,7 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
 
   const handleDetailsClick = () => {
     if (!selectedSlideshow) return;
-    setDetailsSlideshow(selectedSlideshow);
-    setDetailsModalOpen(true);
+    navigate(`/slideshows/${selectedSlideshow.id}`);
     setContextMenuOpen(false);
   };
 
@@ -299,14 +285,7 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
     setContextMenuOpen(false);
   };
 
-  const handleOpenEditor = () => {
-    toast(t("slideshow.contextMenu.editComingSoon"), {
-      icon: "🚧",
-      duration: 3000,
-    });
-    // TODO: When editor is implemented:
-    // navigate(`/slideshows/${selectedSlideshow.id}/edit`);
-  };
+
 
   const handleConfirmDelete = async () => {
     if (!deleteSlideshow) return;
@@ -617,28 +596,6 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
         position={contextMenuPosition}
         items={contextMenuItems}
       />
-
-      {/* Details Modal */}
-      {detailsSlideshow && (
-        <SlideshowDetailsModal
-          isOpen={detailsModalOpen}
-          onClose={() => {
-            setDetailsModalOpen(false);
-            setDetailsSlideshow(null);
-          }}
-          slideshow={{
-            id: detailsSlideshow.id,
-            title: detailsSlideshow.title,
-            subject: getSubjectName(detailsSlideshow.subject),
-            language: getLanguageName(detailsSlideshow.language),
-            visibility: detailsSlideshow.visibility,
-            slide_count: detailsSlideshow.slide_count,
-            created_at: detailsSlideshow.created_at,
-            updated_at: detailsSlideshow.updated_at,
-          }}
-          onOpenEditor={handleOpenEditor}
-        />
-      )}
 
       {/* Delete Confirmation Modal */}
       {deleteSlideshow && (

@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { getSafeErrorMessage } from "../utils/errorUtils";
 import type {
   SlideshowListItem,
   SlideshowDetail,
@@ -33,12 +34,7 @@ export const listSlideshows = async (
     });
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError) {
-      throw new Error(
-        error.response?.data?.detail || "Failed to fetch slideshows"
-      );
-    }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to load slideshows"));
   }
 };
 
@@ -75,18 +71,7 @@ export const getSlideshowDetail = async (
     });
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 404) {
-        throw new Error("Slideshow not found");
-      }
-      if (error.response?.status === 403) {
-        throw new Error("You don't have permission to view this slideshow");
-      }
-      throw new Error(
-        error.response?.data?.detail || "Failed to fetch slideshow"
-      );
-    }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to load slideshow"));
   }
 };
 
@@ -111,13 +96,7 @@ export const getSlide = async (
     );
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 404) {
-        throw new Error("Slide not found");
-      }
-      throw new Error(error.response?.data?.detail || "Failed to fetch slide");
-    }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to load slide"));
   }
 };
 
@@ -137,23 +116,7 @@ export const createSlideshow = async (
     });
     return response.data;
   } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 400) {
-        const errorData = error.response?.data as SlideshowErrorResponse;
-        // Handle field-specific errors
-        if (errorData?.title) {
-          throw new Error(`Title: ${Array.isArray(errorData.title) ? errorData.title[0] : errorData.title}`);
-        }
-        if (errorData?.slides) {
-          throw new Error(`Slides: ${Array.isArray(errorData.slides) ? errorData.slides[0] : errorData.slides}`);
-        }
-        throw new Error(errorData?.detail || "Invalid slideshow data");
-      }
-      throw new Error(
-        error.response?.data?.detail || "Failed to create slideshow"
-      );
-    }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to create slideshow"));
   }
 };
 
@@ -181,8 +144,8 @@ export const updateSlideshow = async (
     return response.data;
   } catch (error) {
     if (error instanceof AxiosError) {
+      // Handle version conflicts specially - these need detailed info
       if (error.response?.status === 409) {
-        // Version conflict - throw the conflict details
         const conflictData = error.response?.data as VersionConflictError;
         throw {
           isVersionConflict: true,
@@ -191,26 +154,15 @@ export const updateSlideshow = async (
       }
       if (error.response?.status === 400) {
         const errorData = error.response?.data as SlideshowErrorResponse;
-        // Check if this is a version conflict disguised as 400
         if (errorData?.error === "version_conflict") {
           throw {
             isVersionConflict: true,
             ...errorData,
           } as VersionConflictError & { isVersionConflict: true };
         }
-        throw new Error(errorData?.detail || "Invalid update data");
       }
-      if (error.response?.status === 403) {
-        throw new Error("You don't have permission to update this slideshow");
-      }
-      if (error.response?.status === 404) {
-        throw new Error("Slideshow not found");
-      }
-      throw new Error(
-        error.response?.data?.detail || "Failed to update slideshow"
-      );
     }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to update slideshow"));
   }
 };
 
@@ -225,18 +177,7 @@ export const deleteSlideshow = async (id: number): Promise<void> => {
       timeout: 10000,
     });
   } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 403) {
-        throw new Error("You don't have permission to delete this slideshow");
-      }
-      if (error.response?.status === 404) {
-        throw new Error("Slideshow not found");
-      }
-      throw new Error(
-        error.response?.data?.detail || "Failed to delete slideshow"
-      );
-    }
-    throw error;
+    throw new Error(getSafeErrorMessage(error, "Failed to delete slideshow"));
   }
 };
 
