@@ -21,6 +21,7 @@ import { getSlideshowDetail, updateSlideshow } from "../services/slideshowApi";
 import type { SlideshowDetail } from "../types/slideshow.types";
 import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
+import LazySelect from "../components/common/LazySelect";
 
 // Subject name mappings (same as in SlideshowListPage)
 const SUBJECTS: Record<string, string> = {
@@ -102,6 +103,8 @@ interface FormData {
   title: string;
   description: string;
   visibility: string;
+  subject: string;
+  language: string;
 }
 
 const SlideshowDetailPage = () => {
@@ -121,6 +124,8 @@ const SlideshowDetailPage = () => {
     title: "",
     description: "",
     visibility: "private",
+    subject: "",
+    language: "",
   });
 
   // Refs
@@ -181,6 +186,8 @@ const SlideshowDetailPage = () => {
           title: data.title,
           description: data.description || "",
           visibility: data.visibility,
+          subject: data.subject || "",
+          language: data.language || "",
         };
         setFormData(initialFormData);
         setOriginalFormData(initialFormData);
@@ -250,6 +257,8 @@ const SlideshowDetailPage = () => {
         title: formData.title,
         description: formData.description || null,
         visibility: formData.visibility as any,
+        subject: formData.subject || null,
+        language: formData.language || null,
         version: slideshow.version,
       });
 
@@ -260,6 +269,8 @@ const SlideshowDetailPage = () => {
         title: updatedSlideshow.title,
         description: updatedSlideshow.description || "",
         visibility: updatedSlideshow.visibility,
+        subject: updatedSlideshow.subject || "",
+        language: updatedSlideshow.language || "",
       };
       setFormData(newOriginalData);
       setOriginalFormData(newOriginalData);
@@ -383,38 +394,43 @@ const SlideshowDetailPage = () => {
                 </div>
               </div>
 
-              {/* Subject */}
-              {slideshow.subject && (
-                <div className="flex items-center gap-3">
-                  <HiBookOpen className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Subject
-                    </div>
-                    <Link
-                      to={`/slideshows/public?subject=${slideshow.subject}`}
-                      className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                      {getSubjectName(slideshow.subject)}
-                    </Link>
-                  </div>
-                </div>
-              )}
+              {/* Subject - Searchable Dropdown */}
+              <div className="col-span-1 md:col-span-2">
+                <LazySelect
+                  label="Subject"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={(e) => handleFieldChange("subject", e.target.value)}
+                  onBlur={() => handleBlur("subject")}
+                  placeholder="Select a subject..."
+                  choiceType="subjects"
+                  searchable={true}
+                  className={
+                    touchedFields.has('subject') && formData.subject !== originalFormData?.subject
+                      ? 'border-red-300 dark:border-red-500/50'
+                      : ''
+                  }
+                />
+              </div>
 
-              {/* Language */}
-              {slideshow.language && (
-                <div className="flex items-center gap-3">
-                  <HiLanguage className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Language
-                    </div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {getLanguageName(slideshow.language)}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Language - Searchable Dropdown */}
+              <div className="col-span-1 md:col-span-2">
+                <LazySelect
+                  label="Language"
+                  name="language"
+                  value={formData.language}
+                  onChange={(e) => handleFieldChange("language", e.target.value)}
+                  onBlur={() => handleBlur("language")}
+                  placeholder="Select a language..."
+                  choiceType="languages"
+                  searchable={true}
+                  className={
+                    touchedFields.has('language') && formData.language !== originalFormData?.language
+                      ? 'border-red-300 dark:border-red-500/50'
+                      : ''
+                  }
+                />
+              </div>
 
               {/* Visibility */}
               <div className="flex items-center gap-3 relative">

@@ -20,7 +20,6 @@ class SlideSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "order",
-            "title",
             "content",
             "rendered_content",
             "notes",

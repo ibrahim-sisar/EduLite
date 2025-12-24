@@ -222,3 +222,66 @@
 .dark .overflow-y-auto {
   scrollbar-color: rgba(96, 165, 250, 0.7) rgba(255, 255, 255, 0.1);
 }
+
+/* ========== Slide Image Styling ========== */
+/* Make images in slides look good and load smoothly */
+.slide-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em auto;
+  display: block;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Smooth loading */
+  background-color: #f3f4f6;
+  min-height: 200px; /* Prevent layout shift while loading */
+  object-fit: cover;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.dark .slide-content img {
+  background-color: #374151;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading state - slightly transparent while image loads */
+.slide-content img:not([src]),
+.slide-content img[src=""] {
+  opacity: 0.5;
+}
+
+/* Hover effect for images */
+.slide-content img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06);
+}
+
+.dark .slide-content img:hover {
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.4), 0 15px 15px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Scale images based on slide text size */
+.slide-text-xl img {
+  max-height: 500px;
+  border-radius: 1rem;
+}
+
+.slide-text-lg img {
+  max-height: 450px;
+  border-radius: 0.875rem;
+}
+
+.slide-text-md img {
+  max-height: 400px;
+  border-radius: 0.75rem;
+}
+
+.slide-text-sm img {
+  max-height: 350px;
+  border-radius: 0.625rem;
+}
+
+.slide-text-xs img {
+  max-height: 300px;
+  border-radius: 0.5rem;
+}
