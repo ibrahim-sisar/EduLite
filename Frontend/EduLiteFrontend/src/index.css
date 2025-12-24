@@ -113,14 +113,45 @@
 .slide-content p,
 .slide-content ul,
 .slide-content ol,
-.slide-content blockquote,
-.slide-content h1,
-.slide-content h2,
-.slide-content h3,
-.slide-content h4,
+.slide-content blockquote {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Heading sizes - Scale based on level */
+.slide-content h1 {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-top: 0.75em;
+  margin-bottom: 0.5em;
+}
+
+.slide-content h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.5em;
+}
+
+.slide-content h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.5em;
+}
+
+.slide-content h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.5em;
+}
+
 .slide-content h5,
 .slide-content h6 {
-  margin-top: 0.5em;
+  font-size: 1em;
+  font-weight: 600;
+  margin-top: 0.75em;
   margin-bottom: 0.5em;
 }
 

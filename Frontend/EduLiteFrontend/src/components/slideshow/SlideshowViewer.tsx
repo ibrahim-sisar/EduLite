@@ -548,11 +548,13 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${
-        !autoHideTopBar && shouldShowTopBar ? 'pt-20' : 'pt-0'
-      } ${
-        !autoHideBottomBar && shouldShowBottomBar ? 'pb-24' : 'pb-0'
-      }`}>
+      <div
+        className="flex-1 flex items-center justify-center overflow-hidden relative transition-all duration-300"
+        style={{
+          marginTop: !autoHideTopBar ? '5rem' : '0',
+          marginBottom: !autoHideBottomBar ? (showNotes ? '28rem' : 'calc(3.5rem - 8px)') : '0'
+        }}
+      >
         <div className="w-full h-full">
           {/* Slide Display */}
           <SlideDisplay

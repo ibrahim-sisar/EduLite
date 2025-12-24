@@ -365,7 +365,7 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
               });
             }
           }}
-          className="fixed bottom-8 right-8 z-10 p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer shadow-lg"
+          className="fixed bottom-8 right-8 z-[60] p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer shadow-lg"
           aria-label="Scroll to bottom"
         >
           <HiChevronDown className="w-6 h-6 text-gray-700 dark:text-gray-300" />
