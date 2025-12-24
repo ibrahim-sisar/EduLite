@@ -534,10 +534,15 @@ describe('tokenService - Axios Interceptors', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(logoutHandler).toHaveBeenCalledTimes(1);
-      expect(toast.error).toHaveBeenCalledWith('Session expired. Please log in again.');
+      expect(toast.error).toHaveBeenCalledWith('You have been automatically logged out. Please log in again.', undefined);
     });
 
     it('does not show multiple logout toasts for concurrent failures', async () => {
+      // Wait for toast deduplication cache to clear from previous test
+      await new Promise(resolve => setTimeout(resolve, 3100));
+
+      vi.clearAllMocks(); // Clear mock call counts after waiting
+
       const logoutHandler = vi.fn();
       setLogoutHandler(logoutHandler);
 
@@ -569,7 +574,7 @@ describe('tokenService - Axios Interceptors', () => {
       // Wait for async operations
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      // Should only show toast once despite 3 failed requests
+      // Should only show toast once despite 3 failed requests (deduplication works)
       expect(toast.error).toHaveBeenCalledTimes(1);
       expect(logoutHandler).toHaveBeenCalledTimes(1);
     });

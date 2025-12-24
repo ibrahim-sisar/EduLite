@@ -41,7 +41,7 @@ describe('SlideDisplay Component', () => {
       expect(screen.getByText(/loading slide 1 of 10/i)).toBeInTheDocument();
     });
 
-    it('renders slide title when present', () => {
+    it('renders slide content from rendered_content', () => {
       renderWithProviders(
         <SlideDisplay
           slide={mockSlide}
@@ -51,7 +51,8 @@ describe('SlideDisplay Component', () => {
         />
       );
 
-      expect(screen.getByText('Test Slide')).toBeInTheDocument();
+      expect(screen.getByText('Test Content')).toBeInTheDocument();
+      expect(screen.getByText('This is a test slide.')).toBeInTheDocument();
     });
 
     it('renders slide content HTML', () => {
