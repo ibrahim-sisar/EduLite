@@ -7,7 +7,6 @@ describe('SlideDisplay Component', () => {
   const mockSlide: Slide = {
     id: 1,
     order: 0,
-    title: 'Test Slide',
     content: '# Test Content',
     rendered_content: '<h1>Test Content</h1><p>This is a test slide.</p>',
     notes: 'Test notes',
@@ -42,7 +41,7 @@ describe('SlideDisplay Component', () => {
       expect(screen.getByText(/loading slide 1 of 10/i)).toBeInTheDocument();
     });
 
-    it('renders slide title when present', () => {
+    it('renders slide content from rendered_content', () => {
       renderWithProviders(
         <SlideDisplay
           slide={mockSlide}
@@ -52,7 +51,8 @@ describe('SlideDisplay Component', () => {
         />
       );
 
-      expect(screen.getByText('Test Slide')).toBeInTheDocument();
+      expect(screen.getByText('Test Content')).toBeInTheDocument();
+      expect(screen.getByText('This is a test slide.')).toBeInTheDocument();
     });
 
     it('renders slide content HTML', () => {
@@ -65,11 +65,12 @@ describe('SlideDisplay Component', () => {
         />
       );
 
-      const contentDiv = container.querySelector('.prose');
+      const contentDiv = container.querySelector('.slide-content');
+      expect(contentDiv).toBeInTheDocument();
       expect(contentDiv?.innerHTML).toContain('<h1>Test Content</h1>');
     });
 
-    it('renders slide number indicator', () => {
+    it('does not render slide number indicator in slide content', () => {
       renderWithProviders(
         <SlideDisplay
           slide={mockSlide}
@@ -79,7 +80,9 @@ describe('SlideDisplay Component', () => {
         />
       );
 
-      expect(screen.getByText(/slide 3 of 10/i)).toBeInTheDocument();
+      // Slide numbers are shown in the progress bar, not in the slide content itself
+      expect(screen.queryByText(/slide 3 of 10/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/3 \/ 10/i)).not.toBeInTheDocument();
     });
 
     it('does not render title when slide has no title', () => {

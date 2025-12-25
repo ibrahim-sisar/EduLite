@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getSafeErrorMessage } from "../utils/errorUtils";
 
 const API_BASE_URL = "http://localhost:8000/api";
 
@@ -56,7 +57,7 @@ export const getUserProfile = async (): Promise<UserProfile> => {
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to fetch profile");
+    throw new Error(getSafeErrorMessage(error, "Failed to load profile"));
   }
 };
 
@@ -72,10 +73,7 @@ export const updateUserProfile = async (profileData: ProfileUpdateRequest): Prom
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 400) {
-      throw new Error(error.response?.data?.detail || "Invalid profile data");
-    }
-    throw new Error(error.response?.data?.detail || "Failed to update profile");
+    throw new Error(getSafeErrorMessage(error, "Failed to update profile"));
   }
 };
 
@@ -94,13 +92,7 @@ export const uploadProfilePicture = async (file: File): Promise<UserProfile> => 
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 400) {
-      const message = error.response?.data?.picture?.[0] ||
-                     error.response?.data?.detail ||
-                     "Invalid file. Please use JPG, PNG, or WEBP format.";
-      throw new Error(message);
-    }
-    throw new Error("Failed to upload profile picture");
+    throw new Error(getSafeErrorMessage(error, "Failed to upload profile picture"));
   }
 };
 
@@ -112,7 +104,7 @@ export const getUserInfo = async (): Promise<User> => {
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to fetch user info");
+    throw new Error(getSafeErrorMessage(error, "Failed to load user info"));
   }
 };
 
@@ -128,7 +120,7 @@ export const deleteProfilePicture = async (): Promise<UserProfile> => {
     );
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to remove profile picture");
+    throw new Error(getSafeErrorMessage(error, "Failed to remove profile picture"));
   }
 };
 
@@ -151,7 +143,7 @@ export const getPrivacySettings = async (): Promise<PrivacySettings> => {
     });
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to fetch privacy settings");
+    throw new Error(getSafeErrorMessage(error, "Failed to load privacy settings"));
   }
 };
 
@@ -167,10 +159,7 @@ export const updatePrivacySettings = async (settings: Partial<PrivacySettings>):
     );
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 400) {
-      throw new Error(error.response?.data?.detail || "Invalid privacy settings");
-    }
-    throw new Error(error.response?.data?.detail || "Failed to update privacy settings");
+    throw new Error(getSafeErrorMessage(error, "Failed to update privacy settings"));
   }
 };
 
@@ -182,7 +171,7 @@ export const deleteUserAccount = async (): Promise<void> => {
       timeout: 10000,
     });
   } catch (error: any) {
-    throw new Error(error.response?.data?.detail || "Failed to delete account");
+    throw new Error(getSafeErrorMessage(error, "Failed to delete account"));
   }
 };
 

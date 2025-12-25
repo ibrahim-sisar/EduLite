@@ -6,7 +6,7 @@ export interface Choice {
   label: string;
 }
 
-export type ChoiceType = 'occupations' | 'countries' | 'languages';
+export type ChoiceType = 'occupations' | 'countries' | 'languages' | 'subjects';
 
 class ChoicesService {
   private memoryCache = new Map<ChoiceType, Choice[]>();
@@ -123,6 +123,10 @@ class ChoicesService {
     return this.getChoices('languages');
   }
 
+  async getSubjectChoices(): Promise<Choice[]> {
+    return this.getChoices('subjects');
+  }
+
   /**
    * Clear cache for a specific choice type (useful for development)
    */
@@ -149,7 +153,8 @@ class ChoicesService {
       await Promise.all([
         this.getChoices('occupations'),
         this.getChoices('countries'),
-        this.getChoices('languages')
+        this.getChoices('languages'),
+        this.getChoices('subjects')
       ]);
     } catch (error) {
       console.warn('Failed to preload some choices:', error);

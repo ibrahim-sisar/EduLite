@@ -33,14 +33,12 @@ class SlideModelTest(TestCase):
         slide = Slide.objects.create(
             slideshow=self.slideshow,
             order=0,
-            title="Introduction",
             content="# Welcome\n\nThis is the first slide.",
             notes="Remember to introduce yourself",
         )
 
         self.assertEqual(slide.slideshow, self.slideshow)
         self.assertEqual(slide.order, 0)
-        self.assertEqual(slide.title, "Introduction")
         self.assertIn("Welcome", slide.content)
         self.assertEqual(slide.notes, "Remember to introduce yourself")
 
@@ -83,13 +81,12 @@ class SlideModelTest(TestCase):
         self.assertIsNotNone(slide.rendered_content)
         self.assertIn("card", slide.rendered_content.lower())
 
-    def test_get_title_explicit(self):
-        """Test get_title() returns explicit title when set"""
+    def test_get_title_from_content(self):
+        """Test get_title() extracts title from first H1 in content"""
         slide = Slide.objects.create(
             slideshow=self.slideshow,
             order=0,
-            title="Explicit Title",
-            content="# Some Header\n\nContent here.",
+            content="# Explicit Title\n\nContent here.",
         )
 
         self.assertEqual(slide.get_title(), "Explicit Title")
@@ -208,8 +205,7 @@ class SlideModelTest(TestCase):
         slide = Slide.objects.create(
             slideshow=self.slideshow,
             order=0,
-            title="Test Slide",
-            content="Content",
+            content="# Test Slide\n\nContent",
         )
 
         expected = f"{self.slideshow.title} - Test Slide"

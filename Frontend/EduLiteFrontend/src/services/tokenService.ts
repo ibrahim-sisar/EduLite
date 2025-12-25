@@ -1,5 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
-import toast from "react-hot-toast";
+import { showErrorToast } from "../utils/errorUtils";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 const TOKEN_REFRESH_BUFFER = Number(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 30;
@@ -51,7 +51,7 @@ export const setStoredTokens = (access: string, refresh: string): void => {
   const storage = getStorage();
   storage.setItem(ACCESS_TOKEN_KEY, access);
   storage.setItem(REFRESH_TOKEN_KEY, refresh);
-  // Reset the session expired flag when new tokens are set
+  // Reset the session expired flags when new tokens are set
   hasShownSessionExpiredMessage = false;
   logoutInProgress = false;
 };
@@ -220,9 +220,10 @@ export const setupAxiosInterceptors = (): void => {
           if (onLogoutHandler && !logoutInProgress) {
             logoutInProgress = true;
 
+            // Double-layer protection: flag + deduplication in errorUtils
             if (!hasShownSessionExpiredMessage) {
               hasShownSessionExpiredMessage = true;
-              toast.error("Session expired. Please log in again.");
+              showErrorToast("You have been automatically logged out. Please log in again.");
             }
 
             onLogoutHandler();

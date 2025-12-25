@@ -18,7 +18,7 @@ const SlideshowViewPage = () => {
   }, [id, navigate, t]);
 
   const handleExit = () => {
-    navigate("/slideshows");
+    navigate(`/slideshows/${id}`);
   };
 
   // If id is invalid, don't render the viewer (useEffect will redirect)

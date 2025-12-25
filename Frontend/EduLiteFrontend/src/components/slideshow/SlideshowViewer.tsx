@@ -18,6 +18,75 @@ import SpeakerNotes from "./SpeakerNotes";
 import PresentationSettingsModal from "./PresentationSettingsModal";
 import PresentationHelpModal from "./PresentationHelpModal";
 
+// Subject name mappings
+const SUBJECTS: Record<string, string> = {
+  math: "Mathematics",
+  physics: "Physics",
+  chemistry: "Chemistry",
+  biology: "Biology",
+  cs: "Computer Science",
+  it: "Information Technology",
+  engineering: "Engineering",
+  datasci: "Data Science",
+  ai: "Artificial Intelligence",
+  envsci: "Environmental Science",
+  astronomy: "Astronomy",
+  stats: "Statistics",
+  robotics: "Robotics",
+  electronics: "Electronics",
+  psych: "Psychology",
+  sociology: "Sociology",
+  polisci: "Political Science",
+  economics: "Economics",
+  anthropology: "Anthropology",
+  intlrel: "International Relations",
+  criminology: "Criminology",
+  history: "History",
+  philosophy: "Philosophy",
+  literature: "Literature",
+  linguistics: "Linguistics",
+  religion: "Religious Studies",
+  cultural: "Cultural Studies",
+  classics: "Classics",
+  visualart: "Visual Arts",
+  music: "Music",
+  performing: "Performing Arts",
+  architecture: "Architecture",
+  design: "Graphic Design",
+  film: "Film & Media Studies",
+  photo: "Photography",
+  fashion: "Fashion Design",
+  business: "Business Administration",
+  accounting: "Accounting",
+  finance: "Finance",
+  marketing: "Marketing",
+  hrm: "Human Resource Management",
+  entrepreneurship: "Entrepreneurship",
+  project: "Project Management",
+  supplychain: "Supply Chain Management",
+  education: "Education",
+  earlyedu: "Early Childhood Education",
+  specialedu: "Special Education",
+  english: "English Language",
+  foreignlang: "Foreign Languages",
+  translation: "Translation Studies",
+  tesol: "TESOL / ESL",
+  law: "Law",
+  legal: "Legal Studies",
+  constitutional: "Constitutional Law",
+  publicpolicy: "Public Policy",
+  politicaltheory: "Political Theory",
+  medicine: "Medicine",
+  nursing: "Nursing",
+  pharmacy: "Pharmacy",
+  publichealth: "Public Health",
+  nutrition: "Nutrition",
+  veterinary: "Veterinary Science",
+  dentistry: "Dentistry",
+  biomed: "Biomedical Science",
+  physicaltherapy: "Physical Therapy",
+};
+
 /**
  * SlideshowViewer Component
  *
@@ -44,9 +113,25 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [slideCount, setSlideCount] = useState<number>(0);
   const [slideshowTitle, setSlideshowTitle] = useState<string>("");
+  const [createdByUsername, setCreatedByUsername] = useState<string>("");
+  const [subject, setSubject] = useState<string | null>(null);
   const [remainingSlideIds, setRemainingSlideIds] = useState<number[]>([]);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
+
+  // Auto-hide settings (default to true)
+  const [autoHideTopBar, setAutoHideTopBar] = useState<boolean>(() => {
+    const saved = localStorage.getItem('slideshow-auto-hide-top');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [autoHideBottomBar, setAutoHideBottomBar] = useState<boolean>(() => {
+    const saved = localStorage.getItem('slideshow-auto-hide-bottom');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Hover state for auto-hide
+  const [isTopBarHovered, setIsTopBarHovered] = useState<boolean>(false);
+  const [isBottomBarHovered, setIsBottomBarHovered] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +141,57 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
     currentSlide && "notes" in currentSlide
       ? (currentSlide.notes as string | null)
       : null;
+
+  // Get readable subject name
+  const getSubjectName = (code: string | null): string | null => {
+    if (!code) return null;
+    return SUBJECTS[code] || code;
+  };
+
+  const subjectName = getSubjectName(subject);
+
+  // Save auto-hide settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('slideshow-auto-hide-top', JSON.stringify(autoHideTopBar));
+  }, [autoHideTopBar]);
+
+  useEffect(() => {
+    localStorage.setItem('slideshow-auto-hide-bottom', JSON.stringify(autoHideBottomBar));
+  }, [autoHideBottomBar]);
+
+  // Track mouse position for auto-hide
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const baseThreshold = 100; // pixels from edge to trigger show
+
+      // Top bar
+      if (autoHideTopBar) {
+        setIsTopBarHovered(e.clientY < baseThreshold);
+      } else {
+        setIsTopBarHovered(true);
+      }
+
+      // Bottom bar - adjust threshold based on notes being open
+      if (autoHideBottomBar) {
+        // When notes are open, extend threshold to cover:
+        // - Notes content: max-h-80 (320px) + padding/borders (~20px)
+        // - Toggle button: ~48px
+        // - Progress bar: ~50px
+        // Total: ~440px, use 450px to be safe
+        const bottomThreshold = showNotes ? 450 : baseThreshold;
+        setIsBottomBarHovered(e.clientY > window.innerHeight - bottomThreshold);
+      } else {
+        setIsBottomBarHovered(true);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [autoHideTopBar, autoHideBottomBar, showNotes]);
+
+  // Determine if bars should be visible
+  const shouldShowTopBar = !autoHideTopBar || isTopBarHovered || settingsOpen || helpOpen;
+  const shouldShowBottomBar = !autoHideBottomBar || isBottomBarHovered;
 
   /**
    * Initial load: Fetch first 3 slides immediately
@@ -72,6 +208,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         // Store slideshow metadata
         setSlideCount(data.slide_count);
         setSlideshowTitle(data.title);
+        setCreatedByUsername(data.created_by_username);
+        setSubject(data.subject);
         setRemainingSlideIds(data.remaining_slide_ids);
 
         // Store initial slides in Map (indexed by order)
@@ -308,11 +446,55 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       className="min-h-screen bg-white dark:bg-black flex flex-col"
     >
       {/* Header / Controls */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30">
-        {/* Title */}
-        <h2 className="text-xl font-light text-gray-900 dark:text-white truncate max-w-md">
-          {slideshowTitle}
-        </h2>
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/30 transition-transform duration-300 ${
+        shouldShowTopBar ? 'translate-y-0' : '-translate-y-full'
+      }`}>
+        {/* Title, Author, and Subject */}
+        <div className="flex flex-col max-w-md">
+          <a
+            href={`/slideshows/${slideshowId}`}
+            className="text-xl font-light text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onExit) {
+                onExit();
+              } else {
+                window.location.href = `/slideshows/${slideshowId}`;
+              }
+            }}
+          >
+            {slideshowTitle}
+          </a>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            {createdByUsername && (
+              <a
+                href={`/profile/${createdByUsername}`}
+                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/profile/${createdByUsername}`;
+                }}
+              >
+                by {createdByUsername}
+              </a>
+            )}
+            {subjectName && subject && (
+              <>
+                {createdByUsername && <span>•</span>}
+                <a
+                  href={`/slideshows/public?subject=${subject}`}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = `/slideshows/public?subject=${subject}`;
+                  }}
+                >
+                  {subjectName}
+                </a>
+              </>
+            )}
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
@@ -377,7 +559,13 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
+      <div
+        className="flex-1 flex items-center justify-center overflow-hidden relative transition-all duration-300"
+        style={{
+          marginTop: !autoHideTopBar ? '5rem' : '0',
+          marginBottom: !autoHideBottomBar ? (showNotes ? '28rem' : 'calc(3.5rem - 8px)') : '0'
+        }}
+      >
         <div className="w-full h-full">
           {/* Slide Display */}
           <SlideDisplay
@@ -388,23 +576,23 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
           />
         </div>
 
-        {/* Navigation Arrows (visible on hover on desktop) */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+        {/* Navigation Arrows (always visible on desktop) */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block">
           <button
             onClick={goToPreviousSlide}
             disabled={currentIndex === 0}
-            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
             aria-label="Previous slide"
           >
             <HiArrowLeft className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity hidden md:block">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
           <button
             onClick={goToNextSlide}
             disabled={currentIndex === slideCount - 1}
-            className="p-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-lg text-gray-300 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
             aria-label="Next slide"
           >
             <HiArrowRight className="w-6 h-6" />
@@ -412,25 +600,34 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         </div>
       </div>
 
-      {/* Speaker Notes Panel */}
-      <SpeakerNotes
-        notes={currentSlideNotes}
-        isVisible={showNotes}
-        onToggle={toggleNotes}
-      />
+      {/* Bottom Bar Container (Speaker Notes + Progress) */}
+      <div className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        shouldShowBottomBar ? 'translate-y-0' : 'translate-y-full'
+      }`}>
+        {/* Speaker Notes Panel */}
+        <SpeakerNotes
+          notes={currentSlideNotes}
+          isVisible={showNotes}
+          onToggle={toggleNotes}
+        />
 
-      {/* Progress Bar */}
-      <SlideProgress
-        currentIndex={currentIndex}
-        totalSlides={slideCount}
-        loadedSlides={loadedSlides}
-        onSlideClick={goToSlide}
-      />
+        {/* Progress Bar */}
+        <SlideProgress
+          currentIndex={currentIndex}
+          totalSlides={slideCount}
+          loadedSlides={loadedSlides}
+          onSlideClick={goToSlide}
+        />
+      </div>
 
       {/* Settings Modal */}
       <PresentationSettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        autoHideTopBar={autoHideTopBar}
+        autoHideBottomBar={autoHideBottomBar}
+        onAutoHideTopBarChange={setAutoHideTopBar}
+        onAutoHideBottomBarChange={setAutoHideBottomBar}
       />
 
       {/* Help Modal */}

@@ -15,7 +15,6 @@ export type SlideshowVisibility = "public" | "unlisted" | "private";
 export interface Slide {
   id: number;
   order: number;
-  title: string | null;
   content: string; // Raw markdown (owner only)
   rendered_content: string; // HTML rendered from markdown
   notes: string | null; // Speaker notes (owner only)
@@ -30,7 +29,6 @@ export interface Slide {
 export interface SlideViewOnly {
   id: number;
   order: number;
-  title: string | null;
   rendered_content: string; // HTML rendered from markdown
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
@@ -100,7 +98,6 @@ export interface SlideshowCreateRequest {
  */
 export interface SlideCreateData {
   order?: number; // Auto-assigned if not provided
-  title?: string | null;
   content: string; // Raw markdown
   notes?: string | null;
 }

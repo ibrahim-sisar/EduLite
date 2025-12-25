@@ -20,6 +20,12 @@ const mockLanguages: Choice[] = [
   { value: 'es', label: 'Spanish' },
 ];
 
+const mockSubjects: Choice[] = [
+  { value: 'math', label: 'Mathematics' },
+  { value: 'cs', label: 'Computer Science' },
+  { value: 'physics', label: 'Physics' },
+];
+
 // Mock fetch globally
 global.fetch = vi.fn();
 
@@ -619,7 +625,7 @@ describe('choicesService - Offline Support', () => {
     expect(choicesService.hasOfflineChoices('languages')).toBe(true);
   });
 
-  it('preloadAllChoices() loads all three choice types', async () => {
+  it('preloadAllChoices() loads all four choice types', async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -635,14 +641,20 @@ describe('choicesService - Offline Support', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => 'application/json' },
+        text: async () => JSON.stringify(mockSubjects),
       } as unknown as Response);
 
     await choicesService.preloadAllChoices();
 
-    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch).toHaveBeenCalledTimes(4); // Now includes subjects
     expect(choicesService.hasOfflineChoices('occupations')).toBe(true);
     expect(choicesService.hasOfflineChoices('countries')).toBe(true);
     expect(choicesService.hasOfflineChoices('languages')).toBe(true);
+    expect(choicesService.hasOfflineChoices('subjects')).toBe(true);
   });
 
   it('preloadAllChoices() continues despite partial failures', async () => {
@@ -657,12 +669,17 @@ describe('choicesService - Offline Support', () => {
         ok: true,
         headers: { get: () => 'application/json' },
         text: async () => JSON.stringify(mockLanguages),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => 'application/json' },
+        text: async () => JSON.stringify(mockSubjects),
       } as unknown as Response);
 
     await choicesService.preloadAllChoices();
 
-    // Should have attempted all 3
-    expect(fetch).toHaveBeenCalledTimes(3);
+    // Should have attempted all 4 (occupations, countries, languages, subjects)
+    expect(fetch).toHaveBeenCalledTimes(4);
 
     // Success caches should exist, failed one should not
     expect(choicesService.hasOfflineChoices('occupations')).toBe(true);

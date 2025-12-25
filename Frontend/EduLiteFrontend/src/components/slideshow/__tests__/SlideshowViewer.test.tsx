@@ -26,9 +26,8 @@ describe('SlideshowViewer Component', () => {
       {
         id: 1,
         order: 0,
-        title: 'Slide 1',
         content: '# Slide 1\n\nWelcome to the presentation',
-        rendered_content: '<p>Welcome to the presentation</p>',
+        rendered_content: '<h1>Slide 1</h1><p>Welcome to the presentation</p>',
         notes: 'Notes for slide 1',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -36,9 +35,8 @@ describe('SlideshowViewer Component', () => {
       {
         id: 2,
         order: 1,
-        title: 'Slide 2',
         content: '# Slide 2\n\nMiddle slide content',
-        rendered_content: '<p>Middle slide content</p>',
+        rendered_content: '<h1>Slide 2</h1><p>Middle slide content</p>',
         notes: null,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -46,9 +44,8 @@ describe('SlideshowViewer Component', () => {
       {
         id: 3,
         order: 2,
-        title: 'Slide 3',
         content: '# Slide 3\n\nThank you for watching',
-        rendered_content: '<p>Thank you for watching</p>',
+        rendered_content: '<h1>Slide 3</h1><p>Thank you for watching</p>',
         notes: 'Notes for slide 3',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
