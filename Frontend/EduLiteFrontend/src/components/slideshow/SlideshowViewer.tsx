@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   HiXMark,
@@ -104,6 +105,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   onExit,
   allowFullscreen = false,
 }) => {
+  const navigate = useNavigate();
+
   // State management
   const [currentIndex, setCurrentIndex] = useState<number>(initialSlide);
   const [slides, setSlides] = useState<Map<number, Slide | SlideViewOnly>>(new Map());
@@ -290,13 +293,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   }, []);
 
   const handleEdit = useCallback(() => {
-    // TODO: Navigate to editor when implemented
-    // navigate(`/slideshows/${slideshowId}/edit`);
-    toast("Editor coming soon!", {
-      icon: "✏️",
-      duration: 3000,
-    });
-  }, [slideshowId]);
+    navigate(`/slideshows/${slideshowId}/edit`);
+  }, [slideshowId, navigate]);
 
   /**
    * Fullscreen handling

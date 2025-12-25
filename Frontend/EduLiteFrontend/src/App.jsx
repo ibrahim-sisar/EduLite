@@ -19,6 +19,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SlideshowListPage from "./pages/SlideshowListPage";
 import SlideshowDetailPage from "./pages/SlideshowDetailPage";
 import SlideshowViewPage from "./pages/SlideshowViewPage";
+import SlideshowEditorPage from "./pages/SlideshowEditorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -148,6 +149,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <SlideshowDetailPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "slideshows/:id/edit",
+        element: (
+          <ProtectedRoute>
+            <SlideshowEditorPage />
           </ProtectedRoute>
         )
       },

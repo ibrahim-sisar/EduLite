@@ -11,6 +11,7 @@ import type {
   Slide,
   SlideViewOnly,
   SlideshowErrorResponse,
+  SlideCreateData,
 } from "../types/slideshow.types";
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -219,6 +220,97 @@ export const getVersionConflictDetails = (
   return null;
 };
 
+/**
+ * Create a new slide in an existing slideshow
+ *
+ * @param slideshowId - Parent slideshow ID
+ * @param data - Slide creation data
+ * @returns Created slide data
+ */
+export const createSlide = async (
+  slideshowId: number,
+  data: SlideCreateData
+): Promise<Slide> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/slideshows/${slideshowId}/slides/`,
+      data,
+      {
+        timeout: 10000,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(getSafeErrorMessage(error, "Failed to create slide"));
+  }
+};
+
+/**
+ * Update an existing slide
+ *
+ * @param slideshowId - Parent slideshow ID
+ * @param slideId - Slide ID to update
+ * @param data - Partial slide data to update
+ * @returns Updated slide data
+ */
+export const updateSlide = async (
+  slideshowId: number,
+  slideId: number,
+  data: Partial<SlideCreateData>
+): Promise<Slide> => {
+  try {
+    const response = await axios.patch(
+      `${API_BASE_URL}/slideshows/${slideshowId}/slides/${slideId}/`,
+      data,
+      {
+        timeout: 10000,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(getSafeErrorMessage(error, "Failed to update slide"));
+  }
+};
+
+/**
+ * Delete a slide
+ *
+ * @param slideshowId - Parent slideshow ID
+ * @param slideId - Slide ID to delete
+ */
+export const deleteSlide = async (
+  slideshowId: number,
+  slideId: number
+): Promise<void> => {
+  try {
+    await axios.delete(
+      `${API_BASE_URL}/slideshows/${slideshowId}/slides/${slideId}/`,
+      {
+        timeout: 10000,
+      }
+    );
+  } catch (error) {
+    throw new Error(getSafeErrorMessage(error, "Failed to delete slide"));
+  }
+};
+
+/**
+ * Preview markdown content (renders without saving)
+ * Sends markdown to backend for rendering, returns HTML
+ *
+ * @param content - Markdown content to render
+ * @param signal - Optional AbortSignal to cancel the request
+ * @returns Rendered HTML string
+ */
+export const previewMarkdown = async (content: string, signal?: AbortSignal): Promise<string> => {
+  const response = await axios.post(
+    `${API_BASE_URL}/slideshows/preview/`,
+    { content },
+    { timeout: 5000, signal }
+  );
+  return response.data.rendered_content;
+};
+
 // Export types for use in components
 export type {
   SlideshowListItem,
@@ -230,4 +322,5 @@ export type {
   VersionConflictError,
   Slide,
   SlideViewOnly,
+  SlideCreateData,
 };

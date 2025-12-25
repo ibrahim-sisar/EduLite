@@ -137,10 +137,7 @@ const SlideshowDetailPage = () => {
   };
 
   const handleEdit = () => {
-    toast("Editor coming soon!", {
-      icon: "🚧",
-      duration: 3000,
-    });
+    navigate(`/slideshows/${id}/edit`);
   };
 
   const handleDelete = () => {

@@ -229,10 +229,7 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
   };
 
   const handleCreateClick = () => {
-    toast(t("slideshow.list.comingSoon"), {
-      icon: "🚧",
-      duration: 3000,
-    });
+    navigate('/slideshows/new');
   };
 
   const handleContextMenu = (e: React.MouseEvent, slideshow: SlideshowListItem) => {
@@ -264,12 +261,9 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
   };
 
   const handleEditClick = () => {
-    toast(t("slideshow.contextMenu.editComingSoon"), {
-      icon: "🚧",
-      duration: 3000,
-    });
-    // TODO: When editor is implemented:
-    // navigate(`/slideshows/${selectedSlideshow.id}/edit`);
+    if (!selectedSlideshow) return;
+    navigate(`/slideshows/${selectedSlideshow.id}/edit`);
+    setContextMenuOpen(false);
   };
 
   const handleDetailsClick = () => {

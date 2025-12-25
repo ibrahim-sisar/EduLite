@@ -509,3 +509,88 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
             slideshow.id,
             slideshow.version,
         )
+
+
+# ========== Preview Endpoint ==========
+
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.throttling import UserRateThrottle
+
+
+class PreviewThrottle(UserRateThrottle):
+    """Throttle preview requests - 30 per minute (~1 every 2 seconds)"""
+
+    rate = "30/min"
+
+
+@extend_schema(
+    summary="Preview markdown rendering",
+    description="Renders markdown to HTML without saving. Used for live preview in editor.",
+    request={
+        "application/json": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "Markdown content to render",
+                    "example": "# Hello\n\nThis is **bold** text.",
+                }
+            },
+            "required": ["content"],
+        }
+    },
+    responses={
+        200: OpenApiResponse(
+            description="Successfully rendered markdown",
+            response={
+                "type": "object",
+                "properties": {
+                    "rendered_content": {
+                        "type": "string",
+                        "description": "Rendered HTML",
+                    }
+                },
+            },
+        ),
+        400: OpenApiResponse(description="Invalid markdown or rendering error"),
+    },
+)
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@throttle_classes([PreviewThrottle])
+def preview_markdown(request):
+    """
+    Preview markdown rendering without saving to database.
+
+    POST /api/slideshows/preview/
+    Body: {"content": "# Markdown"}
+    Returns: {"rendered_content": "<h1>Markdown</h1>"}
+
+    Throttled to 30 requests per minute per user.
+    """
+    content = request.data.get("content", "")
+
+    if not content:
+        return Response({"rendered_content": ""}, status=status.HTTP_200_OK)
+
+    try:
+        from django_spellbook.parsers import spellbook_render
+
+        rendered = spellbook_render(content)
+
+        logger.debug(
+            "Preview rendered for user %s (%d chars -> %d chars)",
+            request.user.username,
+            len(content),
+            len(rendered),
+        )
+
+        return Response({"rendered_content": rendered}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Preview render error for user {request.user.username}: {e}")
+        return Response(
+            {"error": "Failed to render markdown", "detail": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
