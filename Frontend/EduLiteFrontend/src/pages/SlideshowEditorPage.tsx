@@ -1,35 +1,41 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   EditorHeader,
   SlideList,
   SlideEditor,
   SlidePreview,
-} from '../components/slideshow/editor';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { useEditorDraft } from '../hooks/useEditorDraft';
-import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
+} from "../components/slideshow/editor";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import { useEditorDraft } from "../hooks/useEditorDraft";
+import { useUnsavedChanges } from "../hooks/useUnsavedChanges";
 import {
   getSlideshowDetail,
   createSlideshow,
   updateSlideshow,
-} from '../services/slideshowApi';
-import type { EditorSlide, EditorDraft, SaveStatus } from '../types/editor.types';
+} from "../services/slideshowApi";
+import type {
+  EditorSlide,
+  EditorDraft,
+  SaveStatus,
+} from "../types/editor.types";
 
 export default function SlideshowEditorPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isNewSlideshow = id === 'new';
-  const slideshowId = isNewSlideshow ? 'new' : parseInt(id!, 10);
+  const isNewSlideshow = !id || id === "new";
+  const slideshowId = isNewSlideshow ? "new" : parseInt(id, 10);
 
   const isOnline = useOnlineStatus();
   const { loadDraft, saveDraft, clearDraft } = useEditorDraft(slideshowId);
 
   const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('private');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<
+    "public" | "unlisted" | "private"
+  >("private");
   const [subject, setSubject] = useState<string | null>(null);
   const [language, setLanguage] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
@@ -37,14 +43,17 @@ export default function SlideshowEditorPage() {
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(null);
   const [version, setVersion] = useState<number | undefined>(undefined);
 
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showPreview] = useState(true);
 
   // Warn about unsaved changes
-  useUnsavedChanges(isDirty, 'You have unsaved changes. Are you sure you want to leave?');
+  useUnsavedChanges(
+    isDirty,
+    "You have unsaved changes. Are you sure you want to leave?",
+  );
 
   // Load slideshow or draft on mount
   useEffect(() => {
@@ -67,12 +76,14 @@ export default function SlideshowEditorPage() {
             setSelectedSlideId(draft.data.slides[0].tempId);
           }
           setIsDirty(true);
-          toast.success('Loaded draft from local storage', { id: 'draft-loaded' });
+          toast.success("Loaded draft from local storage", {
+            id: "draft-loaded",
+          });
         } else if (!isNewSlideshow) {
           // Load from server
           const slideshow = await getSlideshowDetail(slideshowId as number);
           setTitle(slideshow.title);
-          setDescription(slideshow.description || '');
+          setDescription(slideshow.description || "");
           setVisibility(slideshow.visibility);
           setSubject(slideshow.subject);
           setLanguage(slideshow.language);
@@ -80,14 +91,16 @@ export default function SlideshowEditorPage() {
           setVersion(slideshow.version);
 
           // Convert slides to editor format
-          const editorSlides: EditorSlide[] = slideshow.slides.map((slide, index) => ({
-            id: slide.id,
-            tempId: crypto.randomUUID(),
-            order: slide.order ?? index,
-            content: 'content' in slide ? slide.content : '',
-            notes: 'notes' in slide ? (slide.notes || '') : '',
-            rendered_content: slide.rendered_content,
-          }));
+          const editorSlides: EditorSlide[] = slideshow.slides.map(
+            (slide, index) => ({
+              id: slide.id,
+              tempId: crypto.randomUUID(),
+              order: slide.order ?? index,
+              content: "content" in slide ? slide.content : "",
+              notes: "notes" in slide ? slide.notes || "" : "",
+              rendered_content: slide.rendered_content,
+            }),
+          );
 
           setSlides(editorSlides);
           if (editorSlides.length > 0) {
@@ -98,15 +111,15 @@ export default function SlideshowEditorPage() {
           const newSlide: EditorSlide = {
             tempId: crypto.randomUUID(),
             order: 0,
-            content: '# Welcome\n\nStart creating your slideshow!',
-            notes: '',
+            content: "# Welcome\n\nStart creating your slideshow!",
+            notes: "",
           };
           setSlides([newSlide]);
           setSelectedSlideId(newSlide.tempId);
         }
       } catch (error: any) {
-        toast.error(error.message || 'Failed to load slideshow');
-        navigate('/slideshows/me');
+        toast.error(error.message || "Failed to load slideshow");
+        navigate("/slideshows/me");
       } finally {
         setLoading(false);
       }
@@ -141,22 +154,24 @@ export default function SlideshowEditorPage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error('Please enter a title before saving');
+      toast.error("Please enter a title before saving");
       return;
     }
 
     try {
-      setSaveStatus('saving');
+      setSaveStatus("saving");
       setSaveError(null);
 
       if (isNewSlideshow) {
         // Create new slideshow
         // Filter out slides with empty content
-        const validSlides = slides.filter((slide) => slide.content.trim() !== '');
+        const validSlides = slides.filter(
+          (slide) => slide.content.trim() !== "",
+        );
 
         if (validSlides.length === 0) {
-          toast.error('Please add at least one slide with content');
-          setSaveStatus('error');
+          toast.error("Please add at least one slide with content");
+          setSaveStatus("error");
           return;
         }
 
@@ -174,17 +189,19 @@ export default function SlideshowEditorPage() {
           })),
         });
 
-        toast.success('Slideshow created!');
+        toast.success("Slideshow created!");
         clearDraft();
         navigate(`/slideshows/${created.id}/edit`, { replace: true });
       } else {
         // Update existing slideshow
         // Filter out slides with empty content
-        const validSlides = slides.filter((slide) => slide.content.trim() !== '');
+        const validSlides = slides.filter(
+          (slide) => slide.content.trim() !== "",
+        );
 
         if (validSlides.length === 0) {
-          toast.error('Please add at least one slide with content');
-          setSaveStatus('error');
+          toast.error("Please add at least one slide with content");
+          setSaveStatus("error");
           return;
         }
 
@@ -207,35 +224,42 @@ export default function SlideshowEditorPage() {
         setVersion(updated.version);
 
         // Update slides with the backend response to get proper IDs and rendered_content
-        const updatedSlides: EditorSlide[] = updated.slides.map((slide, index) => {
-          // Try to preserve the tempId by matching content
-          const existingSlide = validSlides.find(s => s.content === ('content' in slide ? slide.content : ''));
-          return {
-            id: slide.id,
-            tempId: existingSlide?.tempId || crypto.randomUUID(),
-            order: slide.order ?? index,
-            content: 'content' in slide ? slide.content : '',
-            notes: 'notes' in slide ? (slide.notes || '') : '',
-            rendered_content: slide.rendered_content,
-          };
-        });
+        const updatedSlides: EditorSlide[] = updated.slides.map(
+          (slide, index) => {
+            // Try to preserve the tempId by matching content
+            const existingSlide = validSlides.find(
+              (s) => s.content === ("content" in slide ? slide.content : ""),
+            );
+            return {
+              id: slide.id,
+              tempId: existingSlide?.tempId || crypto.randomUUID(),
+              order: slide.order ?? index,
+              content: "content" in slide ? slide.content : "",
+              notes: "notes" in slide ? slide.notes || "" : "",
+              rendered_content: slide.rendered_content,
+            };
+          },
+        );
         setSlides(updatedSlides);
 
         // If we filtered out any slides, update the selected slide if needed
-        if (selectedSlideId && !updatedSlides.find(s => s.tempId === selectedSlideId)) {
+        if (
+          selectedSlideId &&
+          !updatedSlides.find((s) => s.tempId === selectedSlideId)
+        ) {
           setSelectedSlideId(updatedSlides[0]?.tempId || null);
         }
 
         setIsDirty(false);
-        setSaveStatus('saved');
+        setSaveStatus("saved");
         setLastSaved(new Date());
-        toast.success('Slideshow saved!');
+        toast.success("Slideshow saved!");
         clearDraft();
       }
     } catch (error: any) {
-      setSaveStatus('error');
+      setSaveStatus("error");
       setSaveError(error.message);
-      toast.error(error.message || 'Failed to save');
+      toast.error(error.message || "Failed to save");
     }
   };
 
@@ -243,8 +267,8 @@ export default function SlideshowEditorPage() {
     const newSlide: EditorSlide = {
       tempId: crypto.randomUUID(),
       order: slides.length,
-      content: '',
-      notes: '',
+      content: "",
+      notes: "",
     };
     setSlides([...slides, newSlide]);
     setSelectedSlideId(newSlide.tempId);
@@ -253,15 +277,17 @@ export default function SlideshowEditorPage() {
 
   const handleDeleteSlide = (tempId: string) => {
     if (slides.length === 1) {
-      toast.error('Cannot delete the last slide');
+      toast.error("Cannot delete the last slide");
       return;
     }
 
     const index = slides.findIndex((s) => s.tempId === tempId);
-    const newSlides = slides.filter((s) => s.tempId !== tempId).map((slide, i) => ({
-      ...slide,
-      order: i,
-    }));
+    const newSlides = slides
+      .filter((s) => s.tempId !== tempId)
+      .map((slide, i) => ({
+        ...slide,
+        order: i,
+      }));
 
     setSlides(newSlides);
 
@@ -272,7 +298,7 @@ export default function SlideshowEditorPage() {
     }
 
     setIsDirty(true);
-    toast.success('Slide deleted');
+    toast.success("Slide deleted");
   };
 
   const handleDuplicateSlide = (tempId: string) => {
@@ -296,11 +322,13 @@ export default function SlideshowEditorPage() {
     setSlides(newSlides);
     setSelectedSlideId(newSlide.tempId);
     setIsDirty(true);
-    toast.success('Slide duplicated');
+    toast.success("Slide duplicated");
   };
 
   const handleSlideChange = (tempId: string, updates: Partial<EditorSlide>) => {
-    setSlides(slides.map((s) => (s.tempId === tempId ? { ...s, ...updates } : s)));
+    setSlides(
+      slides.map((s) => (s.tempId === tempId ? { ...s, ...updates } : s)),
+    );
     setIsDirty(true);
   };
 
@@ -311,15 +339,15 @@ export default function SlideshowEditorPage() {
 
   const handlePresent = () => {
     if (isNewSlideshow || !slideshowId) {
-      toast.error('Please save the slideshow before presenting');
+      toast.error("Please save the slideshow before presenting");
       return;
     }
 
     // Warn if there are unsaved changes
     if (isDirty) {
       const confirmed = window.confirm(
-        'You have unsaved changes. These changes will not appear in the presentation.\n\n' +
-        'Do you want to present anyway?'
+        "You have unsaved changes. These changes will not appear in the presentation.\n\n" +
+          "Do you want to present anyway?",
       );
       if (!confirmed) {
         return;
@@ -334,13 +362,16 @@ export default function SlideshowEditorPage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading editor...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading editor...
+          </p>
         </div>
       </div>
     );
   }
 
-  const selectedSlide = slides.find((s) => s.tempId === selectedSlideId) || null;
+  const selectedSlide =
+    slides.find((s) => s.tempId === selectedSlideId) || null;
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 pt-16">
@@ -350,7 +381,7 @@ export default function SlideshowEditorPage() {
         onTitleChange={setTitle}
         onPresentClick={handlePresent}
         onSaveClick={handleSave}
-        saveStatus={isOnline ? saveStatus : 'offline'}
+        saveStatus={isOnline ? saveStatus : "offline"}
         lastSaved={lastSaved}
         saveError={saveError}
         isDirty={isDirty}
@@ -370,10 +401,12 @@ export default function SlideshowEditorPage() {
           />
         </div>
 
-        <div className={showPreview ? 'flex-1' : 'flex-[2]'}>
+        <div className={showPreview ? "flex-1" : "flex-[2]"}>
           <SlideEditor
             slide={selectedSlide}
-            onChange={(updates) => selectedSlideId && handleSlideChange(selectedSlideId, updates)}
+            onChange={(updates) =>
+              selectedSlideId && handleSlideChange(selectedSlideId, updates)
+            }
           />
         </div>
 
