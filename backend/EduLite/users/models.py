@@ -75,34 +75,6 @@ class UserProfile(models.Model):
             ret_str += f" {self.user.last_name}"
         return f"{ret_str}"
 
-    @property
-    def teachers(self):
-        """
-        Returns a queryset of Users who are teachers of this user in any course.
-        """
-        return (
-            self.courses.filter(memberships__role="teacher")
-            .distinct()
-            .values_list("memberships__user", flat=True)
-        )
-
-    @property
-    def chatrooms(self):
-        """
-        Returns a queryset of ChatRooms that this user is a member of.
-        """
-        from chat.models import ChatRoom
-
-        return ChatRoom.objects.filter(participants=self.user).values_list(
-            "id", flat=True
-        )
-
-    @property
-    def courses(self):
-        from courses.models import Course
-
-        return Course.objects.filter(memberships__user=self.user).distinct()
-
 
 class UserProfilePrivacySettings(models.Model):
     """
