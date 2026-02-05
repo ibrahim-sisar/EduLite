@@ -1,7 +1,10 @@
 import logging
-from django.db.models import Q, Count
-from users.models import FriendSuggestion, User
+
 from chat.models import Message as ChatRoomMessage
+from django.db.models import Q
+
+from users.models import FriendSuggestion, User
+from users.services import UserQueryService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,11 @@ def compute_friend_suggestions_for_user(user):
     total_candidates = candidates.count()
     logger.debug("Total candidates after exclusion: %d", total_candidates)
 
+    # Pre-compute user's courses, teachers, and chatrooms for efficiency
+    user_course_ids = UserQueryService.get_user_course_ids(user)
+    user_teacher_ids = UserQueryService.get_user_teacher_ids(user)
+    user_chatroom_ids = UserQueryService.get_user_chatroom_ids(user)
+
     scored_candidates = []
 
     for candidate in candidates:
@@ -46,7 +54,8 @@ def compute_friend_suggestions_for_user(user):
         )
 
         # Same course
-        shared_courses = set(user.profile.courses) & set(candidate.profile.courses)
+        candidate_course_ids = UserQueryService.get_user_course_ids(candidate)
+        shared_courses = user_course_ids & candidate_course_ids
         if shared_courses:
             score += 1
             reasons.append("Same course")
@@ -55,9 +64,8 @@ def compute_friend_suggestions_for_user(user):
         )
 
         # Same teacher
-        shared_teachers = set(user.profile.teachers.all()) & set(
-            candidate.profile.teachers.all()
-        )
+        candidate_teacher_ids = UserQueryService.get_user_teacher_ids(candidate)
+        shared_teachers = user_teacher_ids & candidate_teacher_ids
         if shared_teachers:
             score += 1
             reasons.append("Same teacher")
@@ -69,7 +77,7 @@ def compute_friend_suggestions_for_user(user):
 
         # Recent chatroom activity
         chat_active = ChatRoomMessage.objects.filter(
-            chat_room__in=user.profile.chatrooms.all(), sender=candidate
+            chat_room_id__in=user_chatroom_ids, sender=candidate
         ).exists()
         if chat_active:
             score += 0.5
