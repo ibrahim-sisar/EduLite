@@ -18,15 +18,10 @@ Usage:
     show_email = PrivacyService.should_show_email(user, requesting_user)
 """
 
-from typing import TYPE_CHECKING, Optional, Set
-
-from django.contrib.auth import get_user_model
+from typing import TYPE_CHECKING, Any, Optional, Set
 
 if TYPE_CHECKING:
     from users.models import UserProfile, UserProfilePrivacySettings
-
-# Use the actual User model for type hints to avoid mypy errors
-User = get_user_model()
 
 
 class PrivacyService:
@@ -44,7 +39,7 @@ class PrivacyService:
     @staticmethod
     def can_be_found_by_user(
         privacy_settings: "UserProfilePrivacySettings",
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        requesting_user: Any,
     ) -> bool:
         """
         Check if a user profile can be found in search by the requesting user.
@@ -57,7 +52,10 @@ class PrivacyService:
             bool: True if the profile should appear in search results
         """
         # Anonymous users can only find profiles with "everyone" visibility
-        if not requesting_user or not requesting_user.is_authenticated:
+        if requesting_user is None:
+            return privacy_settings.search_visibility == "everyone"
+
+        if not getattr(requesting_user, "is_authenticated", False):
             return privacy_settings.search_visibility == "everyone"
 
         # User can always find themselves
@@ -95,7 +93,7 @@ class PrivacyService:
     @staticmethod
     def can_view_full_profile(
         privacy_settings: "UserProfilePrivacySettings",
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        requesting_user: Any,
     ) -> bool:
         """
         Check if the full profile can be viewed by the requesting user.
@@ -108,7 +106,10 @@ class PrivacyService:
             bool: True if the full profile can be viewed
         """
         # Anonymous users can only view public profiles
-        if not requesting_user or not requesting_user.is_authenticated:
+        if requesting_user is None:
+            return privacy_settings.profile_visibility == "public"
+
+        if not getattr(requesting_user, "is_authenticated", False):
             return privacy_settings.profile_visibility == "public"
 
         # User can always view their own profile
@@ -116,7 +117,9 @@ class PrivacyService:
             return True
 
         # Admin/staff can view all profiles
-        if requesting_user.is_superuser or requesting_user.is_staff:
+        if getattr(requesting_user, "is_superuser", False) or getattr(
+            requesting_user, "is_staff", False
+        ):
             return True
 
         visibility = privacy_settings.profile_visibility
@@ -139,7 +142,7 @@ class PrivacyService:
     @staticmethod
     def can_receive_friend_request(
         privacy_settings: "UserProfilePrivacySettings",
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        requesting_user: Any,
     ) -> bool:
         """
         Check if this user can receive a friend request from the requesting user.
@@ -152,7 +155,10 @@ class PrivacyService:
             bool: True if friend request can be sent
         """
         # Must be authenticated
-        if not requesting_user or not requesting_user.is_authenticated:
+        if requesting_user is None:
+            return False
+
+        if not getattr(requesting_user, "is_authenticated", False):
             return False
 
         # Cannot send friend request to oneself
@@ -186,8 +192,8 @@ class PrivacyService:
 
     @staticmethod
     def should_show_email(
-        user: User,  # type: ignore[valid-type]
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        user: Any,
+        requesting_user: Any,
     ) -> bool:
         """
         Determine if email should be shown to the requesting user.
@@ -200,12 +206,15 @@ class PrivacyService:
             bool: True if email should be visible
         """
         # User can always see their own email
-        if requesting_user and user.pk == requesting_user.pk:
+        if requesting_user is not None and getattr(user, "pk", None) == getattr(
+            requesting_user, "pk", None
+        ):
             return True
 
         # Admin users can see all emails
-        if requesting_user and (
-            requesting_user.is_superuser or requesting_user.is_staff
+        if requesting_user is not None and (
+            getattr(requesting_user, "is_superuser", False)
+            or getattr(requesting_user, "is_staff", False)
         ):
             return True
 
@@ -219,8 +228,8 @@ class PrivacyService:
 
     @staticmethod
     def should_show_full_name(
-        user: User,  # type: ignore[valid-type]
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        user: Any,
+        requesting_user: Any,
     ) -> bool:
         """
         Determine if full name should be shown to the requesting user.
@@ -233,12 +242,15 @@ class PrivacyService:
             bool: True if full name should be visible
         """
         # User can always see their own name
-        if requesting_user and user.pk == requesting_user.pk:
+        if requesting_user is not None and getattr(user, "pk", None) == getattr(
+            requesting_user, "pk", None
+        ):
             return True
 
         # Admin users can see all names
-        if requesting_user and (
-            requesting_user.is_superuser or requesting_user.is_staff
+        if requesting_user is not None and (
+            getattr(requesting_user, "is_superuser", False)
+            or getattr(requesting_user, "is_staff", False)
         ):
             return True
 
@@ -252,8 +264,8 @@ class PrivacyService:
 
     @staticmethod
     def get_visible_fields(
-        user: User,  # type: ignore[valid-type]
-        requesting_user: Optional[User],  # type: ignore[valid-type]
+        user: Any,
+        requesting_user: Any,
     ) -> Set[str]:
         """
         Return the set of profile fields that the requesting user is allowed to see.
@@ -285,7 +297,7 @@ class PrivacyService:
     @staticmethod
     def have_mutual_friends(
         user_profile: "UserProfile",
-        other_user: User,  # type: ignore[valid-type]
+        other_user: Any,
     ) -> bool:
         """
         Check if two users have mutual friends.
@@ -303,7 +315,7 @@ class PrivacyService:
         return user_profile.friends.filter(profile__friends=other_user).exists()
 
     @staticmethod
-    def get_user_friends_ids(user: User) -> Set[int]:  # type: ignore[valid-type]
+    def get_user_friends_ids(user: Any) -> Set[int]:
         """
         Get the set of friend IDs for a user.
 
@@ -316,17 +328,24 @@ class PrivacyService:
         Returns:
             Set[int]: Set of user IDs who are friends with this user
         """
-        if not user or not user.is_authenticated:
+        if user is None:
+            return set()
+
+        if not getattr(user, "is_authenticated", False):
             return set()
 
         try:
-            return set(user.profile.friends.values_list("id", flat=True))
+            profile = getattr(user, "profile", None)
+            if profile is not None:
+                return set(profile.friends.values_list("id", flat=True))
         except AttributeError:
-            return set()
+            pass
+
+        return set()
 
     @staticmethod
     def _get_privacy_settings(
-        user: User,  # type: ignore[valid-type]
+        user: Any,
     ) -> Optional["UserProfilePrivacySettings"]:
         """
         Get privacy settings for a user.
@@ -338,8 +357,9 @@ class PrivacyService:
             UserProfilePrivacySettings or None if not found
         """
         try:
-            if hasattr(user, "profile") and hasattr(user.profile, "privacy_settings"):
-                return user.profile.privacy_settings
+            profile = getattr(user, "profile", None)
+            if profile is not None:
+                return getattr(profile, "privacy_settings", None)
         except AttributeError:
             pass
         return None
