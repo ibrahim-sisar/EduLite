@@ -1,13 +1,23 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { usePreviewCache } from '../../../hooks/usePreviewCache';
-import { previewMarkdown } from '../../../services/slideshowApi';
-import toast from 'react-hot-toast';
-import type { EditorSlide } from '../../../types/editor.types';
-import CodeBlock from '../CodeBlock';
+import { useState, useEffect, useMemo, useRef } from "react";
+import {
+  HiArrowsPointingOut,
+  HiArrowLeft,
+  HiArrowRight,
+  HiXMark,
+} from "react-icons/hi2";
+import { usePreviewCache } from "../../../hooks/usePreviewCache";
+import { previewMarkdown } from "../../../services/slideshowApi";
+import toast from "react-hot-toast";
+import type { EditorSlide } from "../../../types/editor.types";
+import CodeBlock from "../CodeBlock";
 
 interface SlidePreviewProps {
   slide: EditorSlide | null;
   isVisible: boolean;
+  currentIndex?: number;
+  totalSlides?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
 }
 
 /**
@@ -39,7 +49,9 @@ interface CodeBlockData {
   language: string;
 }
 
-const extractCodeBlocks = (html: string): { processedHtml: string; codeBlocks: CodeBlockData[] } => {
+const extractCodeBlocks = (
+  html: string,
+): { processedHtml: string; codeBlocks: CodeBlockData[] } => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   const codeBlocks: CodeBlockData[] = [];
@@ -104,41 +116,43 @@ const SlideContentWithCodeBlocks = ({
     const container = contentContainerRef.current;
 
     // Remove inline onclick attributes from accordion buttons and restore state
-    const accordionButtons = container.querySelectorAll('.sb-accordion-toggle');
+    const accordionButtons = container.querySelectorAll(".sb-accordion-toggle");
     accordionButtons.forEach((button, index) => {
-      button.removeAttribute('onclick');
+      button.removeAttribute("onclick");
 
       // Restore previous state if it exists
       const savedState = accordionStatesRef.current.get(index);
       if (savedState !== undefined) {
-        button.setAttribute('aria-expanded', savedState ? 'true' : 'false');
+        button.setAttribute("aria-expanded", savedState ? "true" : "false");
         const content = button.nextElementSibling;
-        if (content && content.classList.contains('sb-accordion-content')) {
-          content.setAttribute('aria-hidden', savedState ? 'false' : 'true');
+        if (content && content.classList.contains("sb-accordion-content")) {
+          content.setAttribute("aria-hidden", savedState ? "false" : "true");
         }
       }
     });
 
     const handleAccordionClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      const button = target.closest('.sb-accordion-toggle');
+      const button = target.closest(".sb-accordion-toggle");
 
       if (button) {
         e.preventDefault();
         e.stopPropagation();
 
-        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        const isExpanded = button.getAttribute("aria-expanded") === "true";
         const newState = !isExpanded;
 
-        button.setAttribute('aria-expanded', newState ? 'true' : 'false');
+        button.setAttribute("aria-expanded", newState ? "true" : "false");
 
         const content = button.nextElementSibling;
-        if (content && content.classList.contains('sb-accordion-content')) {
-          content.setAttribute('aria-hidden', newState ? 'false' : 'true');
+        if (content && content.classList.contains("sb-accordion-content")) {
+          content.setAttribute("aria-hidden", newState ? "false" : "true");
         }
 
         // Save the state
-        const allButtons = Array.from(container.querySelectorAll('.sb-accordion-toggle'));
+        const allButtons = Array.from(
+          container.querySelectorAll(".sb-accordion-toggle"),
+        );
         const index = allButtons.indexOf(button as Element);
         if (index !== -1) {
           accordionStatesRef.current.set(index, newState);
@@ -146,10 +160,10 @@ const SlideContentWithCodeBlocks = ({
       }
     };
 
-    container.addEventListener('click', handleAccordionClick);
+    container.addEventListener("click", handleAccordionClick);
 
     return () => {
-      container.removeEventListener('click', handleAccordionClick);
+      container.removeEventListener("click", handleAccordionClick);
     };
   }, [processedHtml, isDarkMode]); // Re-run when theme changes
 
@@ -159,10 +173,11 @@ const SlideContentWithCodeBlocks = ({
     let currentHtml = processedHtml;
 
     // Create a map of code blocks by ID for quick lookup
-    const codeBlockMap = new Map(codeBlocks.map(cb => [cb.id, cb]));
+    const codeBlockMap = new Map(codeBlocks.map((cb) => [cb.id, cb]));
 
     // Split by placeholder divs
-    const placeholderRegex = /<div[^>]*data-code-block-id="([^"]+)"[^>]*><\/div>/g;
+    const placeholderRegex =
+      /<div[^>]*data-code-block-id="([^"]+)"[^>]*><\/div>/g;
     let lastIndex = 0;
     let match;
 
@@ -177,7 +192,7 @@ const SlideContentWithCodeBlocks = ({
           <div
             key={`html-${lastIndex}`}
             dangerouslySetInnerHTML={{ __html: htmlPart }}
-          />
+          />,
         );
       }
 
@@ -190,7 +205,7 @@ const SlideContentWithCodeBlocks = ({
             code={codeBlockData.code}
             language={codeBlockData.language}
             isDarkMode={isDarkMode}
-          />
+          />,
         );
       }
 
@@ -204,7 +219,7 @@ const SlideContentWithCodeBlocks = ({
         <div
           key={`html-${lastIndex}`}
           dangerouslySetInnerHTML={{ __html: htmlPart }}
-        />
+        />,
       );
     }
 
@@ -214,23 +229,34 @@ const SlideContentWithCodeBlocks = ({
   return <div ref={contentContainerRef}>{parts}</div>;
 };
 
-export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
-  const [renderedContent, setRenderedContent] = useState<string>('');
+export function SlidePreview({
+  slide,
+  isVisible,
+  currentIndex = 0,
+  totalSlides = 1,
+  onPrev,
+  onNext,
+}: SlidePreviewProps) {
+  const [renderedContent, setRenderedContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const { getCache, setCache } = usePreviewCache(slide?.tempId || 'unknown');
+  const contentRef = useRef<HTMLDivElement>(null);
+  const slideContainerRef = useRef<HTMLDivElement>(null);
+
+  const { getCache, setCache } = usePreviewCache(slide?.tempId || "unknown");
 
   // Dark mode detection
   useEffect(() => {
     const checkDarkMode = () => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
     };
     checkDarkMode();
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ["class"],
     });
     return () => observer.disconnect();
   }, []);
@@ -239,7 +265,7 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
   useEffect(() => {
     // No slide or not visible = clear and bail
     if (!slide || !isVisible || !slide.content) {
-      setRenderedContent('');
+      setRenderedContent("");
       setIsLoading(false);
       return;
     }
@@ -260,7 +286,10 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
     const timeoutId = setTimeout(() => {
       const fetchPreview = async () => {
         try {
-          const rendered = await previewMarkdown(slide.content, controller.signal);
+          const rendered = await previewMarkdown(
+            slide.content,
+            controller.signal,
+          );
           // Only update if this request wasn't aborted
           if (!controller.signal.aborted) {
             setRenderedContent(rendered);
@@ -269,16 +298,16 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
           }
         } catch (err: any) {
           // Ignore abort errors - that's expected behavior
-          if (err.name === 'AbortError' || controller.signal.aborted) {
+          if (err.name === "AbortError" || controller.signal.aborted) {
             return;
           }
-          console.error('Preview fetch error:', err);
+          console.error("Preview fetch error:", err);
           if (!controller.signal.aborted) {
             // Handle rate limiting specifically
             if (err.response?.status === 429) {
-              toast.error('Too many preview requests - please wait a moment');
+              toast.error("Too many preview requests - please wait a moment");
             } else {
-              toast.error('Preview unavailable');
+              toast.error("Preview unavailable");
             }
             setIsLoading(false);
           }
@@ -308,6 +337,42 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
     return getPreviewFontSizeClass(contentLength);
   }, [renderedContent]);
 
+  // Keyboard shortcuts for expand/collapse
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (e.key === "Escape" && isExpanded) {
+        e.preventDefault();
+        setIsExpanded(false);
+      }
+      if ((e.key === "e" || e.key === "E") && isVisible) {
+        e.preventDefault();
+        setIsExpanded((prev) => !prev);
+      }
+      // Arrow key navigation in expanded view
+      if (isExpanded) {
+        if (e.key === "ArrowLeft" && onPrev) {
+          e.preventDefault();
+          onPrev();
+        }
+        if (e.key === "ArrowRight" && onNext) {
+          e.preventDefault();
+          onNext();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isExpanded, isVisible, onPrev, onNext]);
+
   if (!isVisible || !slide) {
     return null;
   }
@@ -315,34 +380,50 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
   return (
     <div className="h-full flex flex-col border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-5 flex items-center justify-center">
-        <h3 className="font-semibold text-gray-900 dark:text-gray-100">Preview</h3>
+      <div className="flex-shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+        <div className="w-8" /> {/* Spacer for centering */}
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          Preview
+        </h3>
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+          title="Expand preview (E)"
+        >
+          <HiArrowsPointingOut className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        </button>
       </div>
 
       {/* Preview area - fills remaining space */}
-      <div className="flex-1 flex items-center justify-center px-4 overflow-auto relative">
-        <div className="w-full h-full max-w-6xl">
-          {/* Preview container matching presentation aspect ratio */}
-          <div className={`w-full h-full rounded-lg shadow-xl overflow-auto ${
-            isDarkMode ? 'bg-gray-900' : 'bg-white'
-          }`}>
-            {/* Content - matches SlideDisplay structure with preview classes */}
-            <div className="h-full overflow-y-auto flex items-center justify-center p-12">
-              <div className={`w-full text-center ${fontSizeClass}`}>
-                <div className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white">
-                  {renderedContent ? (
-                    <SlideContentWithCodeBlocks
-                      processedHtml={processedHtml}
-                      codeBlocks={codeBlocks}
-                      isDarkMode={isDarkMode}
-                    />
-                  ) : (
-                    <div className={`text-center py-20 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      <p>Preview will appear here</p>
-                      <p className="text-sm mt-2">Start typing to see your slide</p>
-                    </div>
-                  )}
-                </div>
+      <div
+        className={`flex-1 overflow-hidden relative ${
+          isDarkMode ? "bg-gray-900" : "bg-white"
+        }`}
+      >
+        {/* Scrollable content container */}
+        <div
+          ref={slideContainerRef}
+          className="absolute inset-0 overflow-y-auto"
+        >
+          <div ref={contentRef} className="flex items-start justify-center p-8">
+            <div className={`w-full max-w-4xl text-center ${fontSizeClass}`}>
+              <div className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white">
+                {renderedContent ? (
+                  <SlideContentWithCodeBlocks
+                    processedHtml={processedHtml}
+                    codeBlocks={codeBlocks}
+                    isDarkMode={isDarkMode}
+                  />
+                ) : (
+                  <div
+                    className={`text-center py-12 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+                  >
+                    <p className="text-lg">Preview will appear here</p>
+                    <p className="text-sm mt-2 opacity-75">
+                      Start typing to see your slide
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -350,14 +431,94 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
 
         {/* Loading spinner overlay */}
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 dark:bg-black/40 backdrop-blur-sm">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 dark:bg-black/40 backdrop-blur-sm z-20">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 flex flex-col items-center gap-3">
               <div className="w-12 h-12 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Rendering preview...</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Rendering preview...
+              </p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Expanded fullscreen preview */}
+      {isExpanded && (
+        <div className="fixed inset-0 z-50 bg-black flex justify-center overflow-auto py-8">
+          {/* Floating hint and slide counter */}
+          <div className="fixed top-4 left-4 flex items-center gap-4 text-white/60 text-sm z-10">
+            <span>
+              Press{" "}
+              <kbd className="px-2 py-0.5 bg-white/10 rounded text-white/80">
+                Esc
+              </kbd>{" "}
+              or{" "}
+              <kbd className="px-2 py-0.5 bg-white/10 rounded text-white/80">
+                E
+              </kbd>{" "}
+              to close
+            </span>
+            <span className="text-white/80 font-medium">
+              {currentIndex + 1} / {totalSlides}
+            </span>
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="fixed top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer z-10"
+            title="Close (Esc/E)"
+          >
+            <HiXMark className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Full presentation-style slide display */}
+          <div className="w-full max-w-6xl px-16 my-auto text-center slide-text-lg">
+            <div className="text-white slide-content prose-headings:text-white prose-p:text-white prose-li:text-white">
+              {renderedContent ? (
+                <SlideContentWithCodeBlocks
+                  processedHtml={processedHtml}
+                  codeBlocks={codeBlocks}
+                  isDarkMode={true}
+                />
+              ) : (
+                <div className="text-center py-12 text-gray-400">
+                  <p className="text-lg">No content to preview</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation Arrows */}
+          {onPrev && (
+            <div className="fixed left-4 top-1/2 -translate-y-1/2">
+              <button
+                onClick={onPrev}
+                disabled={currentIndex === 0}
+                className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                aria-label="Previous slide"
+                title="Previous slide (←)"
+              >
+                <HiArrowLeft className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+
+          {onNext && (
+            <div className="fixed right-4 top-1/2 -translate-y-1/2">
+              <button
+                onClick={onNext}
+                disabled={currentIndex === totalSlides - 1}
+                className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                aria-label="Next slide"
+                title="Next slide (→)"
+              >
+                <HiArrowRight className="w-6 h-6" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
