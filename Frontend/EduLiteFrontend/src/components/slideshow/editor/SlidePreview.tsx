@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { usePreviewCache } from '../../../hooks/usePreviewCache';
 import { previewMarkdown } from '../../../services/slideshowApi';
 import toast from 'react-hot-toast';
 import type { EditorSlide } from '../../../types/editor.types';
+import CodeBlock from '../CodeBlock';
 
 interface SlidePreviewProps {
   slide: EditorSlide | null;
@@ -27,6 +28,190 @@ const getPreviewFontSizeClass = (contentLength: number): string => {
   if (contentLength < 600) return "preview-text-md";
   if (contentLength < 1000) return "preview-text-sm";
   return "preview-text-xs";
+};
+
+/**
+ * Extract code blocks from HTML and return structured data
+ */
+interface CodeBlockData {
+  id: string;
+  code: string;
+  language: string;
+}
+
+const extractCodeBlocks = (html: string): { processedHtml: string; codeBlocks: CodeBlockData[] } => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const codeBlocks: CodeBlockData[] = [];
+
+  // Find all <pre><code> blocks
+  const preElements = doc.querySelectorAll("pre");
+
+  preElements.forEach((pre, index) => {
+    const codeElement = pre.querySelector("code");
+    if (codeElement) {
+      const codeText = codeElement.textContent || "";
+
+      // Extract language from class (e.g., "language-javascript")
+      const className = codeElement.className || "";
+      const languageMatch = className.match(/language-(\w+)/);
+      const language = languageMatch ? languageMatch[1] : "text";
+
+      // Create unique ID for this code block
+      const id = `code-block-${index}`;
+
+      codeBlocks.push({
+        id,
+        code: codeText,
+        language,
+      });
+
+      // Replace the <pre> element with a placeholder div
+      const placeholder = doc.createElement("div");
+      placeholder.setAttribute("data-code-block-id", id);
+      placeholder.className = "code-block-placeholder";
+      pre.replaceWith(placeholder);
+    }
+  });
+
+  return {
+    processedHtml: doc.body.innerHTML,
+    codeBlocks,
+  };
+};
+
+/**
+ * Component to render HTML content with injected CodeBlock components
+ */
+interface SlideContentWithCodeBlocksProps {
+  processedHtml: string;
+  codeBlocks: CodeBlockData[];
+  isDarkMode: boolean;
+}
+
+const SlideContentWithCodeBlocks = ({
+  processedHtml,
+  codeBlocks,
+  isDarkMode,
+}: SlideContentWithCodeBlocksProps) => {
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+  const accordionStatesRef = useRef<Map<number, boolean>>(new Map());
+
+  // Add accordion functionality and remove inline onclick handlers
+  useEffect(() => {
+    if (!contentContainerRef.current) return;
+
+    const container = contentContainerRef.current;
+
+    // Remove inline onclick attributes from accordion buttons and restore state
+    const accordionButtons = container.querySelectorAll('.sb-accordion-toggle');
+    accordionButtons.forEach((button, index) => {
+      button.removeAttribute('onclick');
+
+      // Restore previous state if it exists
+      const savedState = accordionStatesRef.current.get(index);
+      if (savedState !== undefined) {
+        button.setAttribute('aria-expanded', savedState ? 'true' : 'false');
+        const content = button.nextElementSibling;
+        if (content && content.classList.contains('sb-accordion-content')) {
+          content.setAttribute('aria-hidden', savedState ? 'false' : 'true');
+        }
+      }
+    });
+
+    const handleAccordionClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('.sb-accordion-toggle');
+
+      if (button) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        const newState = !isExpanded;
+
+        button.setAttribute('aria-expanded', newState ? 'true' : 'false');
+
+        const content = button.nextElementSibling;
+        if (content && content.classList.contains('sb-accordion-content')) {
+          content.setAttribute('aria-hidden', newState ? 'false' : 'true');
+        }
+
+        // Save the state
+        const allButtons = Array.from(container.querySelectorAll('.sb-accordion-toggle'));
+        const index = allButtons.indexOf(button as Element);
+        if (index !== -1) {
+          accordionStatesRef.current.set(index, newState);
+        }
+      }
+    };
+
+    container.addEventListener('click', handleAccordionClick);
+
+    return () => {
+      container.removeEventListener('click', handleAccordionClick);
+    };
+  }, [processedHtml, isDarkMode]); // Re-run when theme changes
+
+  // Split HTML by code block placeholders and render parts with code blocks
+  const parts = useMemo(() => {
+    const result: React.ReactNode[] = [];
+    let currentHtml = processedHtml;
+
+    // Create a map of code blocks by ID for quick lookup
+    const codeBlockMap = new Map(codeBlocks.map(cb => [cb.id, cb]));
+
+    // Split by placeholder divs
+    const placeholderRegex = /<div[^>]*data-code-block-id="([^"]+)"[^>]*><\/div>/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = placeholderRegex.exec(currentHtml)) !== null) {
+      const [fullMatch, codeBlockId] = match;
+      const matchIndex = match.index;
+
+      // Add HTML before this code block
+      if (matchIndex > lastIndex) {
+        const htmlPart = currentHtml.substring(lastIndex, matchIndex);
+        result.push(
+          <div
+            key={`html-${lastIndex}`}
+            dangerouslySetInnerHTML={{ __html: htmlPart }}
+          />
+        );
+      }
+
+      // Add the code block component
+      const codeBlockData = codeBlockMap.get(codeBlockId);
+      if (codeBlockData) {
+        result.push(
+          <CodeBlock
+            key={codeBlockId}
+            code={codeBlockData.code}
+            language={codeBlockData.language}
+            isDarkMode={isDarkMode}
+          />
+        );
+      }
+
+      lastIndex = matchIndex + fullMatch.length;
+    }
+
+    // Add remaining HTML after last code block
+    if (lastIndex < currentHtml.length) {
+      const htmlPart = currentHtml.substring(lastIndex);
+      result.push(
+        <div
+          key={`html-${lastIndex}`}
+          dangerouslySetInnerHTML={{ __html: htmlPart }}
+        />
+      );
+    }
+
+    return result;
+  }, [processedHtml, codeBlocks, isDarkMode]);
+
+  return <div ref={contentContainerRef}>{parts}</div>;
 };
 
 export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
@@ -110,6 +295,12 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
     };
   }, [slide?.tempId, slide?.content, isVisible, getCache, setCache]);
 
+  // Extract code blocks and process HTML
+  const { processedHtml, codeBlocks } = useMemo(() => {
+    if (!renderedContent) return { processedHtml: "", codeBlocks: [] };
+    return extractCodeBlocks(renderedContent);
+  }, [renderedContent]);
+
   // Calculate preview font size class based on content length
   const fontSizeClass = useMemo(() => {
     if (!renderedContent) return "preview-text-lg";
@@ -140,7 +331,11 @@ export function SlidePreview({ slide, isVisible }: SlidePreviewProps) {
               <div className={`w-full text-center ${fontSizeClass}`}>
                 <div className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white">
                   {renderedContent ? (
-                    <div dangerouslySetInnerHTML={{ __html: renderedContent }} />
+                    <SlideContentWithCodeBlocks
+                      processedHtml={processedHtml}
+                      codeBlocks={codeBlocks}
+                      isDarkMode={isDarkMode}
+                    />
                   ) : (
                     <div className={`text-center py-20 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <p>Preview will appear here</p>

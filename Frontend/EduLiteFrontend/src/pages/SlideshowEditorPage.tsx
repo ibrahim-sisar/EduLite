@@ -151,6 +151,15 @@ export default function SlideshowEditorPage() {
 
       if (isNewSlideshow) {
         // Create new slideshow
+        // Filter out slides with empty content
+        const validSlides = slides.filter((slide) => slide.content.trim() !== '');
+
+        if (validSlides.length === 0) {
+          toast.error('Please add at least one slide with content');
+          setSaveStatus('error');
+          return;
+        }
+
         const created = await createSlideshow({
           title,
           description: description || null,
@@ -158,8 +167,8 @@ export default function SlideshowEditorPage() {
           subject,
           language,
           is_published: isPublished,
-          slides: slides.map((slide) => ({
-            order: slide.order,
+          slides: validSlides.map((slide, index) => ({
+            order: index, // Re-index after filtering
             content: slide.content,
             notes: slide.notes || null,
           })),
@@ -170,6 +179,15 @@ export default function SlideshowEditorPage() {
         navigate(`/slideshows/${created.id}/edit`, { replace: true });
       } else {
         // Update existing slideshow
+        // Filter out slides with empty content
+        const validSlides = slides.filter((slide) => slide.content.trim() !== '');
+
+        if (validSlides.length === 0) {
+          toast.error('Please add at least one slide with content');
+          setSaveStatus('error');
+          return;
+        }
+
         const updated = await updateSlideshow(slideshowId as number, {
           title,
           description: description || null,
@@ -178,14 +196,36 @@ export default function SlideshowEditorPage() {
           language,
           is_published: isPublished,
           version: version!,
-          slides: slides.map((slide) => ({
-            order: slide.order,
+          slides: validSlides.map((slide, index) => ({
+            order: index, // Re-index after filtering
             content: slide.content,
             notes: slide.notes || null,
           })),
         });
 
+        // Update version
         setVersion(updated.version);
+
+        // Update slides with the backend response to get proper IDs and rendered_content
+        const updatedSlides: EditorSlide[] = updated.slides.map((slide, index) => {
+          // Try to preserve the tempId by matching content
+          const existingSlide = validSlides.find(s => s.content === ('content' in slide ? slide.content : ''));
+          return {
+            id: slide.id,
+            tempId: existingSlide?.tempId || crypto.randomUUID(),
+            order: slide.order ?? index,
+            content: 'content' in slide ? slide.content : '',
+            notes: 'notes' in slide ? (slide.notes || '') : '',
+            rendered_content: slide.rendered_content,
+          };
+        });
+        setSlides(updatedSlides);
+
+        // If we filtered out any slides, update the selected slide if needed
+        if (selectedSlideId && !updatedSlides.find(s => s.tempId === selectedSlideId)) {
+          setSelectedSlideId(updatedSlides[0]?.tempId || null);
+        }
+
         setIsDirty(false);
         setSaveStatus('saved');
         setLastSaved(new Date());
@@ -274,6 +314,18 @@ export default function SlideshowEditorPage() {
       toast.error('Please save the slideshow before presenting');
       return;
     }
+
+    // Warn if there are unsaved changes
+    if (isDirty) {
+      const confirmed = window.confirm(
+        'You have unsaved changes. These changes will not appear in the presentation.\n\n' +
+        'Do you want to present anyway?'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     navigate(`/slideshows/${slideshowId}/present`);
   };
 
@@ -291,13 +343,11 @@ export default function SlideshowEditorPage() {
   const selectedSlide = slides.find((s) => s.tempId === selectedSlideId) || null;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 pt-16">
       <EditorHeader
         slideshowId={slideshowId}
         title={title}
         onTitleChange={setTitle}
-        isPublished={isPublished}
-        onPublishToggle={() => setIsPublished(!isPublished)}
         onPresentClick={handlePresent}
         onSaveClick={handleSave}
         saveStatus={isOnline ? saveStatus : 'offline'}
