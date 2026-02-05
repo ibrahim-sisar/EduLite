@@ -32,7 +32,9 @@ interface CodeBlockData {
   language: string;
 }
 
-const extractCodeBlocks = (html: string): { processedHtml: string; codeBlocks: CodeBlockData[] } => {
+const extractCodeBlocks = (
+  html: string,
+): { processedHtml: string; codeBlocks: CodeBlockData[] } => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   const codeBlocks: CodeBlockData[] = [];
@@ -97,41 +99,43 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
     const container = contentContainerRef.current;
 
     // Remove inline onclick attributes from accordion buttons and restore state
-    const accordionButtons = container.querySelectorAll('.sb-accordion-toggle');
+    const accordionButtons = container.querySelectorAll(".sb-accordion-toggle");
     accordionButtons.forEach((button, index) => {
-      button.removeAttribute('onclick');
+      button.removeAttribute("onclick");
 
       // Restore previous state if it exists
       const savedState = accordionStatesRef.current.get(index);
       if (savedState !== undefined) {
-        button.setAttribute('aria-expanded', savedState ? 'true' : 'false');
+        button.setAttribute("aria-expanded", savedState ? "true" : "false");
         const content = button.nextElementSibling;
-        if (content && content.classList.contains('sb-accordion-content')) {
-          content.setAttribute('aria-hidden', savedState ? 'false' : 'true');
+        if (content && content.classList.contains("sb-accordion-content")) {
+          content.setAttribute("aria-hidden", savedState ? "false" : "true");
         }
       }
     });
 
     const handleAccordionClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      const button = target.closest('.sb-accordion-toggle');
+      const button = target.closest(".sb-accordion-toggle");
 
       if (button) {
         e.preventDefault();
         e.stopPropagation();
 
-        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        const isExpanded = button.getAttribute("aria-expanded") === "true";
         const newState = !isExpanded;
 
-        button.setAttribute('aria-expanded', newState ? 'true' : 'false');
+        button.setAttribute("aria-expanded", newState ? "true" : "false");
 
         const content = button.nextElementSibling;
-        if (content && content.classList.contains('sb-accordion-content')) {
-          content.setAttribute('aria-hidden', newState ? 'false' : 'true');
+        if (content && content.classList.contains("sb-accordion-content")) {
+          content.setAttribute("aria-hidden", newState ? "false" : "true");
         }
 
         // Save the state
-        const allButtons = Array.from(container.querySelectorAll('.sb-accordion-toggle'));
+        const allButtons = Array.from(
+          container.querySelectorAll(".sb-accordion-toggle"),
+        );
         const index = allButtons.indexOf(button as Element);
         if (index !== -1) {
           accordionStatesRef.current.set(index, newState);
@@ -139,10 +143,10 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
       }
     };
 
-    container.addEventListener('click', handleAccordionClick);
+    container.addEventListener("click", handleAccordionClick);
 
     return () => {
-      container.removeEventListener('click', handleAccordionClick);
+      container.removeEventListener("click", handleAccordionClick);
     };
   }, [processedHtml, isDarkMode]); // Re-run when theme changes
 
@@ -152,10 +156,11 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
     let currentHtml = processedHtml;
 
     // Create a map of code blocks by ID for quick lookup
-    const codeBlockMap = new Map(codeBlocks.map(cb => [cb.id, cb]));
+    const codeBlockMap = new Map(codeBlocks.map((cb) => [cb.id, cb]));
 
     // Split by placeholder divs
-    const placeholderRegex = /<div[^>]*data-code-block-id="([^"]+)"[^>]*><\/div>/g;
+    const placeholderRegex =
+      /<div[^>]*data-code-block-id="([^"]+)"[^>]*><\/div>/g;
     let lastIndex = 0;
     let match;
 
@@ -170,7 +175,7 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
           <div
             key={`html-${lastIndex}`}
             dangerouslySetInnerHTML={{ __html: htmlPart }}
-          />
+          />,
         );
       }
 
@@ -183,7 +188,7 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
             code={codeBlockData.code}
             language={codeBlockData.language}
             isDarkMode={isDarkMode}
-          />
+          />,
         );
       }
 
@@ -197,7 +202,7 @@ const SlideContentWithCodeBlocks: React.FC<SlideContentWithCodeBlocksProps> = ({
         <div
           key={`html-${lastIndex}`}
           dangerouslySetInnerHTML={{ __html: htmlPart }}
-        />
+        />,
       );
     }
 
@@ -327,12 +332,14 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
     <div
       ref={containerRef}
       className={`absolute inset-0 ${
-        isOverflowing ? "overflow-y-auto pt-8 pb-64 flex justify-center" : "overflow-hidden flex items-center justify-center"
+        isOverflowing
+          ? "overflow-y-auto flex justify-center py-8"
+          : "overflow-hidden flex items-center justify-center py-8"
       }`}
     >
       <div
         ref={contentRef}
-        className={`w-full max-w-6xl px-16 text-center ${fontSizeClass}`}
+        className={`w-full max-w-6xl px-16 my-auto text-center ${fontSizeClass}`}
       >
         {/* Slide Content */}
         <div className="text-gray-900 dark:text-white slide-content prose-headings:text-gray-900 dark:prose-headings:text-white prose-p:text-gray-900 dark:prose-p:text-white prose-li:text-gray-900 dark:prose-li:text-white">
@@ -351,7 +358,7 @@ const SlideDisplay: React.FC<SlideDisplayProps> = ({
             if (containerRef.current) {
               containerRef.current.scrollTo({
                 top: containerRef.current.scrollHeight,
-                behavior: 'smooth'
+                behavior: "smooth",
               });
             }
           }}
