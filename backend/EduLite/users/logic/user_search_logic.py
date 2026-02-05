@@ -1,14 +1,17 @@
 # backend/EduLite/users/logic/user_search_logic.py
 # Contains logic functions for user search functionality with privacy controls
 
-from typing import Optional, Tuple, Any, Union
+from typing import Any, Optional, Tuple, Union
+
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet, Q, Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q, QuerySet
 from django.http import HttpRequest
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
+from rest_framework.response import Response
+
+from users.services import PrivacyService
 
 User = get_user_model()
 
@@ -299,27 +302,23 @@ def get_user_friends_ids(user: User) -> set:  # type: ignore[valid-type]
     """
     Get a set of user IDs that are friends with the given user.
 
+    Delegates to PrivacyService for centralized logic.
+
     Args:
         user: The user to get friends for
 
     Returns:
         Set of user IDs that are friends with the given user
     """
-    if not user or not user.is_authenticated:  # type: ignore[attr-defined]
-        return set()
-
-    try:
-        # user.friend_profiles gives UserProfile objects that have this user as a friend
-        # But we want the actual User IDs that are friends with this user
-        # So we need to get the friends from the user's profile
-        return set(user.profile.friends.values_list("id", flat=True))  # type: ignore[attr-defined]
-    except AttributeError:
-        return set()
+    return PrivacyService.get_user_friends_ids(user)
 
 
 def have_mutual_friends(user1: User, user2: User) -> bool:  # type: ignore[valid-type]
     """
-    Check if two users have mutual friends.
+    Check if two users have mutual friends (common friends in their friend lists).
+
+    This function checks if user1 and user2 share any common friends,
+    i.e., if there exists a user who is in both user1's and user2's friend list.
 
     Args:
         user1: First user
@@ -340,8 +339,9 @@ def have_mutual_friends(user1: User, user2: User) -> bool:  # type: ignore[valid
     if user1.id == user2.id:  # type: ignore[attr-defined]
         return False
 
-    user1_friends = get_user_friends_ids(user1)
-    user2_friends = get_user_friends_ids(user2)
+    # Get friend IDs for both users using PrivacyService helper
+    user1_friends = PrivacyService.get_user_friends_ids(user1)
+    user2_friends = PrivacyService.get_user_friends_ids(user2)
 
     # Check if there's any intersection between friend lists
     return bool(user1_friends.intersection(user2_friends))

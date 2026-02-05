@@ -1,30 +1,31 @@
+from typing import TYPE_CHECKING, Optional
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth import get_user_model
-from django.urls import reverse
 from django.db import models
-from django.conf import settings
-from typing import Optional, TYPE_CHECKING
-
+from django.urls import reverse
 from rest_framework import serializers
 
 from .models import (
-    UserProfile,
-    ProfileFriendRequest,
-    UserProfilePrivacySettings,
     FriendSuggestion,
+    ProfileFriendRequest,
+    UserProfile,
+    UserProfilePrivacySettings,
 )
+from .services import PrivacyService
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
+import base64
+import json
+
 from django.conf import settings
-from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import TimestampSigner
-import json
-import base64
-
+from django.template.loader import render_to_string
 
 User = get_user_model()
 
@@ -128,7 +129,10 @@ class ProfileSerializer(
         """
         Check if the requesting user can view the
         full profile based on privacy settings.
+
+        Delegates to PrivacyService for centralized privacy logic.
         """
+        # Handle case where requesting_user is None (anonymous)
         if not requesting_user:
             return False
 
@@ -140,11 +144,13 @@ class ProfileSerializer(
         if requesting_user.is_superuser or requesting_user.is_staff:
             return True
 
-        # Check privacy settings with proper error handling
+        # Delegate to PrivacyService
         try:
             privacy_settings = getattr(obj, "privacy_settings", None)
             if privacy_settings:
-                return privacy_settings.can_profile_be_viewed_by_user(requesting_user)
+                return PrivacyService.can_view_full_profile(
+                    privacy_settings, requesting_user
+                )
         except (AttributeError, UserProfilePrivacySettings.DoesNotExist):
             pass
 
@@ -240,35 +246,20 @@ class UserSearchSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """
         Override to apply privacy filtering efficiently.
+
+        Uses PrivacyService for centralized privacy logic.
         """
         representation = super().to_representation(instance)
         requesting_user = self._get_requesting_user()
 
-        # Apply privacy filtering
-        if requesting_user and instance.id == requesting_user.id:
-            # User can see all their own data
-            return representation
-
-        if requesting_user and (
-            requesting_user.is_superuser or requesting_user.is_staff
-        ):
-            # Admin can see all data
-            return representation
-
-        # Check privacy settings
-        privacy_settings = self._get_privacy_settings(instance)
-
-        if not privacy_settings:
-            # Default privacy: hide email
+        # Use PrivacyService for field-level visibility
+        if not PrivacyService.should_show_email(instance, requesting_user):
             representation.pop("email", None)
-        else:
-            if not privacy_settings.show_email:
-                representation.pop("email", None)
 
-            if not privacy_settings.show_full_name:
-                representation.pop("first_name", None)
-                representation.pop("last_name", None)
-                representation.pop("full_name", None)
+        if not PrivacyService.should_show_full_name(instance, requesting_user):
+            representation.pop("first_name", None)
+            representation.pop("last_name", None)
+            representation.pop("full_name", None)
 
         return representation
 
@@ -383,61 +374,35 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):  # Or ModelSeriali
     ) -> bool:
         """
         Determine if email should be shown to the requesting user.
+
+        Delegates to PrivacyService for centralized privacy logic.
         """
-        # User can always see their own email - use pk comparison
-        if requesting_user and obj.pk == requesting_user.pk:
-            return True
-
-        # Admin users can see all emails
-        if requesting_user and (
-            requesting_user.is_superuser or requesting_user.is_staff
-        ):
-            return True
-
-        # Check privacy settings using cached method
-        privacy_settings = self._get_privacy_settings(obj)
-        if privacy_settings:
-            return privacy_settings.show_email
-
-        # Default to hiding email if no privacy settings exist
-        return False
+        return PrivacyService.should_show_email(obj, requesting_user)
 
     def _should_show_full_name(
         self, obj, requesting_user: Optional["AbstractUser"]
     ) -> bool:
         """
         Determine if full name should be shown to the requesting user.
+
+        Delegates to PrivacyService for centralized privacy logic.
         """
-        # User can always see their own name - fix the comparison
-        if requesting_user and obj.id == requesting_user.id:  # type: ignore[attr-defined]
-            return True
-
-        # Admin users can see all names
-        if requesting_user and (
-            requesting_user.is_superuser or requesting_user.is_staff
-        ):
-            return True
-
-        # Check privacy settings using cached method
-        privacy_settings = self._get_privacy_settings(obj)
-        if privacy_settings:
-            return privacy_settings.show_full_name
-
-        # Default to showing names if no privacy settings exist
-        return True
+        return PrivacyService.should_show_full_name(obj, requesting_user)
 
     def to_representation(self, instance):
         """
         Override to apply privacy filtering based on individual field privacy settings.
+
+        Uses PrivacyService for centralized privacy logic.
         """
         representation = super().to_representation(instance)
         requesting_user = self._get_requesting_user()
 
-        # Apply individual field privacy filtering
-        if not self._should_show_email(instance, requesting_user):
+        # Apply individual field privacy filtering via PrivacyService
+        if not PrivacyService.should_show_email(instance, requesting_user):
             representation.pop("email", None)
 
-        if not self._should_show_full_name(instance, requesting_user):
+        if not PrivacyService.should_show_full_name(instance, requesting_user):
             representation.pop("first_name", None)
             representation.pop("last_name", None)
             representation.pop("full_name", None)

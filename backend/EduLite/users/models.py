@@ -1,15 +1,14 @@
 # backend/EduLite/users/models.py
 # Contains user profile models, friend request models, and privacy settings models
 
-from django.db import models
-from django.contrib.auth import get_user_model
-from django.db import transaction, IntegrityError
-from django.core.exceptions import ValidationError
-
 from typing import TYPE_CHECKING
 
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, models, transaction
 
-from .models_choices import OCCUPATION_CHOICES, COUNTRY_CHOICES, LANGUAGE_CHOICES
+from .models_choices import COUNTRY_CHOICES, LANGUAGE_CHOICES, OCCUPATION_CHOICES
+from .services import PrivacyService
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
@@ -181,47 +180,21 @@ class UserProfilePrivacySettings(models.Model):
         """
         Check if this user profile can be found in search by the requesting user.
 
+        Delegates to PrivacyService for centralized privacy logic.
+
         Args:
             requesting_user: The user performing the search
 
         Returns:
             bool: True if the profile should appear in search results
         """
-        if not requesting_user or not requesting_user.is_authenticated:
-            return self.search_visibility == "everyone"
-
-        # User can always find themselves
-        if requesting_user == self.user_profile.user:
-            return True
-
-        if self.search_visibility == "everyone":
-            return True
-        elif self.search_visibility == "nobody":
-            return False
-        elif self.search_visibility == "friends_only":
-            # Optimized: Use exists() with direct query to avoid N+1
-            return self.user_profile.friends.filter(id=requesting_user.id).exists()
-        elif self.search_visibility == "friends_of_friends":
-            # Optimized: Use database-level joins to avoid N+1
-            # First check if they are direct friends
-            if self.user_profile.friends.filter(id=requesting_user.id).exists():
-                return True
-
-            # Check for mutual friends using optimized query
-            # This uses a single query instead of fetching all friends
-            # We need to check if any of user_profile's friends have requesting_user as a friend
-            # user_profile.friends are User objects, and we need to check their profiles
-            mutual_friends_exist = self.user_profile.friends.filter(
-                profile__friends=requesting_user
-            ).exists()
-
-            return mutual_friends_exist
-
-        return False
+        return PrivacyService.can_be_found_by_user(self, requesting_user)
 
     def can_profile_be_viewed_by_user(self, requesting_user: "AbstractUser") -> bool:
         """
         Check if the full profile can be viewed by the requesting user.
+
+        Delegates to PrivacyService for centralized privacy logic.
 
         Args:
             requesting_user: The user requesting to view the profile
@@ -229,22 +202,7 @@ class UserProfilePrivacySettings(models.Model):
         Returns:
             bool: True if the full profile can be viewed
         """
-        if not requesting_user or not requesting_user.is_authenticated:
-            return self.profile_visibility == "public"
-
-        # User can always view their own profile
-        if requesting_user == self.user_profile.user:
-            return True
-
-        if self.profile_visibility == "public":
-            return True
-        elif self.profile_visibility == "private":
-            return False
-        elif self.profile_visibility == "friends_only":
-            # Optimized: Use exists() with direct query to avoid N+1
-            return self.user_profile.friends.filter(id=requesting_user.id).exists()
-
-        return False
+        return PrivacyService.can_view_full_profile(self, requesting_user)
 
     def can_receive_friend_request_from_user(
         self, requesting_user: "AbstractUser"
@@ -252,38 +210,15 @@ class UserProfilePrivacySettings(models.Model):
         """
         Check if this user can receive a friend request from the requesting user.
 
+        Delegates to PrivacyService for centralized privacy logic.
+
         Args:
             requesting_user: The user wanting to send a friend request
 
         Returns:
             bool: True if friend request can be sent
         """
-        if not requesting_user or not requesting_user.is_authenticated:
-            return False
-
-        # Cannot send friend request to oneself
-        if requesting_user == self.user_profile.user:
-            return False
-
-        # Check if friend requests are allowed
-        if not self.allow_friend_requests:
-            return False
-
-        # Optimized: Check if they are already friends using exists()
-        if self.user_profile.friends.filter(id=requesting_user.id).exists():
-            return False
-
-        # Optimized: Check if there's already a pending request using select_related
-        existing_request = (
-            ProfileFriendRequest.objects.select_related("sender__user")
-            .filter(sender__user=requesting_user, receiver=self.user_profile)
-            .exists()
-        )
-
-        if existing_request:
-            return False
-
-        return True
+        return PrivacyService.can_receive_friend_request(self, requesting_user)
 
 
 # Example of how to get friend requests from a UserProfile:
