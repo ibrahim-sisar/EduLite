@@ -19,6 +19,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SlideshowListPage from "./pages/SlideshowListPage";
 import SlideshowDetailPage from "./pages/SlideshowDetailPage";
 import SlideshowViewPage from "./pages/SlideshowViewPage";
+import SlideshowEditorPage from "./pages/SlideshowEditorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -55,22 +56,21 @@ const RootLayout = () => {
         <Footer />
         <BackToTopButton />
 
-
-      {/* Toast notifications for login/logout feedback */}
-      <Toaster
-        position="bottom-left"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "16px",
-            color: "#374151",
-          },
-        }}
-      />
-    </div>
+        {/* Toast notifications for login/logout feedback */}
+        <Toaster
+          position="bottom-left"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "16px",
+              color: "#374151",
+            },
+          }}
+        />
+      </div>
     </>
   );
 };
@@ -108,7 +108,7 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <ProfilePage />
           </ProtectedRoute>
-        )
+        ),
       },
       {
         path: "slideshows",
@@ -116,7 +116,7 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <SlideshowListPage />
           </ProtectedRoute>
-        )
+        ),
       },
       {
         path: "slideshows/me",
@@ -124,7 +124,7 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <SlideshowListPage view="me" />
           </ProtectedRoute>
-        )
+        ),
       },
       {
         path: "slideshows/public",
@@ -132,7 +132,7 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <SlideshowListPage view="public" />
           </ProtectedRoute>
-        )
+        ),
       },
 
       {
@@ -144,18 +144,34 @@ const router = createBrowserRouter([
         element: <InputComponentDoc />,
       },
       {
+        path: "slideshows/new",
+        element: (
+          <ProtectedRoute>
+            <SlideshowEditorPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "slideshows/:id",
         element: (
           <ProtectedRoute>
             <SlideshowDetailPage />
           </ProtectedRoute>
-        )
+        ),
+      },
+      {
+        path: "slideshows/:id/edit",
+        element: (
+          <ProtectedRoute>
+            <SlideshowEditorPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "*",
         element: <NotFoundPage />,
-      }
-    ]
+      },
+    ],
   },
   {
     path: "/slideshows/:id/present",
@@ -163,8 +179,8 @@ const router = createBrowserRouter([
       <ProtectedRoute>
         <SlideshowViewPage />
       </ProtectedRoute>
-    )
-  }
+    ),
+  },
 ]);
 
 function App() {

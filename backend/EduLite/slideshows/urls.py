@@ -6,6 +6,7 @@ from .views import (
     SlideshowRetrieveUpdateDestroyView,
     SlideCreateView,
     SlideRetrieveUpdateDestroyView,
+    preview_markdown,
 )
 
 app_name = "slideshows"
@@ -31,4 +32,6 @@ urlpatterns = [
         SlideRetrieveUpdateDestroyView.as_view(),
         name="slide-detail",
     ),
+    # Preview markdown rendering
+    path("preview/", preview_markdown, name="preview-markdown"),
 ]
