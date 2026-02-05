@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { useDebounce } from "../useDebounce";
 
 describe("useDebounce", () => {
@@ -154,7 +154,7 @@ describe("useDebounce", () => {
   });
 
   it("should cleanup timer on unmount", () => {
-    const { result, rerender, unmount } = renderHook(
+    const { rerender, unmount } = renderHook(
       ({ value, delay }) => useDebounce(value, delay),
       { initialProps: { value: "initial", delay: 500 } },
     );
