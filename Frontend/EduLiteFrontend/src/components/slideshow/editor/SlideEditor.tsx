@@ -1,8 +1,12 @@
-import { useRef } from 'react';
-import TextareaAutosize from 'react-textarea-autosize';
-import { EditorToolbar } from './EditorToolbar';
-import { SpeakerNotesEditor } from './SpeakerNotesEditor';
-import type { EditorSlide } from '../../../types/editor.types';
+import { useRef, useCallback } from "react";
+import TextareaAutosize from "react-textarea-autosize";
+import { EditorToolbar } from "./EditorToolbar";
+import { SpeakerNotesEditor } from "./SpeakerNotesEditor";
+import type { EditorSlide } from "../../../types/editor.types";
+
+// Regex patterns for list detection
+const UNORDERED_LIST_REGEX = /^(\s*)([-*+])\s/;
+const ORDERED_LIST_REGEX = /^(\s*)(\d+)\.\s/;
 
 interface SlideEditorProps {
   slide: EditorSlide | null;
@@ -12,7 +16,7 @@ interface SlideEditorProps {
 export function SlideEditor({ slide, onChange }: SlideEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleInsert = (before: string, after: string, defaultText = '') => {
+  const handleInsert = (before: string, after: string, defaultText = "") => {
     const textarea = textareaRef.current;
     if (!textarea || !slide) return;
 
@@ -21,7 +25,12 @@ export function SlideEditor({ slide, onChange }: SlideEditorProps) {
     const value = textarea.value;
     const selectedText = value.substring(start, end) || defaultText;
 
-    const newValue = value.substring(0, start) + before + selectedText + after + value.substring(end);
+    const newValue =
+      value.substring(0, start) +
+      before +
+      selectedText +
+      after +
+      value.substring(end);
     const newCursorPos = start + before.length + selectedText.length;
 
     onChange({ content: newValue });
@@ -33,12 +42,105 @@ export function SlideEditor({ slide, onChange }: SlideEditorProps) {
     }, 0);
   };
 
+  // Handle Enter key for list continuation
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key !== "Enter" || !slide) return;
+
+      const textarea = e.currentTarget;
+      const value = textarea.value;
+      const cursorPos = textarea.selectionStart;
+
+      // Find the current line
+      const lineStart = value.lastIndexOf("\n", cursorPos - 1) + 1;
+      const lineEnd = value.indexOf("\n", cursorPos);
+      const currentLine = value.substring(
+        lineStart,
+        lineEnd === -1 ? value.length : lineEnd,
+      );
+
+      // Check for unordered list
+      const unorderedMatch = currentLine.match(UNORDERED_LIST_REGEX);
+      if (unorderedMatch) {
+        const [fullMatch, indent, bullet] = unorderedMatch;
+        const lineContent = currentLine.substring(fullMatch.length);
+
+        // If the line is empty (just the bullet), remove it and don't continue the list
+        if (lineContent.trim() === "") {
+          e.preventDefault();
+          const newValue =
+            value.substring(0, lineStart) +
+            "\n" +
+            value.substring(lineEnd === -1 ? value.length : lineEnd + 1);
+          onChange({ content: newValue });
+          setTimeout(() => {
+            textarea.setSelectionRange(lineStart + 1, lineStart + 1);
+          }, 0);
+          return;
+        }
+
+        // Continue the list
+        e.preventDefault();
+        const insertion = `\n${indent}${bullet} `;
+        const newValue =
+          value.substring(0, cursorPos) +
+          insertion +
+          value.substring(cursorPos);
+        onChange({ content: newValue });
+        setTimeout(() => {
+          const newPos = cursorPos + insertion.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+        return;
+      }
+
+      // Check for ordered list
+      const orderedMatch = currentLine.match(ORDERED_LIST_REGEX);
+      if (orderedMatch) {
+        const [fullMatch, indent, num] = orderedMatch;
+        const lineContent = currentLine.substring(fullMatch.length);
+
+        // If the line is empty (just the number), remove it and don't continue the list
+        if (lineContent.trim() === "") {
+          e.preventDefault();
+          const newValue =
+            value.substring(0, lineStart) +
+            "\n" +
+            value.substring(lineEnd === -1 ? value.length : lineEnd + 1);
+          onChange({ content: newValue });
+          setTimeout(() => {
+            textarea.setSelectionRange(lineStart + 1, lineStart + 1);
+          }, 0);
+          return;
+        }
+
+        // Continue the list with incremented number
+        e.preventDefault();
+        const nextNum = parseInt(num, 10) + 1;
+        const insertion = `\n${indent}${nextNum}. `;
+        const newValue =
+          value.substring(0, cursorPos) +
+          insertion +
+          value.substring(cursorPos);
+        onChange({ content: newValue });
+        setTimeout(() => {
+          const newPos = cursorPos + insertion.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+        return;
+      }
+    },
+    [slide, onChange],
+  );
+
   if (!slide) {
     return (
       <div className="flex items-center justify-center h-full text-gray-500">
         <div className="text-center">
           <p className="text-lg font-medium">No slide selected</p>
-          <p className="text-sm mt-2">Select a slide from the left or create a new one</p>
+          <p className="text-sm mt-2">
+            Select a slide from the left or create a new one
+          </p>
         </div>
       </div>
     );
@@ -53,6 +155,7 @@ export function SlideEditor({ slide, onChange }: SlideEditorProps) {
           ref={textareaRef}
           value={slide.content}
           onChange={(e) => onChange({ content: e.target.value })}
+          onKeyDown={handleKeyDown}
           placeholder="# Slide Title
 
 Start typing your slide content here...

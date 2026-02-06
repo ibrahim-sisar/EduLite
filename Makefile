@@ -147,10 +147,12 @@ build:  ## Build all Docker images
 	@echo "$(CYAN)Building Docker images...$(NC)"
 	cd $(DOCKER_DIR) && $(DOCKER_COMPOSE) build
 
-rebuild:  ## Rebuild all images from scratch (no cache)
+rebuild:  ## Rebuild all images from scratch (no cache) and restart services
 	@echo "$(CYAN)Rebuilding all images from scratch...$(NC)"
 	cd $(DOCKER_DIR) && $(DOCKER_COMPOSE) build --no-cache
-	@echo "$(GREEN)✓ Images rebuilt$(NC)"
+	@echo "$(CYAN)Restarting services with new images...$(NC)"
+	cd $(DOCKER_DIR) && $(DOCKER_COMPOSE) down && $(DOCKER_COMPOSE) up -d
+	@echo "$(GREEN)✓ Images rebuilt and services restarted$(NC)"
 
 clean:  ## Stop and remove containers, networks, volumes (WARNING: Deletes data!)
 	@echo "$(RED)⚠️  WARNING: This will delete ALL containers, networks, and volumes!$(NC)"

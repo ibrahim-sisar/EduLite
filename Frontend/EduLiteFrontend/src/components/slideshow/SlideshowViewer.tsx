@@ -380,22 +380,34 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         </div>
 
         {/* Navigation Arrows (always visible on desktop) */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none z-10">
           <button
             onClick={navigation.prev}
+            onWheel={(e) => {
+              const scrollable = containerRef.current?.querySelector(
+                '[class*="overflow-y"]',
+              );
+              if (scrollable) scrollable.scrollTop += e.deltaY;
+            }}
             disabled={navigation.isFirst}
-            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
             aria-label="Previous slide"
           >
             <HiArrowLeft className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none z-10">
           <button
             onClick={navigation.next}
+            onWheel={(e) => {
+              const scrollable = containerRef.current?.querySelector(
+                '[class*="overflow-y"]',
+              );
+              if (scrollable) scrollable.scrollTop += e.deltaY;
+            }}
             disabled={navigation.isLast}
-            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg"
+            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
             aria-label="Next slide"
           >
             <HiArrowRight className="w-6 h-6" />
