@@ -373,6 +373,15 @@ export function SlidePreview({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isExpanded, isVisible, onPrev, onNext]);
 
+  // Lock body scroll when expanded
+  useEffect(() => {
+    if (!isExpanded) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isExpanded]);
+
   if (!isVisible || !slide) {
     return null;
   }
@@ -444,21 +453,31 @@ export function SlidePreview({
 
       {/* Expanded fullscreen preview */}
       {isExpanded && (
-        <div className="fixed inset-0 z-50 bg-black flex justify-center overflow-auto py-8">
+        <div
+          className={`fixed inset-0 z-50 flex justify-center overflow-auto py-8 ${isDarkMode ? "bg-black" : "bg-white"}`}
+        >
           {/* Floating hint and slide counter */}
-          <div className="fixed top-4 left-4 flex items-center gap-4 text-white/60 text-sm z-10">
+          <div
+            className={`fixed top-4 left-4 flex items-center gap-4 text-sm z-10 ${isDarkMode ? "text-white/60" : "text-gray-500"}`}
+          >
             <span>
               Press{" "}
-              <kbd className="px-2 py-0.5 bg-white/10 rounded text-white/80">
+              <kbd
+                className={`px-2 py-0.5 rounded ${isDarkMode ? "bg-white/10 text-white/80" : "bg-gray-200 text-gray-700"}`}
+              >
                 Esc
               </kbd>{" "}
               or{" "}
-              <kbd className="px-2 py-0.5 bg-white/10 rounded text-white/80">
+              <kbd
+                className={`px-2 py-0.5 rounded ${isDarkMode ? "bg-white/10 text-white/80" : "bg-gray-200 text-gray-700"}`}
+              >
                 E
               </kbd>{" "}
               to close
             </span>
-            <span className="text-white/80 font-medium">
+            <span
+              className={`font-medium ${isDarkMode ? "text-white/80" : "text-gray-700"}`}
+            >
               {currentIndex + 1} / {totalSlides}
             </span>
           </div>
@@ -466,23 +485,29 @@ export function SlidePreview({
           {/* Close button */}
           <button
             onClick={() => setIsExpanded(false)}
-            className="fixed top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer z-10"
+            className={`fixed top-4 right-4 p-2 rounded-lg transition-colors cursor-pointer z-10 ${isDarkMode ? "hover:bg-white/10" : "hover:bg-gray-200"}`}
             title="Close (Esc/E)"
           >
-            <HiXMark className="w-6 h-6 text-white" />
+            <HiXMark
+              className={`w-6 h-6 ${isDarkMode ? "text-white" : "text-gray-700"}`}
+            />
           </button>
 
           {/* Full presentation-style slide display */}
           <div className="w-full max-w-6xl px-16 my-auto text-center slide-text-lg">
-            <div className="text-white slide-content prose-headings:text-white prose-p:text-white prose-li:text-white">
+            <div
+              className={`slide-content ${isDarkMode ? "text-white prose-headings:text-white prose-p:text-white prose-li:text-white" : "text-gray-900 prose-headings:text-gray-900 prose-p:text-gray-900 prose-li:text-gray-900"}`}
+            >
               {renderedContent ? (
                 <SlideContentWithCodeBlocks
                   processedHtml={processedHtml}
                   codeBlocks={codeBlocks}
-                  isDarkMode={true}
+                  isDarkMode={isDarkMode}
                 />
               ) : (
-                <div className="text-center py-12 text-gray-400">
+                <div
+                  className={`text-center py-12 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+                >
                   <p className="text-lg">No content to preview</p>
                 </div>
               )}
@@ -491,11 +516,18 @@ export function SlidePreview({
 
           {/* Navigation Arrows */}
           {onPrev && (
-            <div className="fixed left-4 top-1/2 -translate-y-1/2">
+            <div className="fixed left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
               <button
                 onClick={onPrev}
+                onWheel={(e) => {
+                  const expandedContainer = e.currentTarget.closest(
+                    '[class*="overflow-auto"]',
+                  );
+                  if (expandedContainer)
+                    expandedContainer.scrollTop += e.deltaY;
+                }}
                 disabled={currentIndex === 0}
-                className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className={`p-4 rounded-full backdrop-blur-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto ${isDarkMode ? "bg-gray-800/90 hover:bg-gray-700 text-gray-100 hover:text-white" : "bg-white/90 hover:bg-white text-gray-900"}`}
                 aria-label="Previous slide"
                 title="Previous slide (←)"
               >
@@ -505,11 +537,18 @@ export function SlidePreview({
           )}
 
           {onNext && (
-            <div className="fixed right-4 top-1/2 -translate-y-1/2">
+            <div className="fixed right-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
               <button
                 onClick={onNext}
+                onWheel={(e) => {
+                  const expandedContainer = e.currentTarget.closest(
+                    '[class*="overflow-auto"]',
+                  );
+                  if (expandedContainer)
+                    expandedContainer.scrollTop += e.deltaY;
+                }}
                 disabled={currentIndex === totalSlides - 1}
-                className="p-4 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                className={`p-4 rounded-full backdrop-blur-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto ${isDarkMode ? "bg-gray-800/90 hover:bg-gray-700 text-gray-100 hover:text-white" : "bg-white/90 hover:bg-white text-gray-900"}`}
                 aria-label="Next slide"
                 title="Next slide (→)"
               >

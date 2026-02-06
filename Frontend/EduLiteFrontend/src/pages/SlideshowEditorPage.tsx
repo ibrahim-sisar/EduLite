@@ -284,10 +284,8 @@ export default function SlideshowEditorPage() {
         // Update slides with the backend response to get proper IDs and rendered_content
         const updatedSlides: EditorSlide[] = updated.slides.map(
           (slide, index) => {
-            // Try to preserve the tempId by matching content
-            const existingSlide = validSlides.find(
-              (s) => s.content === ("content" in slide ? slide.content : ""),
-            );
+            // Preserve tempId by matching position (order is preserved through save)
+            const existingSlide = validSlides[index];
             return {
               id: slide.id,
               tempId: existingSlide?.tempId || crypto.randomUUID(),
