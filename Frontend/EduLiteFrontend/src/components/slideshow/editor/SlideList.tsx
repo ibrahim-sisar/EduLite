@@ -67,18 +67,16 @@ function SortableSlideItem({
   return (
     <div ref={setNodeRef} style={style} className={`group relative`}>
       <div
-        className={`flex items-start gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
+        {...attributes}
+        {...listeners}
+        className={`flex items-start gap-2 p-3 border rounded-lg cursor-pointer active:cursor-grabbing transition-all select-none ${
           isSelected
             ? "bg-blue-50 dark:bg-blue-900/20 border-blue-500"
             : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
         }`}
         onClick={onSelect}
       >
-        <div
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing pt-1"
-        >
+        <div className="pt-1">
           <HiMenu className="w-4 h-4 text-gray-400" />
         </div>
 
