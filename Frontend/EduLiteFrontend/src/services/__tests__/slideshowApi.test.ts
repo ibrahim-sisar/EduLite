@@ -126,7 +126,6 @@ describe("slideshowApi", () => {
             order: 0,
             rendered_content: "<h1>Slide 1</h1>",
             content: "# Slide 1",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -135,7 +134,6 @@ describe("slideshowApi", () => {
             order: 1,
             rendered_content: "<h1>Slide 2</h1>",
             content: "# Slide 2",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -174,7 +172,6 @@ describe("slideshowApi", () => {
             order: 0,
             rendered_content: "<h1>Slide 1</h1>",
             content: "# Slide 1",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -183,7 +180,6 @@ describe("slideshowApi", () => {
             order: 1,
             rendered_content: "<h1>Slide 2</h1>",
             content: "# Slide 2",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -215,8 +211,8 @@ describe("slideshowApi", () => {
         language: "en",
         is_published: false,
         slides: [
-          { order: 0, content: "# Slide 1", notes: null },
-          { order: 1, content: "# Slide 2", notes: null },
+          { order: 0, content: "# Slide 1" },
+          { order: 1, content: "# Slide 2" },
         ],
       };
 
@@ -239,7 +235,6 @@ describe("slideshowApi", () => {
             order: 0,
             rendered_content: "<h1>Slide 1</h1>",
             content: "# Slide 1",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -248,7 +243,6 @@ describe("slideshowApi", () => {
             order: 1,
             rendered_content: "<h1>Slide 2</h1>",
             content: "# Slide 2",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -297,9 +291,9 @@ describe("slideshowApi", () => {
         is_published: true,
         version: 1,
         slides: [
-          { order: 0, content: "# Updated Slide 1", notes: null },
-          { order: 1, content: "# Updated Slide 2", notes: null },
-          { order: 2, content: "# New Slide 3", notes: null },
+          { order: 0, content: "# Updated Slide 1" },
+          { order: 1, content: "# Updated Slide 2" },
+          { order: 2, content: "# New Slide 3" },
         ],
       };
 
@@ -322,7 +316,6 @@ describe("slideshowApi", () => {
             order: 0,
             rendered_content: "<h1>Updated Slide 1</h1>",
             content: "# Updated Slide 1",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -331,7 +324,6 @@ describe("slideshowApi", () => {
             order: 1,
             rendered_content: "<h1>Updated Slide 2</h1>",
             content: "# Updated Slide 2",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -340,7 +332,6 @@ describe("slideshowApi", () => {
             order: 2,
             rendered_content: "<h1>New Slide 3</h1>",
             content: "# New Slide 3",
-            notes: "",
             created_at: "2024-01-01T00:00:00Z",
             updated_at: "2024-01-01T00:00:00Z",
           },
@@ -369,7 +360,7 @@ describe("slideshowApi", () => {
         language: null,
         is_published: false,
         version: 1, // Client has version 1
-        slides: [{ order: 0, content: "# Slide 1", notes: null }],
+        slides: [{ order: 0, content: "# Slide 1" }],
       };
 
       mock.onPatch("http://localhost:8000/api/slideshows/1/").reply(409, {
@@ -395,8 +386,8 @@ describe("slideshowApi", () => {
         is_published: false,
         version: 1,
         slides: [
-          { order: 0, content: "# Slide 1", notes: null },
-          { order: 1, content: "", notes: null }, // Empty content
+          { order: 0, content: "# Slide 1" },
+          { order: 1, content: "" }, // Empty content
         ],
       };
 
@@ -495,7 +486,6 @@ describe("slideshowApi", () => {
         id: 1,
         order: 0,
         content: "# Slide 1",
-        notes: "Test notes",
         rendered_content: "<h1>Slide 1</h1>",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
@@ -510,11 +500,10 @@ describe("slideshowApi", () => {
     });
 
     it("should create a new slide", async () => {
-      const slideData = { order: 0, content: "# New Slide", notes: null };
+      const slideData = { order: 0, content: "# New Slide" };
       const mockResponse: Slide = {
         id: 1,
         ...slideData,
-        notes: "",
         rendered_content: "<h1>New Slide</h1>",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
@@ -535,7 +524,6 @@ describe("slideshowApi", () => {
         id: 1,
         order: 0,
         content: "# Updated Slide",
-        notes: "",
         rendered_content: "<h1>Updated Slide</h1>",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",

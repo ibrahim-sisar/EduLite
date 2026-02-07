@@ -120,18 +120,6 @@ class SlideCreateViewTestCase(TestCase):
         self.assertIn("Test Slide", response.data["rendered_content"])
         self.assertIn("<strong>bold</strong>", response.data["rendered_content"])
 
-    def test_create_slide_with_notes(self):
-        """Test creating slide with speaker notes."""
-        self.client.force_authenticate(user=self.teacher)
-        data = {
-            "content": "# Slide with Notes",
-            "notes": "Remember to emphasize this point",
-        }
-        response = self.client.post(self.url, data, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["notes"], "Remember to emphasize this point")
-
     def test_create_slide_non_enrolled_instructor_forbidden(self):
         """Test that instructors from other courses cannot create slides."""
         self.client.force_authenticate(user=self.other_teacher)

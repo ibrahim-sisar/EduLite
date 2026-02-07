@@ -1,7 +1,6 @@
 import { useRef, useCallback } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { EditorToolbar } from "./EditorToolbar";
-import { SpeakerNotesEditor } from "./SpeakerNotesEditor";
 import type { EditorSlide } from "../../../types/editor.types";
 
 // Regex patterns for list detection
@@ -175,11 +174,6 @@ You can use markdown:
           {slide.content.length} characters
         </div>
       </div>
-
-      <SpeakerNotesEditor
-        notes={slide.notes}
-        onChange={(notes) => onChange({ notes })}
-      />
     </div>
   );
 }

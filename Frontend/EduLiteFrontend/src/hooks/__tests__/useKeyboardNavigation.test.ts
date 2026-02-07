@@ -7,7 +7,6 @@ describe("useKeyboardNavigation", () => {
     onNext: vi.fn(),
     onPrev: vi.fn(),
     onGoToSlide: vi.fn(),
-    onToggleNotes: vi.fn(),
     onToggleFullscreen: vi.fn(),
     onExit: vi.fn(),
   };
@@ -33,7 +32,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("ArrowRight");
@@ -47,7 +46,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown(" ");
@@ -63,7 +62,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("ArrowLeft");
@@ -77,42 +76,12 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("Backspace");
 
       expect(mockCallbacks.onPrev).toHaveBeenCalledTimes(1);
-      expect(event.preventDefault).toHaveBeenCalled();
-    });
-  });
-
-  describe("speaker notes toggle", () => {
-    it("should call onToggleNotes when n is pressed", () => {
-      renderHook(() =>
-        useKeyboardNavigation({
-          ...mockCallbacks,
-          slideCount: 10,
-        })
-      );
-
-      const event = fireKeyDown("n");
-
-      expect(mockCallbacks.onToggleNotes).toHaveBeenCalledTimes(1);
-      expect(event.preventDefault).toHaveBeenCalled();
-    });
-
-    it("should call onToggleNotes when N is pressed", () => {
-      renderHook(() =>
-        useKeyboardNavigation({
-          ...mockCallbacks,
-          slideCount: 10,
-        })
-      );
-
-      const event = fireKeyDown("N");
-
-      expect(mockCallbacks.onToggleNotes).toHaveBeenCalledTimes(1);
       expect(event.preventDefault).toHaveBeenCalled();
     });
   });
@@ -123,7 +92,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("Home");
@@ -137,7 +106,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("End");
@@ -153,7 +122,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("1");
@@ -167,7 +136,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("5");
@@ -181,7 +150,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("9");
@@ -195,7 +164,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 3,
-        })
+        }),
       );
 
       fireKeyDown("5");
@@ -211,7 +180,7 @@ describe("useKeyboardNavigation", () => {
           ...mockCallbacks,
           slideCount: 10,
           allowFullscreen: true,
-        })
+        }),
       );
 
       const event = fireKeyDown("f");
@@ -226,7 +195,7 @@ describe("useKeyboardNavigation", () => {
           ...mockCallbacks,
           slideCount: 10,
           allowFullscreen: true,
-        })
+        }),
       );
 
       const event = fireKeyDown("F");
@@ -241,7 +210,7 @@ describe("useKeyboardNavigation", () => {
           ...mockCallbacks,
           slideCount: 10,
           allowFullscreen: false,
-        })
+        }),
       );
 
       fireKeyDown("f");
@@ -255,10 +224,9 @@ describe("useKeyboardNavigation", () => {
           onNext: mockCallbacks.onNext,
           onPrev: mockCallbacks.onPrev,
           onGoToSlide: mockCallbacks.onGoToSlide,
-          onToggleNotes: mockCallbacks.onToggleNotes,
           slideCount: 10,
           allowFullscreen: true,
-        })
+        }),
       );
 
       fireKeyDown("f");
@@ -274,7 +242,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       const event = fireKeyDown("Escape");
@@ -296,7 +264,7 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       fireKeyDown("Escape");
@@ -319,16 +287,14 @@ describe("useKeyboardNavigation", () => {
           ...mockCallbacks,
           slideCount: 10,
           enabled: false,
-        })
+        }),
       );
 
       fireKeyDown("ArrowRight");
       fireKeyDown("ArrowLeft");
-      fireKeyDown("n");
 
       expect(mockCallbacks.onNext).not.toHaveBeenCalled();
       expect(mockCallbacks.onPrev).not.toHaveBeenCalled();
-      expect(mockCallbacks.onToggleNotes).not.toHaveBeenCalled();
     });
 
     it("should respond to keys when enabled", () => {
@@ -337,7 +303,7 @@ describe("useKeyboardNavigation", () => {
           ...mockCallbacks,
           slideCount: 10,
           enabled: true,
-        })
+        }),
       );
 
       fireKeyDown("ArrowRight");
@@ -354,14 +320,14 @@ describe("useKeyboardNavigation", () => {
         useKeyboardNavigation({
           ...mockCallbacks,
           slideCount: 10,
-        })
+        }),
       );
 
       unmount();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "keydown",
-        expect.any(Function)
+        expect.any(Function),
       );
 
       removeEventListenerSpy.mockRestore();

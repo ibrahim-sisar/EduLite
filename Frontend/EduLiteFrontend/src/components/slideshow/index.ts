@@ -8,11 +8,9 @@
 export { default as SlideshowViewer } from "./SlideshowViewer";
 export { default as SlideDisplay } from "./SlideDisplay";
 export { default as SlideProgress } from "./SlideProgress";
-export { default as SpeakerNotes } from "./SpeakerNotes";
 
 export type {
   SlideshowViewerProps,
   SlideDisplayProps,
   SlideProgressProps,
-  SpeakerNotesProps,
 } from "./types";

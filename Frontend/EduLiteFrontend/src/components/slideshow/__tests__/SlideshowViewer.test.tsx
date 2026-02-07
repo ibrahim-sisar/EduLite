@@ -28,7 +28,6 @@ describe("SlideshowViewer Component", () => {
         order: 0,
         content: "# Slide 1\n\nWelcome to the presentation",
         rendered_content: "<h1>Slide 1</h1><p>Welcome to the presentation</p>",
-        notes: "Notes for slide 1",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       },
@@ -37,7 +36,6 @@ describe("SlideshowViewer Component", () => {
         order: 1,
         content: "# Slide 2\n\nMiddle slide content",
         rendered_content: "<h1>Slide 2</h1><p>Middle slide content</p>",
-        notes: null,
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       },
@@ -46,7 +44,6 @@ describe("SlideshowViewer Component", () => {
         order: 2,
         content: "# Slide 3\n\nThank you for watching",
         rendered_content: "<h1>Slide 3</h1><p>Thank you for watching</p>",
-        notes: "Notes for slide 3",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       },
@@ -225,22 +222,6 @@ describe("SlideshowViewer Component", () => {
       expect(
         screen.queryByLabelText(/enter fullscreen/i),
       ).not.toBeInTheDocument();
-    });
-  });
-
-  describe("Speaker Notes", () => {
-    it("shows speaker notes when showNotes is true", async () => {
-      renderWithProviders(<SlideshowViewer slideshowId={1} showNotes={true} />);
-
-      expect(await screen.findByText("Notes for slide 1")).toBeInTheDocument();
-    });
-
-    it("hides speaker notes by default", async () => {
-      renderWithProviders(<SlideshowViewer slideshowId={1} />);
-
-      expect(await screen.findByText("Slide 1")).toBeInTheDocument();
-
-      expect(screen.queryByText("Notes for slide 1")).not.toBeInTheDocument();
     });
   });
 

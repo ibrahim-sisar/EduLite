@@ -36,7 +36,6 @@ class SlideSerializerTestCase(TestCase):
             slideshow=self.slideshow,
             order=0,
             content="# Test Content\n\nHello world",
-            notes="Speaker notes here",
         )
 
         self.factory = APIRequestFactory()
@@ -55,22 +54,13 @@ class SlideSerializerTestCase(TestCase):
         serializer = SlideSerializer(self.slide, context={"request": request})
         self.assertNotIn("content", serializer.data)
 
-    def test_slide_serializer_excludes_notes_for_students(self):
-        """Test that speaker notes are excluded for students."""
-        request = self.factory.get("/")
-        request.user = self.student
-
-        serializer = SlideSerializer(self.slide, context={"request": request})
-        self.assertNotIn("notes", serializer.data)
-
     def test_slide_serializer_includes_all_fields_for_teachers(self):
-        """Test that teachers see all fields including content and notes."""
+        """Test that teachers see all fields including content."""
         request = self.factory.get("/")
         request.user = self.teacher
 
         serializer = SlideSerializer(self.slide, context={"request": request})
         self.assertIn("content", serializer.data)
-        self.assertIn("notes", serializer.data)
         self.assertIn("rendered_content", serializer.data)
 
     def test_slide_serializer_read_only_fields(self):

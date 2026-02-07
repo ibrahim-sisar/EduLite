@@ -178,7 +178,6 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
                             "order": 0,
                             "title": "Welcome",
                             "content": "# Welcome\n\nLet's learn Python!",
-                            "notes": "Introduce yourself first",
                         },
                         {
                             "order": 1,
@@ -338,14 +337,12 @@ class SlideCreateView(generics.CreateAPIView):
                     "order": 3,
                     "title": "Advanced Topics",
                     "content": "# Advanced Python\n\nDecorators and more",
-                    "notes": "Spend extra time on decorators",
                 },
             ),
             OpenApiExample(
                 "Create slide with auto-order",
                 value={
                     "content": "# Summary\n\nReview of key concepts",
-                    "notes": "Leave time for Q&A",
                 },
             ),
         ],
