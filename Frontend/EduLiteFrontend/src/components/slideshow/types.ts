@@ -10,9 +10,6 @@ export interface SlideshowViewerProps {
   /** The index of the slide to start with (0-based) */
   initialSlide?: number;
 
-  /** Whether to show speaker notes by default */
-  showNotes?: boolean;
-
   /** Callback when user exits the viewer (e.g., via Escape key) */
   onExit?: () => void;
 
@@ -52,18 +49,4 @@ export interface SlideProgressProps {
 
   /** Callback when a slide is clicked */
   onSlideClick: (index: number) => void;
-}
-
-/**
- * Props for the SpeakerNotes component
- */
-export interface SpeakerNotesProps {
-  /** The notes content to display */
-  notes: string | null;
-
-  /** Whether the notes panel is visible */
-  isVisible: boolean;
-
-  /** Callback to toggle notes visibility */
-  onToggle: () => void;
 }

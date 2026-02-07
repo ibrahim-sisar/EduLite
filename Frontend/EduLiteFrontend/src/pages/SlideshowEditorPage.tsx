@@ -76,7 +76,6 @@ export default function SlideshowEditorPage() {
         tempId: crypto.randomUUID(),
         order: slide.order ?? index,
         content: "content" in slide ? slide.content : "",
-        notes: "notes" in slide ? slide.notes || "" : "",
         rendered_content: slide.rendered_content,
       }),
     );
@@ -170,7 +169,6 @@ export default function SlideshowEditorPage() {
             tempId: crypto.randomUUID(),
             order: 0,
             content: "# Welcome\n\nStart creating your slideshow!",
-            notes: "",
           };
           setSlides([newSlide]);
           setSelectedSlideId(newSlide.tempId);
@@ -243,7 +241,6 @@ export default function SlideshowEditorPage() {
           slides: validSlides.map((slide, index) => ({
             order: index, // Re-index after filtering
             content: slide.content,
-            notes: slide.notes || null,
           })),
         });
 
@@ -274,7 +271,6 @@ export default function SlideshowEditorPage() {
           slides: validSlides.map((slide, index) => ({
             order: index, // Re-index after filtering
             content: slide.content,
-            notes: slide.notes || null,
           })),
         });
 
@@ -291,7 +287,6 @@ export default function SlideshowEditorPage() {
               tempId: existingSlide?.tempId || crypto.randomUUID(),
               order: slide.order ?? index,
               content: "content" in slide ? slide.content : "",
-              notes: "notes" in slide ? slide.notes || "" : "",
               rendered_content: slide.rendered_content,
             };
           },
@@ -341,7 +336,6 @@ export default function SlideshowEditorPage() {
       tempId: crypto.randomUUID(),
       order: slides.length,
       content: "",
-      notes: "",
     };
     setSlides([...slides, newSlide]);
     setSelectedSlideId(newSlide.tempId);
@@ -383,7 +377,6 @@ export default function SlideshowEditorPage() {
       tempId: crypto.randomUUID(),
       order: index + 1,
       content: slide.content,
-      notes: slide.notes,
     };
 
     const newSlides = [

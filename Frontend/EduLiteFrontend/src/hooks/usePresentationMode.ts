@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback, RefObject } from "react";
 export interface UsePresentationModeOptions {
   /** Ref to the container element for fullscreen */
   containerRef: RefObject<HTMLElement | null>;
-  /** Whether notes panel is open (affects bottom bar hover threshold) */
-  showNotes?: boolean;
   /** Whether settings modal is open (keeps top bar visible) */
   settingsOpen?: boolean;
   /** Whether help modal is open (keeps top bar visible) */
@@ -54,7 +52,6 @@ const STORAGE_KEY_BOTTOM = "slideshow-auto-hide-bottom";
  */
 export function usePresentationMode({
   containerRef,
-  showNotes = false,
   settingsOpen = false,
   helpOpen = false,
 }: UsePresentationModeOptions): UsePresentationModeReturn {
@@ -71,14 +68,16 @@ export function usePresentationMode({
     }
   });
 
-  const [autoHideBottomBar, setAutoHideBottomBarState] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_BOTTOM);
-      return saved !== null ? JSON.parse(saved) : true;
-    } catch {
-      return true;
-    }
-  });
+  const [autoHideBottomBar, setAutoHideBottomBarState] = useState<boolean>(
+    () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_BOTTOM);
+        return saved !== null ? JSON.parse(saved) : true;
+      } catch {
+        return true;
+      }
+    },
+  );
 
   // Hover state for auto-hide
   const [isTopBarHovered, setIsTopBarHovered] = useState<boolean>(false);
@@ -115,15 +114,9 @@ export function usePresentationMode({
         setIsTopBarHovered(true);
       }
 
-      // Bottom bar - adjust threshold based on notes being open
+      // Bottom bar
       if (autoHideBottomBar) {
-        // When notes are open, extend threshold to cover:
-        // - Notes content: max-h-80 (320px) + padding/borders (~20px)
-        // - Toggle button: ~48px
-        // - Progress bar: ~50px
-        // Total: ~440px, use 450px to be safe
-        const bottomThreshold = showNotes ? 450 : baseThreshold;
-        setIsBottomBarHovered(e.clientY > window.innerHeight - bottomThreshold);
+        setIsBottomBarHovered(e.clientY > window.innerHeight - baseThreshold);
       } else {
         setIsBottomBarHovered(true);
       }
@@ -131,7 +124,7 @@ export function usePresentationMode({
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [autoHideTopBar, autoHideBottomBar, showNotes]);
+  }, [autoHideTopBar, autoHideBottomBar]);
 
   // Toggle fullscreen
   const toggleFullscreen = useCallback(async () => {
@@ -158,11 +151,13 @@ export function usePresentationMode({
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // Compute whether bars should be visible
-  const shouldShowTopBar = !autoHideTopBar || isTopBarHovered || settingsOpen || helpOpen;
+  const shouldShowTopBar =
+    !autoHideTopBar || isTopBarHovered || settingsOpen || helpOpen;
   const shouldShowBottomBar = !autoHideBottomBar || isBottomBarHovered;
 
   return {

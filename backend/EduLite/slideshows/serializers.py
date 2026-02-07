@@ -11,8 +11,8 @@ class SlideSerializer(serializers.ModelSerializer):
     Serializer for individual slides.
 
     Permission-based field filtering:
-    - Owner: See all fields (content, rendered_content, notes)
-    - Others: Only see rendered_content (no raw content or speaker notes)
+    - Owner: See all fields (content, rendered_content)
+    - Others: Only see rendered_content (no raw content)
     """
 
     class Meta:
@@ -22,7 +22,6 @@ class SlideSerializer(serializers.ModelSerializer):
             "order",
             "content",
             "rendered_content",
-            "notes",
             "created_at",
             "updated_at",
         ]
@@ -31,7 +30,7 @@ class SlideSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """
         Conditionally hide sensitive fields from non-owners.
-        Only the slideshow owner can see raw content and notes.
+        Only the slideshow owner can see raw content.
         """
         data = super().to_representation(instance)
         request = self.context.get("request")
@@ -43,7 +42,6 @@ class SlideSerializer(serializers.ModelSerializer):
             # Remove sensitive fields for non-owners
             if not is_owner:
                 data.pop("content", None)  # Remove raw markdown
-                data.pop("notes", None)  # Remove speaker notes
 
         return data
 

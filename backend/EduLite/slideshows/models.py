@@ -152,11 +152,6 @@ class Slide(models.Model):
         blank=True, help_text="Cached HTML rendered from markdown via Spellbook"
     )
 
-    # Speaker notes (owner only)
-    notes = models.TextField(
-        blank=True, null=True, help_text="Speaker notes visible only to slideshow owner"
-    )
-
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

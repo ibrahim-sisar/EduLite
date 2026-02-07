@@ -7,8 +7,6 @@ export interface UseKeyboardNavigationOptions {
   onPrev: () => void;
   /** Navigate to specific slide by index */
   onGoToSlide: (index: number) => void;
-  /** Toggle speaker notes visibility */
-  onToggleNotes: () => void;
   /** Toggle fullscreen mode */
   onToggleFullscreen?: () => void;
   /** Exit the presentation */
@@ -28,7 +26,6 @@ export interface UseKeyboardNavigationOptions {
  * - Arrow Right / Space: Next slide
  * - Arrow Left / Backspace: Previous slide
  * - Escape: Exit fullscreen or presentation
- * - N: Toggle speaker notes
  * - F: Toggle fullscreen (when allowed)
  * - Home: Go to first slide
  * - End: Go to last slide
@@ -40,7 +37,6 @@ export interface UseKeyboardNavigationOptions {
  *   onNext: navigation.next,
  *   onPrev: navigation.prev,
  *   onGoToSlide: navigation.goToSlide,
- *   onToggleNotes: () => setShowNotes(prev => !prev),
  *   onToggleFullscreen: presentation.toggleFullscreen,
  *   onExit: handleExit,
  *   slideCount: 10,
@@ -52,7 +48,6 @@ export function useKeyboardNavigation({
   onNext,
   onPrev,
   onGoToSlide,
-  onToggleNotes,
   onToggleFullscreen,
   onExit,
   slideCount,
@@ -83,12 +78,6 @@ export function useKeyboardNavigation({
           } else {
             onExit?.();
           }
-          break;
-
-        case "n":
-        case "N":
-          e.preventDefault();
-          onToggleNotes();
           break;
 
         case "Home":
@@ -128,7 +117,6 @@ export function useKeyboardNavigation({
     onNext,
     onPrev,
     onGoToSlide,
-    onToggleNotes,
     onToggleFullscreen,
     onExit,
     slideCount,

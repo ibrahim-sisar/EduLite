@@ -7,7 +7,7 @@ class SlideInline(admin.TabularInline):
 
     model = Slide
     extra = 1
-    fields = ("order", "content", "notes")
+    fields = ("order", "content")
     ordering = ["order"]
 
 
@@ -83,7 +83,7 @@ class SlideAdmin(admin.ModelAdmin):
         ),
         (
             "Content",
-            {"fields": ("content", "notes")},
+            {"fields": ("content",)},
         ),
         (
             "Rendered",

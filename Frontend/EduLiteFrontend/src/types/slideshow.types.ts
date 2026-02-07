@@ -17,7 +17,6 @@ export interface Slide {
   order: number;
   content: string; // Raw markdown (owner only)
   rendered_content: string; // HTML rendered from markdown
-  notes: string | null; // Speaker notes (owner only)
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
 }
@@ -99,7 +98,6 @@ export interface SlideshowCreateRequest {
 export interface SlideCreateData {
   order?: number; // Auto-assigned if not provided
   content: string; // Raw markdown
-  notes?: string | null;
 }
 
 /**

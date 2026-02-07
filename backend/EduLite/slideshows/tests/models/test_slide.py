@@ -34,13 +34,11 @@ class SlideModelTest(TestCase):
             slideshow=self.slideshow,
             order=0,
             content="# Welcome\n\nThis is the first slide.",
-            notes="Remember to introduce yourself",
         )
 
         self.assertEqual(slide.slideshow, self.slideshow)
         self.assertEqual(slide.order, 0)
         self.assertIn("Welcome", slide.content)
-        self.assertEqual(slide.notes, "Remember to introduce yourself")
 
     def test_markdown_rendering_on_save(self):
         """Test that markdown is rendered to HTML when slide is saved"""

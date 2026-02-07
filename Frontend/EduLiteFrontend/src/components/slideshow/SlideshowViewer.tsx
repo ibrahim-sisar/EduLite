@@ -14,7 +14,6 @@ import type { Slide, SlideViewOnly } from "../../types/slideshow.types";
 import type { SlideshowViewerProps } from "./types";
 import SlideDisplay from "./SlideDisplay";
 import SlideProgress from "./SlideProgress";
-import SpeakerNotes from "./SpeakerNotes";
 import PresentationSettingsModal from "./PresentationSettingsModal";
 import PresentationHelpModal from "./PresentationHelpModal";
 
@@ -106,15 +105,13 @@ const getSubjectName = (code: string | null): string | null => {
  *
  * Main presentation viewer with:
  * - Progressive loading (first 3 slides immediate, rest in background)
- * - Keyboard navigation (arrows, space, escape, N for notes)
+ * - Keyboard navigation (arrows, space, escape)
  * - Fullscreen support (optional)
  * - Offline capability (loads ALL slides, works without network)
- * - Speaker notes panel
  */
 const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   slideshowId,
   initialSlide = 0,
-  showNotes: showNotesInitial = false,
   onExit,
   allowFullscreen = false,
 }) => {
@@ -122,7 +119,6 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // UI State (kept in component as they're simple toggles)
-  const [showNotes, setShowNotes] = useState<boolean>(showNotesInitial);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [helpOpen, setHelpOpen] = useState<boolean>(false);
 
@@ -137,15 +133,9 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
 
   const presentation = usePresentationMode({
     containerRef,
-    showNotes,
     settingsOpen,
     helpOpen,
   });
-
-  // Toggle notes callback
-  const toggleNotes = useCallback(() => {
-    setShowNotes((prev) => !prev);
-  }, []);
 
   // Handle fullscreen toggle with error toast
   const handleToggleFullscreen = useCallback(async () => {
@@ -161,7 +151,6 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
     onNext: navigation.next,
     onPrev: navigation.prev,
     onGoToSlide: navigation.goToSlide,
-    onToggleNotes: toggleNotes,
     onToggleFullscreen: handleToggleFullscreen,
     onExit,
     slideCount,
@@ -176,10 +165,6 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
   // Get current slide data
   const currentSlide: Slide | SlideViewOnly | null =
     slides.get(navigation.currentIndex) || null;
-  const currentSlideNotes: string | null =
-    currentSlide && "notes" in currentSlide
-      ? (currentSlide.notes as string | null)
-      : null;
   const isCurrentSlideLoading = !slides.has(navigation.currentIndex);
 
   // Derived values
@@ -363,9 +348,7 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
         style={{
           marginTop: !presentation.autoHideTopBar ? "5rem" : "0",
           marginBottom: !presentation.autoHideBottomBar
-            ? showNotes
-              ? "28rem"
-              : "calc(3.5rem - 8px)"
+            ? "calc(3.5rem - 8px)"
             : "0",
         }}
       >
@@ -423,13 +406,6 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
             : "translate-y-full"
         }`}
       >
-        {/* Speaker Notes Panel */}
-        <SpeakerNotes
-          notes={currentSlideNotes}
-          isVisible={showNotes}
-          onToggle={toggleNotes}
-        />
-
         {/* Progress Bar */}
         <SlideProgress
           currentIndex={navigation.currentIndex}

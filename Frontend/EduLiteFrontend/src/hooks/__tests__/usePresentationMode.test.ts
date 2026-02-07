@@ -28,7 +28,7 @@ describe("usePresentationMode", () => {
   describe("auto-hide settings initialization", () => {
     it("should default to auto-hide enabled for both bars", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       expect(result.current.autoHideTopBar).toBe(true);
@@ -40,7 +40,7 @@ describe("usePresentationMode", () => {
       localStorage.setItem("slideshow-auto-hide-bottom", "false");
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       expect(result.current.autoHideTopBar).toBe(false);
@@ -51,7 +51,7 @@ describe("usePresentationMode", () => {
       localStorage.setItem("slideshow-auto-hide-top", "not-valid-json{");
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       // Should fall back to default
@@ -62,7 +62,7 @@ describe("usePresentationMode", () => {
   describe("setAutoHideTopBar", () => {
     it("should update state and persist to localStorage", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       act(() => {
@@ -77,7 +77,7 @@ describe("usePresentationMode", () => {
   describe("setAutoHideBottomBar", () => {
     it("should update state and persist to localStorage", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       act(() => {
@@ -92,7 +92,7 @@ describe("usePresentationMode", () => {
   describe("shouldShowTopBar", () => {
     it("should always show when autoHideTopBar is false", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       act(() => {
@@ -107,7 +107,7 @@ describe("usePresentationMode", () => {
         usePresentationMode({
           containerRef: mockContainerRef,
           settingsOpen: true,
-        })
+        }),
       );
 
       expect(result.current.shouldShowTopBar).toBe(true);
@@ -118,7 +118,7 @@ describe("usePresentationMode", () => {
         usePresentationMode({
           containerRef: mockContainerRef,
           helpOpen: true,
-        })
+        }),
       );
 
       expect(result.current.shouldShowTopBar).toBe(true);
@@ -128,7 +128,7 @@ describe("usePresentationMode", () => {
   describe("shouldShowBottomBar", () => {
     it("should always show when autoHideBottomBar is false", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       act(() => {
@@ -142,7 +142,7 @@ describe("usePresentationMode", () => {
   describe("mouse hover tracking", () => {
     it("should show top bar when mouse is near top edge", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       // Simulate mouse move near top
@@ -159,7 +159,7 @@ describe("usePresentationMode", () => {
 
     it("should hide top bar when mouse is away from top edge", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       // Simulate mouse move away from top
@@ -182,7 +182,7 @@ describe("usePresentationMode", () => {
       });
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       // Simulate mouse move near bottom
@@ -196,37 +196,12 @@ describe("usePresentationMode", () => {
 
       expect(result.current.shouldShowBottomBar).toBe(true);
     });
-
-    it("should use larger threshold when notes are open", () => {
-      Object.defineProperty(window, "innerHeight", {
-        value: 800,
-        configurable: true,
-      });
-
-      const { result } = renderHook(() =>
-        usePresentationMode({
-          containerRef: mockContainerRef,
-          showNotes: true,
-        })
-      );
-
-      // Simulate mouse move that's beyond 100px but within 450px threshold
-      act(() => {
-        const event = new MouseEvent("mousemove", {
-          clientY: 400, // Beyond normal threshold, but within notes threshold (800 - 450 = 350)
-          bubbles: true,
-        });
-        window.dispatchEvent(event);
-      });
-
-      expect(result.current.shouldShowBottomBar).toBe(true);
-    });
   });
 
   describe("fullscreen", () => {
     it("should start not in fullscreen", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       expect(result.current.isFullscreen).toBe(false);
@@ -237,7 +212,7 @@ describe("usePresentationMode", () => {
       mockContainerRef.current!.requestFullscreen = requestFullscreenMock;
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       await act(async () => {
@@ -259,7 +234,7 @@ describe("usePresentationMode", () => {
       document.exitFullscreen = exitFullscreenMock;
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       await act(async () => {
@@ -271,18 +246,22 @@ describe("usePresentationMode", () => {
     });
 
     it("should handle fullscreen errors", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const requestFullscreenMock = vi.fn().mockRejectedValue(new Error("Fullscreen denied"));
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const requestFullscreenMock = vi
+        .fn()
+        .mockRejectedValue(new Error("Fullscreen denied"));
       mockContainerRef.current!.requestFullscreen = requestFullscreenMock;
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       await expect(
         act(async () => {
           await result.current.toggleFullscreen();
-        })
+        }),
       ).rejects.toThrow("Fullscreen denied");
 
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -293,7 +272,7 @@ describe("usePresentationMode", () => {
       const nullRef = { current: null };
 
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: nullRef })
+        usePresentationMode({ containerRef: nullRef }),
       );
 
       // Should not throw
@@ -306,7 +285,7 @@ describe("usePresentationMode", () => {
 
     it("should update isFullscreen on fullscreenchange event", () => {
       const { result } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       expect(result.current.isFullscreen).toBe(false);
@@ -340,14 +319,14 @@ describe("usePresentationMode", () => {
       const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
 
       const { unmount } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       unmount();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "mousemove",
-        expect.any(Function)
+        expect.any(Function),
       );
 
       removeEventListenerSpy.mockRestore();
@@ -357,14 +336,14 @@ describe("usePresentationMode", () => {
       const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
       const { unmount } = renderHook(() =>
-        usePresentationMode({ containerRef: mockContainerRef })
+        usePresentationMode({ containerRef: mockContainerRef }),
       );
 
       unmount();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "fullscreenchange",
-        expect.any(Function)
+        expect.any(Function),
       );
 
       removeEventListenerSpy.mockRestore();
