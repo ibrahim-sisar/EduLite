@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { HiXMark } from "react-icons/hi2";
+import { HiViewList, HiPencilAlt, HiEye } from "react-icons/hi";
 import {
   EditorHeader,
   SlideList,
@@ -50,6 +51,9 @@ export default function SlideshowEditorPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showPreview] = useState(true);
+  const [mobilePanel, setMobilePanel] = useState<
+    "slides" | "editor" | "preview"
+  >("editor");
   const [showPresentModal, setShowPresentModal] = useState(false);
 
   // Warn about unsaved changes
@@ -524,12 +528,54 @@ export default function SlideshowEditorPage() {
         canPresent={slides.length > 0 && !isNewSlideshow}
       />
 
+      {/* Mobile Panel Tabs */}
+      <div className="flex md:hidden border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <button
+          onClick={() => setMobilePanel("slides")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            mobilePanel === "slides"
+              ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          <HiViewList className="w-4 h-4" />
+          Slides
+        </button>
+        <button
+          onClick={() => setMobilePanel("editor")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            mobilePanel === "editor"
+              ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          <HiPencilAlt className="w-4 h-4" />
+          Editor
+        </button>
+        <button
+          onClick={() => setMobilePanel("preview")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            mobilePanel === "preview"
+              ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
+          <HiEye className="w-4 h-4" />
+          Preview
+        </button>
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-64 border-r border-gray-200 dark:border-gray-700">
+        <div
+          className={`w-full md:w-64 border-r border-gray-200 dark:border-gray-700 ${mobilePanel === "slides" ? "block" : "hidden"} md:block`}
+        >
           <SlideList
             slides={slides}
             selectedId={selectedSlideId}
-            onSelect={setSelectedSlideId}
+            onSelect={(id) => {
+              setSelectedSlideId(id);
+              setMobilePanel("editor");
+            }}
             onAdd={handleAddSlide}
             onDelete={handleDeleteSlide}
             onReorder={handleReorderSlides}
@@ -537,7 +583,9 @@ export default function SlideshowEditorPage() {
           />
         </div>
 
-        <div className={showPreview ? "flex-1" : "flex-[2]"}>
+        <div
+          className={`w-full ${showPreview ? "md:flex-1" : "md:flex-[2]"} ${mobilePanel === "editor" ? "block" : "hidden"} md:block`}
+        >
           <SlideEditor
             slide={selectedSlide}
             onChange={(updates) =>
@@ -547,7 +595,9 @@ export default function SlideshowEditorPage() {
         </div>
 
         {showPreview && (
-          <div className="flex-1">
+          <div
+            className={`w-full md:flex-1 ${mobilePanel === "preview" ? "block" : "hidden"} md:block`}
+          >
             <SlidePreview
               slide={selectedSlide}
               isVisible={showPreview}
