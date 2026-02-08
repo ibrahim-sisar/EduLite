@@ -15,12 +15,14 @@ import {
   HiGlobeAlt,
   HiUser,
 } from "react-icons/hi";
-import { listSlideshows } from "../services/slideshowApi";
+import { listSlideshows, deleteSlideshow } from "../services/slideshowApi";
 import type {
   SlideshowListItem,
   PaginatedResponse,
 } from "../types/slideshow.types";
-import ContextMenu, { type ContextMenuItem } from "../components/common/ContextMenu";
+import ContextMenu, {
+  type ContextMenuItem,
+} from "../components/common/ContextMenu";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 
 // Lookup maps for readable names
@@ -148,7 +150,9 @@ interface SlideshowListPageProps {
   view?: "me" | "public";
 }
 
-const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView }) => {
+const SlideshowListPage: React.FC<SlideshowListPageProps> = ({
+  view: propView,
+}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -164,12 +168,17 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
 
   // Context menu state
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [selectedSlideshow, setSelectedSlideshow] = useState<SlideshowListItem | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [selectedSlideshow, setSelectedSlideshow] =
+    useState<SlideshowListItem | null>(null);
 
   // Modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteSlideshow, setDeleteSlideshow] = useState<SlideshowListItem | null>(null);
+  const [slideshowToDelete, setSlideshowToDelete] =
+    useState<SlideshowListItem | null>(null);
 
   // Redirect from /slideshows to /slideshows/me or /slideshows/public based on localStorage
   useEffect(() => {
@@ -229,10 +238,13 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
   };
 
   const handleCreateClick = () => {
-    navigate('/slideshows/new');
+    navigate("/slideshows/new");
   };
 
-  const handleContextMenu = (e: React.MouseEvent, slideshow: SlideshowListItem) => {
+  const handleContextMenu = (
+    e: React.MouseEvent,
+    slideshow: SlideshowListItem,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedSlideshow(slideshow);
@@ -240,7 +252,10 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
     setContextMenuOpen(true);
   };
 
-  const handleDotsClick = (e: React.MouseEvent, slideshow: SlideshowListItem) => {
+  const handleDotsClick = (
+    e: React.MouseEvent,
+    slideshow: SlideshowListItem,
+  ) => {
     e.stopPropagation();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setSelectedSlideshow(slideshow);
@@ -274,27 +289,24 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
 
   const handleDeleteClick = () => {
     if (!selectedSlideshow) return;
-    setDeleteSlideshow(selectedSlideshow);
+    setSlideshowToDelete(selectedSlideshow);
     setDeleteModalOpen(true);
     setContextMenuOpen(false);
   };
 
-
-
   const handleConfirmDelete = async () => {
-    if (!deleteSlideshow) return;
+    if (!slideshowToDelete) return;
 
     try {
-      // TODO: Implement delete API call when backend endpoint is ready
-      // await deleteSlideshow(deleteSlideshow.id);
+      await deleteSlideshow(slideshowToDelete.id);
       toast.success(t("slideshow.contextMenu.deleteSuccess"));
-      fetchSlideshows(); // Refresh the list
+      fetchSlideshows();
     } catch (error) {
       console.error("Failed to delete slideshow:", error);
       toast.error(t("slideshow.contextMenu.deleteError"));
     } finally {
       setDeleteModalOpen(false);
-      setDeleteSlideshow(null);
+      setSlideshowToDelete(null);
     }
   };
 
@@ -376,7 +388,9 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
               <HiPresentationChartBar className="text-2xl text-white" />
             </div>
             <h1 className="text-4xl font-light text-gray-900 dark:text-white tracking-tight">
-              {currentView === "me" ? t("slideshow.list.myTitle") : t("slideshow.list.publicTitle")}
+              {currentView === "me"
+                ? t("slideshow.list.myTitle")
+                : t("slideshow.list.publicTitle")}
             </h1>
             {/* Toggle Button */}
             <button
@@ -400,7 +414,9 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
             </button>
           </div>
           <p className="text-lg text-gray-500 dark:text-gray-400 font-light ml-16">
-            {currentView === "me" ? t("slideshow.list.mySubtitle") : t("slideshow.list.publicSubtitle")}
+            {currentView === "me"
+              ? t("slideshow.list.mySubtitle")
+              : t("slideshow.list.publicSubtitle")}
           </p>
         </div>
 
@@ -592,17 +608,17 @@ const SlideshowListPage: React.FC<SlideshowListPageProps> = ({ view: propView })
       />
 
       {/* Delete Confirmation Modal */}
-      {deleteSlideshow && (
+      {slideshowToDelete && (
         <ConfirmationModal
           isOpen={deleteModalOpen}
           onClose={() => {
             setDeleteModalOpen(false);
-            setDeleteSlideshow(null);
+            setSlideshowToDelete(null);
           }}
           onConfirm={handleConfirmDelete}
           title={t("slideshow.contextMenu.deleteConfirmTitle")}
           message={t("slideshow.contextMenu.deleteConfirmMessage", {
-            title: deleteSlideshow.title,
+            title: slideshowToDelete.title,
           })}
           confirmText={t("slideshow.contextMenu.deleteConfirmButton")}
           cancelText={t("common.cancel")}

@@ -15,10 +15,18 @@ import {
   HiRectangleStack,
 } from "react-icons/hi2";
 import { FaSave } from "react-icons/fa";
-import { getSlideshowDetail, updateSlideshow } from "../services/slideshowApi";
+import {
+  getSlideshowDetail,
+  updateSlideshow,
+  deleteSlideshow,
+} from "../services/slideshowApi";
 import type { SlideshowDetail } from "../types/slideshow.types";
-import { useUnsavedChanges, useFormDirtyState } from "../hooks/useUnsavedChanges";
+import {
+  useUnsavedChanges,
+  useFormDirtyState,
+} from "../hooks/useUnsavedChanges";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
+import ConfirmationModal from "../components/common/ConfirmationModal";
 import LazySelect from "../components/common/LazySelect";
 
 interface FormData {
@@ -38,10 +46,14 @@ const SlideshowDetailPage = () => {
   const [saving, setSaving] = useState(false);
   const [visibilityMenuOpen, setVisibilityMenuOpen] = useState(false);
   const [showNavigationModal, setShowNavigationModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   // Form data tracking for unsaved changes
-  const [originalFormData, setOriginalFormData] = useState<FormData | null>(null);
+  const [originalFormData, setOriginalFormData] = useState<FormData | null>(
+    null,
+  );
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -62,7 +74,7 @@ const SlideshowDetailPage = () => {
   // Block navigation when there are unsaved changes
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
+      isDirty && currentLocation.pathname !== nextLocation.pathname,
   );
 
   // Store blocker reference for modal callbacks
@@ -70,7 +82,7 @@ const SlideshowDetailPage = () => {
 
   // Handle blocked navigation with custom modal
   useEffect(() => {
-    if (blocker.state === 'blocked') {
+    if (blocker.state === "blocked") {
       setShowNavigationModal(true);
     }
   }, [blocker]);
@@ -141,20 +153,32 @@ const SlideshowDetailPage = () => {
   };
 
   const handleDelete = () => {
-    toast("Delete functionality coming soon!", {
-      icon: "🚧",
-      duration: 3000,
-    });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteSlideshow(Number(id));
+      toast.success("Slideshow deleted successfully");
+      navigate("/slideshows");
+    } catch (error) {
+      console.error("Failed to delete slideshow:", error);
+      toast.error("Failed to delete slideshow");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   // Handle field blur to track touched fields
   const handleBlur = (field: keyof FormData) => {
-    setTouchedFields(prev => new Set(prev).add(field));
+    setTouchedFields((prev) => new Set(prev).add(field));
   };
 
   // Handle form field changes
   const handleFieldChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -265,9 +289,10 @@ const SlideshowDetailPage = () => {
               onChange={(e) => handleFieldChange("title", e.target.value)}
               onBlur={() => handleBlur("title")}
               className={`text-4xl font-light text-gray-900 dark:text-white mb-4 bg-transparent border-b-2 ${
-                touchedFields.has('title') && formData.title !== originalFormData?.title
-                  ? 'border-red-300 dark:border-red-500/50'
-                  : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                touchedFields.has("title") &&
+                formData.title !== originalFormData?.title
+                  ? "border-red-300 dark:border-red-500/50"
+                  : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
               } focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none w-full transition-colors cursor-text`}
               placeholder="Slideshow Title"
             />
@@ -276,9 +301,10 @@ const SlideshowDetailPage = () => {
               onChange={(e) => handleFieldChange("description", e.target.value)}
               onBlur={() => handleBlur("description")}
               className={`text-lg text-gray-600 dark:text-gray-400 leading-relaxed bg-transparent border ${
-                touchedFields.has('description') && formData.description !== originalFormData?.description
-                  ? 'border-red-300 dark:border-red-500/50'
-                  : 'border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                touchedFields.has("description") &&
+                formData.description !== originalFormData?.description
+                  ? "border-red-300 dark:border-red-500/50"
+                  : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
               } focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none w-full rounded-lg p-2 min-h-[60px] resize-y transition-colors cursor-text`}
               placeholder="Add a description..."
             />
@@ -315,9 +341,10 @@ const SlideshowDetailPage = () => {
                   choiceType="subjects"
                   searchable={true}
                   className={
-                    touchedFields.has('subject') && formData.subject !== originalFormData?.subject
-                      ? 'border-red-300 dark:border-red-500/50'
-                      : ''
+                    touchedFields.has("subject") &&
+                    formData.subject !== originalFormData?.subject
+                      ? "border-red-300 dark:border-red-500/50"
+                      : ""
                   }
                 />
               </div>
@@ -328,15 +355,18 @@ const SlideshowDetailPage = () => {
                   label="Language"
                   name="language"
                   value={formData.language}
-                  onChange={(e) => handleFieldChange("language", e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange("language", e.target.value)
+                  }
                   onBlur={() => handleBlur("language")}
                   placeholder="Select a language..."
                   choiceType="languages"
                   searchable={true}
                   className={
-                    touchedFields.has('language') && formData.language !== originalFormData?.language
-                      ? 'border-red-300 dark:border-red-500/50'
-                      : ''
+                    touchedFields.has("language") &&
+                    formData.language !== originalFormData?.language
+                      ? "border-red-300 dark:border-red-500/50"
+                      : ""
                   }
                 />
               </div>
@@ -354,14 +384,25 @@ const SlideshowDetailPage = () => {
                     onClick={() => setVisibilityMenuOpen(!visibilityMenuOpen)}
                     onBlur={() => handleBlur("visibility")}
                     className={`font-medium capitalize hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 px-2 py-1 -mx-2 -my-1 rounded border-2 ${
-                      touchedFields.has('visibility') && formData.visibility !== originalFormData?.visibility
-                        ? 'border-red-300 dark:border-red-500/50 text-gray-900 dark:text-white'
-                        : 'border-transparent text-gray-900 dark:text-white'
+                      touchedFields.has("visibility") &&
+                      formData.visibility !== originalFormData?.visibility
+                        ? "border-red-300 dark:border-red-500/50 text-gray-900 dark:text-white"
+                        : "border-transparent text-gray-900 dark:text-white"
                     }`}
                   >
                     {formData.visibility}
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
 
@@ -374,21 +415,21 @@ const SlideshowDetailPage = () => {
                       />
                       <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-20 min-w-[160px]">
                         <button
-                          onClick={() => handleVisibilityChange('public')}
+                          onClick={() => handleVisibilityChange("public")}
                           className="w-full px-4 py-2 text-left text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors cursor-pointer"
                         >
                           <HiGlobeAlt className="w-4 h-4" />
                           <span>Public</span>
                         </button>
                         <button
-                          onClick={() => handleVisibilityChange('unlisted')}
+                          onClick={() => handleVisibilityChange("unlisted")}
                           className="w-full px-4 py-2 text-left text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors cursor-pointer"
                         >
                           <HiEyeSlash className="w-4 h-4" />
                           <span>Unlisted</span>
                         </button>
                         <button
-                          onClick={() => handleVisibilityChange('private')}
+                          onClick={() => handleVisibilityChange("private")}
                           className="w-full px-4 py-2 text-left text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors cursor-pointer rounded-b-lg"
                         >
                           <HiLockClosed className="w-4 h-4" />
@@ -408,7 +449,8 @@ const SlideshowDetailPage = () => {
                     Slides
                   </div>
                   <div className="font-medium text-gray-900 dark:text-white">
-                    {slideshow.slide_count} {slideshow.slide_count === 1 ? 'slide' : 'slides'}
+                    {slideshow.slide_count}{" "}
+                    {slideshow.slide_count === 1 ? "slide" : "slides"}
                   </div>
                 </div>
               </div>
@@ -510,6 +552,18 @@ const SlideshowDetailPage = () => {
         onConfirm={handleConfirmNavigation}
         onCancel={handleCancelNavigation}
         message="You have unsaved changes. Are you sure you want to leave?"
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Slideshow"
+        message={`Are you sure you want to delete "${slideshow.title}"? This action cannot be undone.`}
+        confirmText={deleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
       />
     </div>
   );
