@@ -22,6 +22,7 @@ import { useSlideNavigation } from "../../hooks/useSlideNavigation";
 import { useSlideLoader } from "../../hooks/useSlideLoader";
 import { usePresentationMode } from "../../hooks/usePresentationMode";
 import { useKeyboardNavigation } from "../../hooks/useKeyboardNavigation";
+import { useSwipeNavigation } from "../../hooks/useSwipeNavigation";
 
 // Subject name mappings
 const SUBJECTS: Record<string, string> = {
@@ -155,6 +156,12 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
     onExit,
     slideCount,
     allowFullscreen,
+  });
+
+  // Swipe navigation for mobile
+  useSwipeNavigation(containerRef, {
+    onSwipeLeft: navigation.next,
+    onSwipeRight: navigation.prev,
   });
 
   // Navigation handler for edit
@@ -362,8 +369,8 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
           />
         </div>
 
-        {/* Navigation Arrows (always visible on desktop) */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none z-10">
+        {/* Navigation Arrows */}
+        <div className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
           <button
             onClick={navigation.prev}
             onWheel={(e) => {
@@ -373,14 +380,14 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
               if (scrollable) scrollable.scrollTop += e.deltaY;
             }}
             disabled={navigation.isFirst}
-            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
+            className="p-2 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
             aria-label="Previous slide"
           >
-            <HiArrowLeft className="w-6 h-6" />
+            <HiArrowLeft className="w-4 h-4 md:w-6 md:h-6" />
           </button>
         </div>
 
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block pointer-events-none z-10">
+        <div className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
           <button
             onClick={navigation.next}
             onWheel={(e) => {
@@ -390,10 +397,10 @@ const SlideshowViewer: React.FC<SlideshowViewerProps> = ({
               if (scrollable) scrollable.scrollTop += e.deltaY;
             }}
             disabled={navigation.isLast}
-            className="p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
+            className="p-2 md:p-4 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 backdrop-blur-lg text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-lg pointer-events-auto"
             aria-label="Next slide"
           >
-            <HiArrowRight className="w-6 h-6" />
+            <HiArrowRight className="w-4 h-4 md:w-6 md:h-6" />
           </button>
         </div>
       </div>

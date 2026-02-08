@@ -58,45 +58,47 @@ export function EditorHeader({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder="Untitled Slideshow"
-            className="flex-1 text-lg font-semibold bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 min-w-0"
+            className="flex-1 text-base sm:text-lg font-semibold bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 min-w-0"
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onSaveClick}
             disabled={!isDirty}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <HiSave className="w-5 h-5" />
-            Save
+            <span className="hidden sm:inline">Save</span>
           </button>
 
           <button
             type="button"
             onClick={() => setShowShortcuts(true)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+            className="hidden sm:block p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
             title="Keyboard shortcuts"
           >
             <BsKeyboard className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
 
-          <SaveStatusIndicator
-            status={saveStatus}
-            lastSaved={lastSaved}
-            error={saveError}
-          />
+          <div className="hidden sm:block">
+            <SaveStatusIndicator
+              status={saveStatus}
+              lastSaved={lastSaved}
+              error={saveError}
+            />
+          </div>
 
           <button
             type="button"
             onClick={onPresentClick}
             disabled={!canPresent}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer rounded-lg font-medium transition-colors flex items-center gap-2"
             title={!canPresent ? "Add slides to present" : "Present slideshow"}
           >
             <HiEye className="w-5 h-5" />
-            Present
+            <span className="hidden sm:inline">Present</span>
           </button>
         </div>
       </div>
