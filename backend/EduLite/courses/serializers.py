@@ -1,11 +1,11 @@
 # backend/Edulite/courses/serializers.py
 # Contains course serializers, course modules serializers, course membership serializers, course chatrooms serializers
 
-from rest_framework import serializers
-from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
+from rest_framework import serializers
 
-from .models import Course, CourseModule, CourseMembership, CourseChatRoom
+from .models import Course, CourseChatRoom, CourseMembership, CourseModule
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -108,25 +108,36 @@ class CourseModuleSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """
         Validate that the referenced object_id exists under the given content_type.
+        For partial updates, fall back to instance values when fields are omitted.
         """
         if isinstance(attrs.get("content_type"), str):
             attrs["content_type"] = self.validate_content_type(attrs["content_type"])
 
-        content_type = attrs["content_type"]
-        object_id = attrs.get("object_id")
+        content_type = attrs.get(
+            "content_type", getattr(self.instance, "content_type", None)
+        )
+        object_id = attrs.get("object_id", getattr(self.instance, "object_id", None))
 
-        if not object_id:
-            raise serializers.ValidationError(
-                {"object_id": "Object ID must be provided."}
-            )
+        # For creation, both fields are required
+        if not self.instance:
+            if not content_type:
+                raise serializers.ValidationError(
+                    {"content_type": "Content type must be provided."}
+                )
+            if not object_id:
+                raise serializers.ValidationError(
+                    {"object_id": "Object ID must be provided."}
+                )
 
-        model_class = content_type.model_class()
-        if not model_class or not model_class.objects.filter(id=object_id).exists():
-            raise serializers.ValidationError(
-                {
-                    "object_id": "Target object does not exist for the given content type."
-                }
-            )
+        # Validate the referenced object exists when either field is present
+        if content_type and object_id:
+            model_class = content_type.model_class()
+            if not model_class or not model_class.objects.filter(id=object_id).exists():
+                raise serializers.ValidationError(
+                    {
+                        "object_id": "Target object does not exist for the given content type."
+                    }
+                )
 
         return attrs
 
