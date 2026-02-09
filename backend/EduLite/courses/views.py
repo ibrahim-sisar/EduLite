@@ -12,6 +12,7 @@ from drf_spectacular.utils import (
 )
 
 from .models import CourseMembership
+from .permissions import CanCreateCourse
 from .serializers import CourseSerializer
 
 User = get_user_model()
@@ -23,7 +24,7 @@ class CourseCreateView(generics.CreateAPIView):
     """Create a course for the authenticated user."""
 
     serializer_class = CourseSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [CanCreateCourse]
 
     @extend_schema(
         summary="Create a course",

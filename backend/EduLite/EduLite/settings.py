@@ -306,6 +306,11 @@ SIMPLE_JWT = {
 
 BLOCKED_EMAIL_DOMAINS = ["test.com"]  # For testing
 
+# Course Settings
+COURSE_CREATION_REQUIRES_TEACHER = (
+    True  # Set to False to allow any authenticated user to create courses
+)
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",

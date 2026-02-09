@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Optional
 
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -67,8 +68,9 @@ class CourseCreateAPITests(APITestCase):
             ).exists()
         )
 
-    def test_non_teacher_can_create_course_and_is_set_as_teacher(self):
-        """Any authenticated user can create a course and becomes the teacher member."""
+    @override_settings(COURSE_CREATION_REQUIRES_TEACHER=False)
+    def test_non_teacher_can_create_course_when_setting_allows(self):
+        """When COURSE_CREATION_REQUIRES_TEACHER is False, any user can create and becomes teacher."""
 
         student = self._create_user("student_user", "student")
         self.client.force_authenticate(user=student)
@@ -90,6 +92,20 @@ class CourseCreateAPITests(APITestCase):
                 course=course, user=student, role="teacher", status="enrolled"
             ).exists()
         )
+
+    def test_non_teacher_denied_by_default(self):
+        """With default setting, non-teacher users cannot create courses."""
+
+        student = self._create_user("student_user2", "student")
+        self.client.force_authenticate(user=student)
+
+        response = self.client.post(
+            self.url,
+            {"title": "Course by student"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_validation_errors_returned(self):
         """Serializer validation errors surface as 400 responses."""
