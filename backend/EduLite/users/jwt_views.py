@@ -20,8 +20,8 @@ from drf_spectacular.utils import (
     Authenticate with username and password to receive JWT access and refresh tokens.
 
     **Token Lifetimes:**
-    - Access token: 5 minutes
-    - Refresh token: 1 day
+    - Access token: 30 minutes
+    - Refresh token: 7 days
 
     Use the access token in the Authorization header for authenticated requests:
     `Authorization: Bearer <access_token>`
@@ -58,10 +58,10 @@ from drf_spectacular.utils import (
                 name="TokenPairResponse",
                 fields={
                     "access": serializers.CharField(
-                        help_text="JWT access token (expires in 5 minutes)"
+                        help_text="JWT access token (expires in 30 minutes)"
                     ),
                     "refresh": serializers.CharField(
-                        help_text="JWT refresh token (expires in 1 day)"
+                        help_text="JWT refresh token (expires in 7 days)"
                     ),
                 },
             ),
@@ -133,7 +133,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     description="""
     Get a new access token using a valid refresh token.
 
-    When your access token expires (after 5 minutes), use this endpoint with your
+    When your access token expires (after 30 minutes), use this endpoint with your
     refresh token to get a new access token without re-authenticating.
 
     **Note:** If token rotation is enabled, you'll also receive a new refresh token.
