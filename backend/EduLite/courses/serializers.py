@@ -188,6 +188,98 @@ class CourseMembershipSerializer(serializers.ModelSerializer):
         return attrs
 
 
+class CourseListSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer for listing courses.
+    Does not include nested memberships or modules - only metadata.
+    """
+
+    member_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "title",
+            "outline",
+            "visibility",
+            "subject",
+            "language",
+            "country",
+            "is_active",
+            "member_count",
+            "start_date",
+            "end_date",
+        ]
+        read_only_fields = ("id", "is_active")
+
+    def get_member_count(self, obj):
+        """Return the number of enrolled members in this course."""
+        if hasattr(obj, "member_count"):
+            return obj.member_count
+        return obj.memberships.count()
+
+
+class CourseDetailSerializer(serializers.ModelSerializer):
+    """
+    Full serializer for course detail view.
+    Includes nested memberships, modules, and the requesting user's role.
+    """
+
+    duration_time = serializers.SerializerMethodField()
+    members = CourseMembershipSerializer(
+        source="memberships", many=True, read_only=True
+    )
+    modules = CourseModuleSerializer(source="course_modules", many=True, read_only=True)
+    member_count = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "title",
+            "outline",
+            "language",
+            "country",
+            "subject",
+            "visibility",
+            "start_date",
+            "end_date",
+            "duration_time",
+            "allow_join_requests",
+            "is_active",
+            "member_count",
+            "user_role",
+            "members",
+            "modules",
+        ]
+        read_only_fields = ("id", "is_active")
+
+    def get_duration_time(self, instance):
+        """Returns the duration of the course in minutes."""
+        if instance.start_date and instance.end_date:
+            duration = instance.end_date - instance.start_date
+            return duration.total_seconds() // 60
+        return 0
+
+    def get_member_count(self, obj):
+        """Return the number of enrolled members in this course."""
+        if hasattr(obj, "member_count"):
+            return obj.member_count
+        return obj.memberships.count()
+
+    def get_user_role(self, obj):
+        """Return the requesting user's role in the course, or null."""
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return None
+        membership = obj.memberships.filter(user=request.user).first()
+        if membership:
+            return membership.role
+        return None
+
+
 class CourseChatRoomSerializer(serializers.ModelSerializer):
     """
     Serializer for the CourseChatRoom model.
