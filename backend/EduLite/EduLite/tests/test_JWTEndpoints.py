@@ -84,9 +84,30 @@ class TestJWTEndpoints(APITestCase):
         self.assertNotEqual(
             original_access_token, refresh_response.data["access"]
         )  # New access token
-        # If ROTATE_REFRESH_TOKENS is True in your SIMPLE_JWT settings,
-        # you'd also assert that a new 'refresh' token is present.
-        # If it's False (default), 'refresh' token might not be in the refresh response.
+        # ROTATE_REFRESH_TOKENS is True, so a new refresh token must be returned
+        self.assertIn("refresh", refresh_response.data)
+        self.assertNotEqual(refresh_token, refresh_response.data["refresh"])
+
+    def test_refresh_token_blacklisted_after_rotation(self):
+        """Old refresh token should be blacklisted after rotation and rejected on reuse."""
+        # Get initial tokens
+        obtain_data = {"username": self.username, "password": self.password}
+        obtain_response = self.client.post(
+            self.token_obtain_url, obtain_data, format="json"
+        )
+        old_refresh_token = obtain_response.data["refresh"]
+
+        # Use the refresh token (this rotates it and blacklists the old one)
+        refresh_response = self.client.post(
+            self.token_refresh_url, {"refresh": old_refresh_token}, format="json"
+        )
+        self.assertEqual(refresh_response.status_code, status.HTTP_200_OK)
+
+        # Try to reuse the old (now blacklisted) refresh token
+        reuse_response = self.client.post(
+            self.token_refresh_url, {"refresh": old_refresh_token}, format="json"
+        )
+        self.assertEqual(reuse_response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_refresh_token_invalid_or_expired(self):
         invalid_refresh_data = {"refresh": "this.is.an.invalid.token"}

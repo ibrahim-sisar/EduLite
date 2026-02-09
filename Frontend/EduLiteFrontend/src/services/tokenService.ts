@@ -1,9 +1,11 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { showErrorToast } from "../utils/errorUtils";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-const TOKEN_REFRESH_BUFFER = Number(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 30;
-const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === 'true';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const TOKEN_REFRESH_BUFFER =
+  Number(import.meta.env.VITE_TOKEN_REFRESH_BUFFER) || 30;
+const USE_SESSION_STORAGE = import.meta.env.VITE_USE_SESSION_STORAGE === "true";
 
 // Token storage keys
 const ACCESS_TOKEN_KEY = "access";
@@ -39,7 +41,10 @@ const getStorage = () => {
 };
 
 // JWT token utilities with configurable storage
-export const getStoredTokens = (): { access: string | null; refresh: string | null } => {
+export const getStoredTokens = (): {
+  access: string | null;
+  refresh: string | null;
+} => {
   const storage = getStorage();
   return {
     access: storage.getItem(ACCESS_TOKEN_KEY),
@@ -67,11 +72,11 @@ export const isTokenExpired = (token: string): boolean => {
   if (!token) return true;
 
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload = JSON.parse(atob(token.split(".")[1]));
     const currentTime = Math.floor(Date.now() / 1000);
 
     // Check if token expires in the next buffer time (proactive refresh)
-    return payload.exp < (currentTime + TOKEN_REFRESH_BUFFER);
+    return payload.exp < currentTime + TOKEN_REFRESH_BUFFER;
   } catch (error) {
     // Silent fail - token is considered expired if we can't parse it
     return true;
@@ -99,14 +104,17 @@ export const refreshAccessToken = async (): Promise<string> => {
           "Content-Type": "application/json",
         },
         timeout: 10000,
-      }
+      },
     );
 
-    const { access } = response.data;
+    const { access, refresh: newRefresh } = response.data;
 
-    // Update stored access token
+    // Update stored tokens (refresh token rotates when ROTATE_REFRESH_TOKENS is enabled)
     const storage = getStorage();
     storage.setItem(ACCESS_TOKEN_KEY, access);
+    if (newRefresh) {
+      storage.setItem(REFRESH_TOKEN_KEY, newRefresh);
+    }
 
     return access;
   } catch (error: any) {
@@ -169,7 +177,10 @@ export const setupAxiosInterceptors = (): void => {
   axios.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       // Skip token injection for auth endpoints
-      if (config.url?.includes('/token/') || config.url?.includes('/register/')) {
+      if (
+        config.url?.includes("/token/") ||
+        config.url?.includes("/register/")
+      ) {
         return config;
       }
 
@@ -186,7 +197,7 @@ export const setupAxiosInterceptors = (): void => {
     },
     (error) => {
       return Promise.reject(error);
-    }
+    },
   );
 
   // Response interceptor: Handle 401 responses with token refresh
@@ -198,7 +209,10 @@ export const setupAxiosInterceptors = (): void => {
       const originalRequest = error.config;
 
       // Skip retry for auth endpoints
-      if (originalRequest.url?.includes('/token/') || originalRequest.url?.includes('/register/')) {
+      if (
+        originalRequest.url?.includes("/token/") ||
+        originalRequest.url?.includes("/register/")
+      ) {
         return Promise.reject(error);
       }
 
@@ -223,7 +237,9 @@ export const setupAxiosInterceptors = (): void => {
             // Double-layer protection: flag + deduplication in errorUtils
             if (!hasShownSessionExpiredMessage) {
               hasShownSessionExpiredMessage = true;
-              showErrorToast("You have been automatically logged out. Please log in again.");
+              showErrorToast(
+                "You have been automatically logged out. Please log in again.",
+              );
             }
 
             onLogoutHandler();
@@ -240,7 +256,7 @@ export const setupAxiosInterceptors = (): void => {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 };
 

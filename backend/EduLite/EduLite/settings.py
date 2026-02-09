@@ -276,8 +276,12 @@ if ("test" in sys.argv or "mercury_test" in sys.argv) and DEBUG == True:
     ]
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # Default is 5 minutes
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # Default is 1 day
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=30
+    ),  # Reduced refresh frequency for better UX
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=7
+    ),  # Users stay logged in across sessions for a week
     "ROTATE_REFRESH_TOKENS": True,  # If True, a new refresh token is issued when you use a refresh token.
     "BLACKLIST_AFTER_ROTATION": True,  # If True, old refresh tokens are blacklisted after rotation. Requires an additional app for blacklisting.
     "UPDATE_LAST_LOGIN": False,  # Default is False. If True, updates the user's last_login field.
@@ -287,7 +291,7 @@ SIMPLE_JWT = {
     "AUDIENCE": None,  # Default
     "ISSUER": None,  # Default
     "JWK_URL": None,  # Default
-    "LEEWAY": 0,  # Default
+    "LEEWAY": 10,  # 10 seconds of clock-skew tolerance between client and server
     "AUTH_HEADER_TYPES": (
         "Bearer",
     ),  # Default is ('Bearer',). Defines the prefix for the Authorization header.
