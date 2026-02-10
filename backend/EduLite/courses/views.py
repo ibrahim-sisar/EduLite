@@ -14,8 +14,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Course, CourseMembership, CourseModule
+from .pagination import CoursePagination
 from .permissions import CanCreateCourse, IsCourseMember, IsCourseTeacher
-from .serializers import CourseModuleSerializer, CourseSerializer
+from .serializers import (
+    CourseMembershipSerializer,
+    CourseModuleSerializer,
+    CourseSerializer,
+)
 
 User = get_user_model()
 
@@ -333,4 +338,266 @@ class CourseModuleDetailView(CoursesAppBaseAPIView):
             request.user,
         )
         module.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# --- Course Membership Operations ---
+
+
+class CourseMembershipListInviteView(CoursesAppBaseAPIView):
+    """List course members and invite new users."""
+
+    permission_classes = [IsCourseMember]
+
+    @extend_schema(
+        summary="List course members",
+        description=(
+            "Returns a paginated list of memberships for the course. "
+            "Only enrolled course members can view."
+        ),
+        tags=["Course Members"],
+        responses={
+            200: OpenApiResponse(
+                description="Paginated list of course members.",
+                response=CourseMembershipSerializer(many=True),
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Not a course member."),
+            404: OpenApiResponse(description="Course not found."),
+        },
+    )
+    def get(self, request, pk, *args, **kwargs):
+        get_object_or_404(Course, pk=pk)
+        memberships = (
+            CourseMembership.objects.filter(course_id=pk)
+            .select_related("user", "course")
+            .order_by("pk")
+        )
+        paginator = CoursePagination()
+        page = paginator.paginate_queryset(memberships, request, view=self)
+        serializer = CourseMembershipSerializer(
+            page, many=True, context=self.get_serializer_context()
+        )
+        return paginator.get_paginated_response(serializer.data)
+
+    @extend_schema(
+        summary="Invite a user to the course",
+        description=(
+            "Invite a user by their ID. Only course teachers can invite. "
+            "The membership is created with status 'invited'."
+        ),
+        tags=["Course Members"],
+        request=inline_serializer(
+            name="CourseMembershipInviteRequest",
+            fields={
+                "user": serializers.IntegerField(help_text="User ID to invite"),
+                "role": serializers.ChoiceField(
+                    choices=["student", "assistant", "teacher"],
+                    required=False,
+                    help_text="Role for the invited user (default: student)",
+                ),
+            },
+        ),
+        responses={
+            201: OpenApiResponse(
+                description="User invited successfully.",
+                response=CourseMembershipSerializer,
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Only teachers can invite users."),
+            404: OpenApiResponse(description="Course or user not found."),
+            409: OpenApiResponse(
+                description="User is already a member of this course."
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Invite student",
+                summary="Invite a user as a student",
+                request_only=True,
+                value={"user": 5, "role": "student"},
+            ),
+        ],
+    )
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        if not IsCourseTeacher().has_permission(request, self):
+            raise exceptions.PermissionDenied(IsCourseTeacher.message)
+
+        course = get_object_or_404(Course, pk=pk)
+        user_id = request.data.get("user")
+        user = get_object_or_404(User, pk=user_id)
+
+        if CourseMembership.objects.filter(course=course, user=user).exists():
+            return Response(
+                {"detail": "User is already a member of this course."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        role = request.data.get("role", "student")
+        membership = CourseMembership.objects.create(
+            course=course,
+            user=user,
+            role=role,
+            status="invited",
+        )
+        logger.info(
+            "User %s invited to course %s (%s) by %s",
+            user.username,
+            course.title,
+            course.pk,
+            request.user,
+        )
+        serializer = CourseMembershipSerializer(
+            membership, context=self.get_serializer_context()
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CourseMembershipDetailView(CoursesAppBaseAPIView):
+    """Approve, deny, change role, or remove a course membership."""
+
+    permission_classes = [IsCourseMember]
+
+    def get_object(self, pk, membership_id):
+        return get_object_or_404(
+            CourseMembership.objects.select_related("user", "course"),
+            pk=membership_id,
+            course_id=pk,
+        )
+
+    def _is_last_teacher(self, membership):
+        """Check if this membership is the only enrolled teacher in the course."""
+        if membership.role != "teacher":
+            return False
+        return (
+            not CourseMembership.objects.filter(
+                course=membership.course, role="teacher", status="enrolled"
+            )
+            .exclude(pk=membership.pk)
+            .exists()
+        )
+
+    @extend_schema(
+        summary="Update a course membership",
+        description=(
+            "Partially update a membership's status or role. Teacher-only.\n\n"
+            "- **Approve**: set status to 'enrolled' (from pending/invited)\n"
+            "- **Deny**: set status to 'denied' (deletes the membership, returns 204)\n"
+            "- **Change role**: update the role field\n\n"
+            "Cannot demote the last teacher in a course (returns 409)."
+        ),
+        tags=["Course Members"],
+        request=inline_serializer(
+            name="CourseMembershipUpdateRequest",
+            fields={
+                "status": serializers.ChoiceField(
+                    choices=["enrolled", "denied"],
+                    required=False,
+                    help_text="New status (use 'denied' to remove pending/invited member)",
+                ),
+                "role": serializers.ChoiceField(
+                    choices=["student", "assistant", "teacher"],
+                    required=False,
+                    help_text="New role",
+                ),
+            },
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Membership updated.",
+                response=CourseMembershipSerializer,
+            ),
+            204: OpenApiResponse(description="Membership denied and deleted."),
+            400: OpenApiResponse(description="Validation error."),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Only teachers can manage members."),
+            404: OpenApiResponse(description="Membership not found."),
+            409: OpenApiResponse(description="Cannot demote the last teacher."),
+        },
+    )
+    @transaction.atomic
+    def patch(self, request, pk, membership_id, *args, **kwargs):
+        if not IsCourseTeacher().has_permission(request, self):
+            raise exceptions.PermissionDenied(IsCourseTeacher.message)
+
+        membership = self.get_object(pk, membership_id)
+
+        # Deny = delete the membership
+        if request.data.get("status") == "denied":
+            logger.info(
+                "Membership %s denied in course %s by %s",
+                membership_id,
+                pk,
+                request.user,
+            )
+            membership.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        # Last-teacher protection on role change
+        new_role = request.data.get("role")
+        if (
+            new_role
+            and new_role != "teacher"
+            and membership.role == "teacher"
+            and self._is_last_teacher(membership)
+        ):
+            return Response(
+                {"detail": "Cannot demote the last teacher in the course."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        serializer = CourseMembershipSerializer(
+            membership,
+            data=request.data,
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        logger.info(
+            "Membership %s updated in course %s by %s",
+            membership_id,
+            pk,
+            request.user,
+        )
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary="Remove a course member",
+        description=(
+            "Remove a member from the course. Teacher-only. "
+            "Cannot remove the last teacher (returns 409)."
+        ),
+        tags=["Course Members"],
+        responses={
+            204: OpenApiResponse(description="Member removed."),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Only teachers can remove members."),
+            404: OpenApiResponse(description="Membership not found."),
+            409: OpenApiResponse(description="Cannot remove the last teacher."),
+        },
+    )
+    @transaction.atomic
+    def delete(self, request, pk, membership_id, *args, **kwargs):
+        if not IsCourseTeacher().has_permission(request, self):
+            raise exceptions.PermissionDenied(IsCourseTeacher.message)
+
+        membership = self.get_object(pk, membership_id)
+
+        if self._is_last_teacher(membership):
+            return Response(
+                {"detail": "Cannot remove the last teacher in the course."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        logger.info(
+            "Member %s removed from course %s by %s",
+            membership.user.username,
+            pk,
+            request.user,
+        )
+        membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
