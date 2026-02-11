@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CourseCreateView,
+    CourseEnrollView,
     CourseMembershipDetailView,
     CourseMembershipListInviteView,
     CourseModuleDetailView,
@@ -29,5 +30,10 @@ urlpatterns = [
         "courses/<int:pk>/members/<int:membership_id>/",
         CourseMembershipDetailView.as_view(),
         name="course-membership-detail",
+    ),
+    path(
+        "courses/<int:pk>/enroll/",
+        CourseEnrollView.as_view(),
+        name="course-enroll",
     ),
 ]
