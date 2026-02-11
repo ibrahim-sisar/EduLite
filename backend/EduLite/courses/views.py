@@ -17,6 +17,7 @@ from .models import Course, CourseMembership, CourseModule
 from .pagination import CoursePagination
 from .permissions import CanCreateCourse, IsCourseMember, IsCourseTeacher
 from .serializers import (
+    CourseDetailSerializer,
     CourseMembershipSerializer,
     CourseModuleSerializer,
     CourseSerializer,
@@ -123,6 +124,115 @@ class CourseCreateView(CoursesAppBaseAPIView):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class CourseDetailView(CoursesAppBaseAPIView):
+    """Retrieve, update, or delete a single course."""
+
+    permission_classes = [IsCourseMember]
+
+    def get_object(self, pk):
+        return get_object_or_404(
+            Course.objects.prefetch_related(
+                "memberships__user", "course_modules__content_type"
+            ),
+            pk=pk,
+        )
+
+    @extend_schema(
+        summary="Retrieve a course",
+        description=(
+            "Get full details of a course including members, modules, "
+            "and the requesting user's role."
+        ),
+        tags=["Courses"],
+        responses={
+            200: OpenApiResponse(
+                description="Course details.",
+                response=CourseDetailSerializer,
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Not a course member."),
+            404: OpenApiResponse(description="Course not found."),
+        },
+    )
+    def get(self, request, pk, *args, **kwargs):
+        course = self.get_object(pk)
+        serializer = CourseDetailSerializer(
+            course, context=self.get_serializer_context()
+        )
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary="Update a course",
+        description=(
+            "Partially update course fields. Only course teachers can update."
+        ),
+        tags=["Courses"],
+        request=CourseSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Course updated successfully.",
+                response=CourseSerializer,
+            ),
+            400: OpenApiResponse(description="Validation error."),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Only teachers can update courses."),
+            404: OpenApiResponse(description="Course not found."),
+        },
+    )
+    @transaction.atomic
+    def patch(self, request, pk, *args, **kwargs):
+        if not IsCourseTeacher().has_permission(request, self):
+            raise exceptions.PermissionDenied(IsCourseTeacher.message)
+
+        course = self.get_object(pk)
+        serializer = CourseSerializer(
+            course,
+            data=request.data,
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        logger.info(
+            "Course %s (%s) updated by %s",
+            course.title,
+            course.pk,
+            request.user,
+        )
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary="Delete a course",
+        description=(
+            "Delete a course and all associated data (memberships, modules, etc.). "
+            "Only course teachers can delete."
+        ),
+        tags=["Courses"],
+        responses={
+            204: OpenApiResponse(description="Course deleted successfully."),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Only teachers can delete courses."),
+            404: OpenApiResponse(description="Course not found."),
+        },
+    )
+    @transaction.atomic
+    def delete(self, request, pk, *args, **kwargs):
+        if not IsCourseTeacher().has_permission(request, self):
+            raise exceptions.PermissionDenied(IsCourseTeacher.message)
+
+        course = self.get_object(pk)
+        logger.info(
+            "Course %s (%s) deleted by %s",
+            course.title,
+            course.pk,
+            request.user,
+        )
+        course.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # --- Course Module Operations ---
