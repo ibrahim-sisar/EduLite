@@ -601,3 +601,118 @@ class CourseMembershipDetailView(CoursesAppBaseAPIView):
         )
         membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# --- Course Enrollment ---
+
+
+class CourseEnrollView(CoursesAppBaseAPIView):
+    """Join or leave a course."""
+
+    @extend_schema(
+        summary="Join a course",
+        description=(
+            "Join a course as a student.\n\n"
+            "- **Public** courses: immediately enrolled.\n"
+            "- **Restricted** courses with join requests enabled: membership created as pending.\n"
+            "- **Restricted** without join requests or **private** courses: denied (403).\n\n"
+            "Returns 409 if already a member."
+        ),
+        tags=["Course Enrollment"],
+        responses={
+            201: OpenApiResponse(
+                description="Successfully joined or request submitted.",
+                response=CourseMembershipSerializer,
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Course does not allow joining."),
+            404: OpenApiResponse(description="Course not found."),
+            409: OpenApiResponse(description="Already a member of this course."),
+        },
+    )
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        course = get_object_or_404(Course, pk=pk)
+
+        if CourseMembership.objects.filter(course=course, user=request.user).exists():
+            return Response(
+                {"detail": "You are already a member of this course."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if course.visibility == "public":
+            membership_status = "enrolled"
+        elif course.visibility == "restricted" and course.allow_join_requests:
+            membership_status = "pending"
+        else:
+            return Response(
+                {"detail": "This course does not allow joining."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        membership = CourseMembership.objects.create(
+            course=course,
+            user=request.user,
+            role="student",
+            status=membership_status,
+        )
+        logger.info(
+            "User %s joined course %s (%s) with status %s",
+            request.user.username,
+            course.title,
+            course.pk,
+            membership_status,
+        )
+        serializer = CourseMembershipSerializer(
+            membership, context=self.get_serializer_context()
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        summary="Leave a course",
+        description=(
+            "Remove yourself from a course. "
+            "The last teacher in a course cannot leave (returns 409)."
+        ),
+        tags=["Course Enrollment"],
+        responses={
+            204: OpenApiResponse(description="Successfully left the course."),
+            401: OpenApiResponse(description="Authentication required."),
+            404: OpenApiResponse(description="Not a member of this course."),
+            409: OpenApiResponse(description="Cannot leave as the last teacher."),
+        },
+    )
+    @transaction.atomic
+    def delete(self, request, pk, *args, **kwargs):
+        membership = (
+            CourseMembership.objects.filter(course_id=pk, user=request.user)
+            .select_related("course")
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {"detail": "You are not a member of this course."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if (
+            membership.role == "teacher"
+            and not CourseMembership.objects.filter(
+                course_id=pk, role="teacher", status="enrolled"
+            )
+            .exclude(pk=membership.pk)
+            .exists()
+        ):
+            return Response(
+                {"detail": "Cannot leave as the last teacher in the course."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        logger.info(
+            "User %s left course %s",
+            request.user.username,
+            pk,
+        )
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
