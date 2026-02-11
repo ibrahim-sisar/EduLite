@@ -2,10 +2,13 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
     OpenApiExample,
+    OpenApiParameter,
     OpenApiResponse,
+    OpenApiTypes,
     extend_schema,
     inline_serializer,
 )
@@ -18,6 +21,7 @@ from .pagination import CoursePagination
 from .permissions import CanCreateCourse, IsCourseMember, IsCourseTeacher
 from .serializers import (
     CourseDetailSerializer,
+    CourseListSerializer,
     CourseMembershipSerializer,
     CourseModuleSerializer,
     CourseSerializer,
@@ -41,10 +45,104 @@ class CoursesAppBaseAPIView(APIView):
 # --- Course CRUD Operations ---
 
 
-class CourseCreateView(CoursesAppBaseAPIView):
-    """Create a course for the authenticated user."""
+class CourseListCreateView(CoursesAppBaseAPIView):
+    """List and create courses."""
 
-    permission_classes = [CanCreateCourse]
+    @extend_schema(
+        summary="List courses",
+        description=(
+            "Returns a paginated list of courses visible to the requesting user. "
+            "Public courses are visible to all authenticated users. "
+            "Private and restricted courses are only visible to their members.\n\n"
+            "Supports filtering by visibility, subject, language, country, "
+            "and mine (returns only courses the user is a member of)."
+        ),
+        tags=["Courses"],
+        parameters=[
+            OpenApiParameter(
+                name="visibility",
+                type=OpenApiTypes.STR,
+                description="Filter by visibility (public, restricted, private).",
+            ),
+            OpenApiParameter(
+                name="subject",
+                type=OpenApiTypes.STR,
+                description="Filter by subject.",
+            ),
+            OpenApiParameter(
+                name="language",
+                type=OpenApiTypes.STR,
+                description="Filter by language.",
+            ),
+            OpenApiParameter(
+                name="country",
+                type=OpenApiTypes.STR,
+                description="Filter by country.",
+            ),
+            OpenApiParameter(
+                name="mine",
+                type=OpenApiTypes.BOOL,
+                description="If true, return only courses the user is a member of.",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Paginated list of courses.",
+                response=CourseListSerializer(many=True),
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        courses = (
+            Course.objects.annotate(
+                member_count=Count(
+                    "memberships",
+                    filter=Q(memberships__status="enrolled"),
+                    distinct=True,
+                )
+            )
+            .filter(
+                Q(visibility="public")
+                | Q(
+                    memberships__user=request.user,
+                    memberships__status="enrolled",
+                )
+            )
+            .distinct()
+            .order_by("-id")
+        )
+
+        # Apply query param filters
+        visibility = request.query_params.get("visibility")
+        if visibility:
+            courses = courses.filter(visibility=visibility)
+
+        subject = request.query_params.get("subject")
+        if subject:
+            courses = courses.filter(subject=subject)
+
+        language = request.query_params.get("language")
+        if language:
+            courses = courses.filter(language=language)
+
+        country = request.query_params.get("country")
+        if country:
+            courses = courses.filter(country=country)
+
+        mine = request.query_params.get("mine")
+        if mine and mine.lower() in ("true", "1"):
+            courses = courses.filter(
+                memberships__user=request.user,
+                memberships__status="enrolled",
+            )
+
+        paginator = CoursePagination()
+        page = paginator.paginate_queryset(courses, request, view=self)
+        serializer = CourseListSerializer(
+            page, many=True, context=self.get_serializer_context()
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
         summary="Create a course",
@@ -98,6 +196,9 @@ class CourseCreateView(CoursesAppBaseAPIView):
     )
     @transaction.atomic
     def post(self, request, *args, **kwargs):
+        if not CanCreateCourse().has_permission(request, self):
+            raise exceptions.PermissionDenied(CanCreateCourse.message)
+
         logger.debug("Course creation requested by user %s", request.user)
 
         serializer = CourseSerializer(
