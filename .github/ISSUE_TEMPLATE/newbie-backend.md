@@ -1,75 +1,59 @@
 ---
 name: "Newbie Backend Task"
-about: "A beginner-friendly backend (Django/Python) task for EduLite contributors."
-title: "[NEWBIE-BACKEND] Brief title describing the task"
+about: "A beginner-friendly backend (Django/Python) task."
+title: "[NEWBIE-BACKEND] "
 labels: 'good first issue, backend, help wanted'
 assignees: ''
+---
+
+## Claiming This Task
+
+Before you start working, check the **Assignees** section. If no one is assigned, leave a comment claiming the issue and assign it to yourself. This prevents duplicate work.
+
+See the [Community Wiki](https://github.com/ibrahim-sisar/EduLite/wiki) for contributing guidelines and git workflow.
+
+## Goal
+
+*What will the contributor achieve?*
+*(Example: Add a `favorite_quote` field to UserProfile and expose it in the API.)*
+
+## Task Description
+
+*Step-by-step, what needs to be done?*
+*(Example: 1. Add the field to the model. 2. Run makemigrations. 3. Add it to the serializer.)*
+
+## Definition of Done
+
+*How does the contributor know they're finished?*
+*(Example: The field appears in the API response and the migration applies cleanly.)*
+
+## Benefits
+
+*How does this help EduLite? What will the contributor learn?*
+
+## Skills You'll Practice
+
+*List skills — be encouraging!*
+*(Example: Django models, migrations, DRF serializers, Git basics.)*
+
+## Files to be Altered (if known)
+
+*List specific files or directories.*
+
+## Testing
+
+*What tests should be added or updated? How can they verify it works?*
+*(Example: Run the existing user tests and confirm nothing breaks. Add a test for the new field.)*
+
+## Tips (Optional)
+
+*Hints, gotchas, links to relevant docs, or encouragement.*
 
 ---
-## Claiming This Task:
 
-Please read the [Git Workflow Wiki Page](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Git-Workflow) for updated community documentation.
+**Getting started?** These wiki pages will help you get set up:
 
-Before you start working, please check the **Assignees** section on the right. If no one is assigned, leave a comment claiming the issue and assign it to yourself. This is required to prevent duplicate work.
+- [Getting Started, First Contribution](https://github.com/ibrahim-sisar/EduLite/wiki/Getting-Started-First-Contribution)
+- [Getting Started, Backend](https://github.com/ibrahim-sisar/EduLite/wiki/Getting-Started-Backend)
 
-## **🎯 Goal / Objective**
-
-*Concisely describe what the contributor will achieve by completing this backend task. What is the main aim of this change or addition?*
-*(Example: To add a new, non-essential field to the `UserProfile` model to store a user's favorite quote, and expose it in the ProfileSerializer.)*
-
-## **📝 Task Description / Requirements**
-
-*Provide a clear, step-by-step description of what needs to be done on the backend. Be specific about models to modify, expected API behavior (if any), or database changes.*
-*(Example:*
-
-1. Locate the `UserProfile` model in `backend/users/models.py`.
-2. Add a new `CharField` named `favorite_quote` to the `UserProfile` model. It can be `blank=True`, `null=True`, with a `max_length` of 255.
-3. Make and apply database migrations for this change (`python manage.py makemigrations users` and `python manage.py migrate`).
-4. Add `favorite_quote` to the `fields` list in the `ProfileSerializer` in `backend/users/serializers.py` so it can be viewed and updated via the API.
-5. Register the new field in the `UserProfileAdmin` in `backend/users/admin.py` if applicable, so it's visible in the Django admin panel.)*
-
-## **✨ Benefits / Why this helps EduLite**
-
-*Explain how completing this task will benefit the EduLite project, its backend functionality, data structure, or prepare it for future features.*
-*(Example: This allows users to personalize their profiles further. It also gives a new contributor experience with Django model changes, migrations, and serializer updates.)*
-
-## **🛠️ Skills Required**
-
-*List the specific backend skills or technologies the contributor will need or will get a chance to practice. Be encouraging!*
-*(Example:*
-* *Basic Python syntax.*
-* *Understanding of Django models and field types.*
-* *Familiarity with Django migrations.*
-* *Basic knowledge of Django REST Framework serializers (how to add a field).*
-* *(Optional) Django admin customization.*
-* *Git and GitHub for creating a branch and submitting a pull request (we're here to help!).)*
-
-## **📚 Helpful Resources / Getting Started**
-
-*Provide links to relevant Django/Python documentation, specific files in the `backend/` directory, or sections of the contribution guide relevant to backend development. Point them to where they can ask questions.*
-*(Example:*
-* *Django Model Field Reference: [https://docs.djangoproject.com/en/stable/ref/models/fields/](https://docs.djangoproject.com/en/stable/ref/models/fields/)*
-* *Django Migrations: [https://docs.djangoproject.com/en/stable/topics/migrations/](https://docs.djangoproject.com/en/stable/topics/migrations/)*
-* *Django REST Framework Serializers: [https://www.django-rest-framework.org/api-guide/serializers/](https://www.django-rest-framework.org/api-guide/serializers/)*
-* *Relevant Files: `backend/users/models.py`, `backend/users/serializers.py`*
-* *EduLite Backend README: `backend/README.md`*
-* *EduLite Contributing Guide: `CONTRIBUTING.md`*
-* *Feel free to ask questions in our Discord server's #backend channel!)*
-
-## **💻 Files to be Altered or Created (if known)**
-
-*List any specific files or directories within the `backend/` codebase that you believe will need to be modified or created.*
-*(Example: `backend/users/models.py`, `backend/users/serializers.py`, new migration file in `backend/users/migrations/`)*
-
-## **🧪 Testing Considerations (Optional)**
-
-*Briefly mention any testing aspects the contributor should consider. This could be manual testing steps or ideas for simple automated tests.*
-*(Example: "After making the changes, find the corresponding test in tests/test_classname.py and alter any failing tests, or add your own new ones.)*
-
-## **💡 Additional Context / Tips (Optional)**
-
-*Add any other helpful context, tips for approaching the backend problem, or relevant information about the existing backend setup. This is a good place for encouragement!*
-*(Example: "Remember to activate your Python virtual environment before running `manage.py` commands. If you add a field to a model, Django's `makemigrations` command will create the migration file for you. We appreciate your contribution to improving EduLite's backend!")*
-
----
-*This task is designed as a good entry point for new backend contributors. We're here to support you through the process!*
+*This is a beginner-friendly task. Ask questions in Discord — we're here to help!*

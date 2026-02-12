@@ -1,33 +1,33 @@
 ---
 name: General Issue Report
 about: Describe a problem or suggest an improvement
-title: "[ISSUE] A brief title describing the issue"
+title: "[ISSUE] "
 labels: ''
 assignees: ''
-
 ---
-## Claiming This Task:
 
-Please read the [Git Workflow Wiki Page](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Git-Workflow) for updated community documentation.
+## Claiming This Task
 
-Before you start working, please check the **Assignees** section on the right. If no one is assigned, leave a comment claiming the issue and assign it to yourself. This is required to prevent duplicate work.
+Before you start working, check the **Assignees** section. If no one is assigned, leave a comment claiming the issue and assign it to yourself. This prevents duplicate work.
 
-## **Current Situation**
+See the [Community Wiki](https://github.com/ibrahim-sisar/EduLite/wiki) for contributing guidelines and git workflow.
 
-*Please provide a clear and concise description of what the problem is, or what the current state is if suggesting an enhancement.*
+## Current Situation
 
-## **Proposed Solution(s)**
+*What's the problem, or what's the current state if suggesting an enhancement?*
 
-*Please describe the solution you'd like to see implemented or suggest ways to address the problem.*
+## Proposed Solution
 
-## **Benefits**
+*How should this be fixed or improved?*
 
-*Please describe how this solution would benefit the project, it's contributors, or it's users.*
+## Benefits
 
-## **Files to be Altered or created (if known)**
+*How does this help the project, its contributors, or its users?*
 
-*List any specific files or directories within the codebase that you believe will need to be modified to implement the proposed solution. If unsure, leave this blank.*
+## Files to be Altered (if known)
 
-## **Additional Context (Optional)**
+*List specific files or directories. Leave blank if unsure.*
 
-*Add any other context, screenshots, or links about the issue here.*
+## Additional Context (Optional)
+
+*Screenshots, links, or other relevant information.*

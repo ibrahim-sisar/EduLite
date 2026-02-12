@@ -140,12 +140,11 @@ For detailed Docker documentation, see [docker/README.md](docker/README.md).
 
 ---
 
-## 📌 What’s Next?
+## Community Wiki
 
-- [ ] Finalize UI wireframes
-- [ ] Build MVP: Users, Courses, Messaging
-- [ ] Release first working demo
-- [ ] Collect early feedback
+We manage the [community wiki on Github](https://github.com/ibrahim-sisar/EduLite/wiki) - This is an organic growing knowledge base for the project.
+
+We keep a clear [Mission Statement/Values Acknowledgement](https://github.com/ibrahim-sisar/EduLite/wiki/Vision-Mission) within.
 
 ---
 
