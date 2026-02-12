@@ -1,25 +1,40 @@
 """API views for the slideshows app."""
 
 import logging
+
 from django.db import transaction
-from rest_framework import generics, permissions
 from drf_spectacular.utils import (
-    extend_schema,
+    OpenApiExample,
     OpenApiParameter,
     OpenApiResponse,
-    OpenApiExample,
+    OpenApiTypes,
+    extend_schema,
+    inline_serializer,
 )
+from rest_framework import generics, permissions, serializers
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Slideshow, Slide
-from .serializers import (
-    SlideshowListSerializer,
-    SlideshowDetailSerializer,
-    SlideSerializer,
-)
-from .permissions import IsOwnerOrReadOnly
+from .models import Slide, Slideshow
 from .pagination import SlideshowPagination
+from .permissions import IsOwnerOrReadOnly
+from .serializers import (
+    SlideSerializer,
+    SlideshowDetailSerializer,
+    SlideshowListSerializer,
+)
 
 logger = logging.getLogger(__name__)
+
+
+class SlideshowsAppBaseAPIView(APIView):
+    """Base API view for slideshows app."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_context(self):
+        """Include request context for serializers."""
+        return {"request": self.request}
 
 
 class SlideshowListCreateView(generics.ListCreateAPIView):
@@ -52,8 +67,8 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
         - User's own slideshows (all)
         - Public published slideshows from others
         """
-        from django.db.models import Q
         from django.contrib.auth import get_user_model
+        from django.db.models import Q
 
         User = get_user_model()
         user = self.request.user
@@ -508,11 +523,157 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         )
 
 
+# ========== Search Endpoint ==========
+
+
+@extend_schema(tags=["Slideshows"])
+class SlideshowSearchView(SlideshowsAppBaseAPIView):
+    """
+    Search slideshows by title or description.
+
+    GET: Returns paginated search results.
+         - Text search across title and description (case-insensitive)
+         - Minimum query length: 2 characters
+         - Visibility rules: user sees own slideshows (any visibility) + public published from others
+         - Supports combining search with filters (visibility, subject, language, country, mine)
+    """
+
+    @extend_schema(
+        summary="Search slideshows",
+        description=(
+            "Search for slideshows by title or description. "
+            "Returns slideshows visible to the user: their own (any visibility) "
+            "and public published slideshows from others. "
+            "Supports combining text search with filters."
+        ),
+        parameters=[
+            OpenApiParameter(
+                name="q",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Search query (minimum 2 characters)",
+            ),
+            OpenApiParameter(
+                name="page",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Page number for pagination",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="page_size",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description="Number of results per page (default 20, max 100)",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="visibility",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by visibility (public, private, unlisted)",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="subject",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by subject",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="language",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by language",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="country",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description="Filter by country",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="mine",
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description="Show only user's own slideshows (true/false)",
+                required=False,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Search results",
+                response=inline_serializer(
+                    name="SlideshowSearchPaginatedResponse",
+                    fields={
+                        "count": serializers.IntegerField(),
+                        "next": serializers.URLField(allow_null=True),
+                        "previous": serializers.URLField(allow_null=True),
+                        "total_pages": serializers.IntegerField(),
+                        "current_page": serializers.IntegerField(),
+                        "page_size": serializers.IntegerField(),
+                        "results": SlideshowListSerializer(many=True),
+                    },
+                ),
+            ),
+            400: OpenApiResponse(
+                description="Invalid search query",
+                response=inline_serializer(
+                    name="SlideshowSearchError",
+                    fields={"detail": serializers.CharField()},
+                ),
+                examples=[
+                    OpenApiExample(
+                        "Query Too Short",
+                        value={
+                            "detail": "Search query must be at least 2 characters long."
+                        },
+                    ),
+                ],
+            ),
+            401: OpenApiResponse(description="Authentication required"),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        from .logic.slideshow_search_logic import (
+            apply_slideshow_filters,
+            build_slideshow_search_queryset,
+            validate_search_query,
+        )
+
+        search_query = request.query_params.get("q", "").strip()
+
+        # Step 1: Validate query
+        is_valid, error_response = validate_search_query(search_query)
+        if not is_valid:
+            return error_response
+
+        # Step 2: Build search queryset with visibility rules
+        queryset = build_slideshow_search_queryset(search_query, request.user)
+
+        # Step 3: Apply optional filters
+        queryset = apply_slideshow_filters(queryset, request.query_params, request.user)
+
+        # Step 4: Paginate
+        paginator = SlideshowPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+
+        # Step 5: Serialize and return
+        serializer = SlideshowListSerializer(
+            page, many=True, context=self.get_serializer_context()
+        )
+        return paginator.get_paginated_response(serializer.data)
+
+
 # ========== Preview Endpoint ==========
 
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.throttling import UserRateThrottle
 
 
