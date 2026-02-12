@@ -20,7 +20,9 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
   const navigate = useNavigate();
 
   const isActiveRoute = (path: string): boolean =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
+    path === "/"
+      ? location.pathname === "/"
+      : location.pathname.startsWith(path);
 
   const handleProfileClick = () => {
     navigate("/profile");
@@ -55,7 +57,7 @@ export default function Navbar({ isLoggedIn }: NavbarProps) {
                 { to: "/", label: t("nav.home") },
                 { to: "/about", label: t("nav.about") },
                 { to: "/conversations", label: t("nav.conversations") },
-                { to: "/chapters", label: t("nav.chapters") },
+                { to: "/courses", label: t("nav.courses") },
                 { to: "/slideshows", label: t("nav.slideshows") },
               ].map((link) => (
                 <Link
