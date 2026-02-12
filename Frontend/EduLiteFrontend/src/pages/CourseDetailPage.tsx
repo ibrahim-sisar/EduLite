@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
   useParams,
   useNavigate,
@@ -186,8 +186,12 @@ const CourseDetailPage = () => {
     }
   }, [course]);
 
-  // Enrollment hook
-  const enrollment = useEnrollment(courseId, course, refetchCourse);
+  // Enrollment hook — refetch course detail AND members after enrollment changes
+  const refetchAfterEnrollment = useCallback(() => {
+    refetchCourse();
+    refetchMembers();
+  }, [refetchCourse, refetchMembers]);
+  const enrollment = useEnrollment(courseId, course, refetchAfterEnrollment);
 
   // Derived state
   const isTeacher = course?.user_role === "teacher";

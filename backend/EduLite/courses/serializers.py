@@ -206,6 +206,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     """
 
     member_count = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -219,6 +220,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             "country",
             "is_active",
             "member_count",
+            "is_member",
             "start_date",
             "end_date",
         ]
@@ -229,6 +231,13 @@ class CourseListSerializer(serializers.ModelSerializer):
         if hasattr(obj, "member_count"):
             return obj.member_count
         return obj.memberships.count()
+
+    def get_is_member(self, obj):
+        """Return whether the requesting user is a member of this course."""
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        return obj.memberships.filter(user=request.user).exists()
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):

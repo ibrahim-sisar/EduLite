@@ -32,6 +32,7 @@ const mockCourse1: CourseListItem = {
   country: "US",
   is_active: true,
   member_count: 25,
+  is_member: true,
   start_date: "2024-09-01T08:00:00Z",
   end_date: "2024-12-15T20:00:00Z",
 };
@@ -46,6 +47,7 @@ const mockCourse2: CourseListItem = {
   country: "PS",
   is_active: true,
   member_count: 10,
+  is_member: true,
   start_date: null,
   end_date: null,
 };
@@ -60,6 +62,7 @@ const mockCourse3: CourseListItem = {
   country: "CA",
   is_active: false,
   member_count: 0,
+  is_member: false,
   start_date: "2025-01-15T08:00:00Z",
   end_date: null,
 };
@@ -680,8 +683,8 @@ describe("CourseListPage", () => {
         id: 100,
         user: 1,
         user_name: "testuser",
-        course: 1,
-        course_title: "Introduction to Physics",
+        course: 3,
+        course_title: "Computer Science 101",
         role: "student",
         status: "enrolled",
       });
@@ -690,13 +693,13 @@ describe("CourseListPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getAllByText("Introduction to Physics").length,
+          screen.getAllByText("Computer Science 101").length,
         ).toBeGreaterThan(0);
       });
 
-      // Click dots menu on first course
+      // Click dots menu on non-member course (mockCourse3, is_member: false)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
-      await user.click(dotsButtons[0]);
+      await user.click(dotsButtons[2]);
 
       // Click Enroll
       await waitFor(() => {
@@ -705,7 +708,7 @@ describe("CourseListPage", () => {
       await user.click(screen.getByText(/^enroll$/i));
 
       await waitFor(() => {
-        expect(coursesApi.enrollInCourse).toHaveBeenCalledWith(1);
+        expect(coursesApi.enrollInCourse).toHaveBeenCalledWith(3);
         expect(toast.success).toHaveBeenCalledWith(
           expect.stringContaining("enrolled"),
         );
@@ -721,8 +724,8 @@ describe("CourseListPage", () => {
         id: 100,
         user: 1,
         user_name: "testuser",
-        course: 1,
-        course_title: "Introduction to Physics",
+        course: 3,
+        course_title: "Computer Science 101",
         role: "student",
         status: "pending",
       });
@@ -731,12 +734,13 @@ describe("CourseListPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getAllByText("Introduction to Physics").length,
+          screen.getAllByText("Computer Science 101").length,
         ).toBeGreaterThan(0);
       });
 
+      // Click dots menu on non-member course (mockCourse3, is_member: false)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
-      await user.click(dotsButtons[0]);
+      await user.click(dotsButtons[2]);
 
       await waitFor(() => {
         expect(screen.getByText(/^enroll$/i)).toBeInTheDocument();
@@ -763,12 +767,13 @@ describe("CourseListPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getAllByText("Introduction to Physics").length,
+          screen.getAllByText("Computer Science 101").length,
         ).toBeGreaterThan(0);
       });
 
+      // Click dots menu on non-member course (mockCourse3, is_member: false)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
-      await user.click(dotsButtons[0]);
+      await user.click(dotsButtons[2]);
 
       await waitFor(() => {
         expect(screen.getByText(/^enroll$/i)).toBeInTheDocument();
@@ -951,7 +956,7 @@ describe("CourseListPage", () => {
       });
     });
 
-    it("shows Enroll option in public view context menu", async () => {
+    it("shows Enroll option for non-member course", async () => {
       const user = userEvent.setup();
       vi.mocked(coursesApi.listCourses).mockResolvedValue(
         mockPaginatedResponse,
@@ -961,19 +966,20 @@ describe("CourseListPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getAllByText("Introduction to Physics").length,
+          screen.getAllByText("Computer Science 101").length,
         ).toBeGreaterThan(0);
       });
 
+      // Click dots on non-member course (mockCourse3, is_member: false)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
-      await user.click(dotsButtons[0]);
+      await user.click(dotsButtons[2]);
 
       await waitFor(() => {
         expect(screen.getByText(/^enroll$/i)).toBeInTheDocument();
       });
     });
 
-    it("shows Leave option in my courses context menu", async () => {
+    it("shows Leave option for member course", async () => {
       const user = userEvent.setup();
       vi.mocked(coursesApi.listCourses).mockResolvedValue(
         mockPaginatedResponse,
@@ -987,6 +993,7 @@ describe("CourseListPage", () => {
         ).toBeGreaterThan(0);
       });
 
+      // Click dots on member course (mockCourse1, is_member: true)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
       await user.click(dotsButtons[0]);
 
@@ -995,7 +1002,7 @@ describe("CourseListPage", () => {
       });
     });
 
-    it("does not show Enroll in my courses context menu", async () => {
+    it("does not show Enroll for member course", async () => {
       const user = userEvent.setup();
       vi.mocked(coursesApi.listCourses).mockResolvedValue(
         mockPaginatedResponse,
@@ -1009,6 +1016,7 @@ describe("CourseListPage", () => {
         ).toBeGreaterThan(0);
       });
 
+      // Click dots on member course (mockCourse1, is_member: true)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
       await user.click(dotsButtons[0]);
 
@@ -1019,7 +1027,7 @@ describe("CourseListPage", () => {
       expect(screen.queryByText(/^enroll$/i)).not.toBeInTheDocument();
     });
 
-    it("does not show Leave in public view context menu", async () => {
+    it("does not show Leave for non-member course", async () => {
       const user = userEvent.setup();
       vi.mocked(coursesApi.listCourses).mockResolvedValue(
         mockPaginatedResponse,
@@ -1029,12 +1037,13 @@ describe("CourseListPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getAllByText("Introduction to Physics").length,
+          screen.getAllByText("Computer Science 101").length,
         ).toBeGreaterThan(0);
       });
 
+      // Click dots on non-member course (mockCourse3, is_member: false)
       const dotsButtons = screen.getAllByLabelText(/actions/i);
-      await user.click(dotsButtons[0]);
+      await user.click(dotsButtons[2]);
 
       await waitFor(() => {
         expect(screen.getByText(/^enroll$/i)).toBeInTheDocument();

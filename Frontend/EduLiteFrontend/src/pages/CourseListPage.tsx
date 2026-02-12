@@ -30,82 +30,7 @@ import ContextMenu, {
 } from "../components/common/ContextMenu";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import LazySelect from "../components/common/LazySelect";
-
-// Lookup maps for readable names (same as SlideshowListPage)
-const SUBJECTS: Record<string, string> = {
-  math: "Mathematics",
-  physics: "Physics",
-  chemistry: "Chemistry",
-  biology: "Biology",
-  cs: "Computer Science",
-  it: "Information Technology",
-  engineering: "Engineering",
-  datasci: "Data Science",
-  ai: "Artificial Intelligence",
-  envsci: "Environmental Science",
-  astronomy: "Astronomy",
-  stats: "Statistics",
-  robotics: "Robotics",
-  electronics: "Electronics",
-  psych: "Psychology",
-  sociology: "Sociology",
-  polisci: "Political Science",
-  economics: "Economics",
-  anthropology: "Anthropology",
-  intlrel: "International Relations",
-  criminology: "Criminology",
-  history: "History",
-  philosophy: "Philosophy",
-  literature: "Literature",
-  linguistics: "Linguistics",
-  religion: "Religious Studies",
-  cultural: "Cultural Studies",
-  classics: "Classics",
-  visualart: "Visual Arts",
-  music: "Music",
-  performing: "Performing Arts",
-  architecture: "Architecture",
-  design: "Graphic Design",
-  film: "Film & Media Studies",
-  photo: "Photography",
-  fashion: "Fashion Design",
-  business: "Business Administration",
-  accounting: "Accounting",
-  finance: "Finance",
-  marketing: "Marketing",
-  hrm: "Human Resource Management",
-  entrepreneurship: "Entrepreneurship",
-  project: "Project Management",
-  supplychain: "Supply Chain Management",
-  education: "Education",
-  earlyedu: "Early Childhood Education",
-  specialedu: "Special Education",
-  english: "English Language",
-  foreignlang: "Foreign Languages",
-  translation: "Translation Studies",
-  tesol: "TESOL / ESL",
-  law: "Law",
-  legal: "Legal Studies",
-  constitutional: "Constitutional Law",
-  publicpolicy: "Public Policy",
-  politicaltheory: "Political Theory",
-  medicine: "Medicine",
-  nursing: "Nursing",
-  pharmacy: "Pharmacy",
-  publichealth: "Public Health",
-  nutrition: "Nutrition",
-  veterinary: "Veterinary Science",
-  dentistry: "Dentistry",
-  biomed: "Biomedical Science",
-  physicaltherapy: "Physical Therapy",
-};
-
-const LANGUAGES: Record<string, string> = {
-  en: "English",
-  fr: "French",
-  es: "Spanish",
-  ar: "Arabic",
-};
+import { SUBJECTS, LANGUAGES } from "../utils/choicesLookup";
 
 const VISIBILITY_LABELS: Record<CourseVisibility, string> = {
   public: "Public",
@@ -287,7 +212,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
       } else {
         toast.success(t("course.contextMenu.enrollSuccess"));
       }
-      refetch();
+      navigate(`/courses/${selectedCourse.id}`);
     } catch {
       toast.error(t("course.contextMenu.enrollError"));
     }
@@ -322,7 +247,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
       icon: <HiEye />,
       onClick: handleViewClick,
     },
-    ...(currentView === "public"
+    ...(selectedCourse && !selectedCourse.is_member
       ? [
           {
             id: "enroll",
@@ -332,7 +257,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
           },
         ]
       : []),
-    ...(currentView === "me"
+    ...(selectedCourse?.is_member
       ? [
           {
             id: "separator" as const,

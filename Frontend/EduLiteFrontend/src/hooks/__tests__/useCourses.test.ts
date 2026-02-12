@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { useCourses } from "../useCourses";
 import * as coursesApi from "../../services/coursesApi";
-import type { CoursePaginatedResponse, CourseListItem } from "../../types/courses.types";
+import type {
+  CoursePaginatedResponse,
+  CourseListItem,
+} from "../../types/courses.types";
 
 vi.mock("../../services/coursesApi");
 
@@ -25,6 +28,7 @@ describe("useCourses", () => {
         country: "US",
         is_active: true,
         member_count: 5,
+        is_member: true,
         start_date: "2024-09-01T08:00:00Z",
         end_date: "2024-12-15T20:00:00Z",
       },
@@ -38,6 +42,7 @@ describe("useCourses", () => {
         country: null,
         is_active: true,
         member_count: 3,
+        is_member: false,
         start_date: null,
         end_date: null,
       },
@@ -137,6 +142,7 @@ describe("useCourses", () => {
           country: null,
           is_active: true,
           member_count: 1,
+          is_member: false,
           start_date: null,
           end_date: null,
         },
