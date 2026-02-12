@@ -7,9 +7,9 @@ from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django_mercury import monitor
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django_mercury import monitor
 
 from courses.models import Course, CourseMembership
 
@@ -19,7 +19,7 @@ class CourseCreateAPITests(APITestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.url = reverse("course-create")
+        self.url = reverse("course-list-create")
         self.user_model = get_user_model()
 
     def _create_user(self, username: str, occupation: Optional[str] = None):

@@ -6,10 +6,10 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIRequestFactory
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from courses.models import Course, CourseMembership
-from courses.permissions import CanCreateCourse, IsCourseTeacher, IsCourseMember
+from courses.permissions import CanCreateCourse, IsCourseMember, IsCourseTeacher
 
 User = get_user_model()
 
@@ -18,7 +18,7 @@ class CanCreateCoursePermissionTests(APITestCase):
     """Test the CanCreateCourse permission with setting toggle."""
 
     def setUp(self):
-        self.url = reverse("course-create")
+        self.url = reverse("course-list-create")
 
     def _create_user(self, username: str, occupation: Optional[str] = None):
         user = User.objects.create_user(username=username, password="test-pass-123")
