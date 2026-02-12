@@ -957,3 +957,93 @@ class CourseEnrollView(CoursesAppBaseAPIView):
         )
         membership.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CourseInvitationAcceptView(CoursesAppBaseAPIView):
+    """Accept a course invitation."""
+
+    @extend_schema(
+        summary="Accept a course invitation",
+        description=(
+            "Accept a pending invitation to a course. "
+            "The requesting user must have a membership with status 'invited' for this course. "
+            "On success, the membership status is updated to 'enrolled'."
+        ),
+        tags=["Course Enrollment"],
+        responses={
+            200: OpenApiResponse(
+                description="Invitation accepted, now enrolled.",
+                response=CourseMembershipSerializer,
+            ),
+            401: OpenApiResponse(description="Authentication required."),
+            404: OpenApiResponse(description="No invitation found for this course."),
+        },
+    )
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        membership = (
+            CourseMembership.objects.filter(
+                course_id=pk, user=request.user, status="invited"
+            )
+            .select_related("user", "course")
+            .first()
+        )
+
+        if not membership:
+            return Response(
+                {"detail": "No invitation found for this course."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        membership.status = "enrolled"
+        membership.save()
+
+        logger.info(
+            "User %s accepted invitation to course %s",
+            request.user.username,
+            pk,
+        )
+
+        serializer = CourseMembershipSerializer(
+            membership, context=self.get_serializer_context()
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CourseInvitationDeclineView(CoursesAppBaseAPIView):
+    """Decline a course invitation."""
+
+    @extend_schema(
+        summary="Decline a course invitation",
+        description=(
+            "Decline a pending invitation to a course. "
+            "The requesting user must have a membership with status 'invited' for this course. "
+            "On success, the membership is deleted entirely."
+        ),
+        tags=["Course Enrollment"],
+        responses={
+            204: OpenApiResponse(description="Invitation declined."),
+            401: OpenApiResponse(description="Authentication required."),
+            404: OpenApiResponse(description="No invitation found for this course."),
+        },
+    )
+    @transaction.atomic
+    def post(self, request, pk, *args, **kwargs):
+        membership = CourseMembership.objects.filter(
+            course_id=pk, user=request.user, status="invited"
+        ).first()
+
+        if not membership:
+            return Response(
+                {"detail": "No invitation found for this course."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        logger.info(
+            "User %s declined invitation to course %s",
+            request.user.username,
+            pk,
+        )
+
+        membership.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
