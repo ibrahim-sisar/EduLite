@@ -207,6 +207,8 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     member_count = serializers.SerializerMethodField()
     is_member = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
+    user_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -221,6 +223,8 @@ class CourseListSerializer(serializers.ModelSerializer):
             "is_active",
             "member_count",
             "is_member",
+            "user_role",
+            "user_status",
             "start_date",
             "end_date",
         ]
@@ -232,12 +236,29 @@ class CourseListSerializer(serializers.ModelSerializer):
             return obj.member_count
         return obj.memberships.count()
 
+    def _get_user_membership(self, obj):
+        """Return the requesting user's membership in the course, or None."""
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return None
+        return obj.memberships.filter(user=request.user).first()
+
     def get_is_member(self, obj):
         """Return whether the requesting user is a member of this course."""
         request = self.context.get("request")
         if not request or not request.user or not request.user.is_authenticated:
             return False
         return obj.memberships.filter(user=request.user).exists()
+
+    def get_user_role(self, obj):
+        """Return the requesting user's role in the course, or null."""
+        membership = self._get_user_membership(obj)
+        return membership.role if membership else None
+
+    def get_user_status(self, obj):
+        """Return the requesting user's membership status in the course, or null."""
+        membership = self._get_user_membership(obj)
+        return membership.status if membership else None
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
