@@ -19,6 +19,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SlideshowListPage from "./pages/SlideshowListPage";
 import CourseListPage from "./pages/CourseListPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
+import CourseFormPage from "./pages/CourseFormPage";
 import SlideshowDetailPage from "./pages/SlideshowDetailPage";
 import SlideshowViewPage from "./pages/SlideshowViewPage";
 import SlideshowEditorPage from "./pages/SlideshowEditorPage";
@@ -137,10 +138,26 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "courses/new",
+        element: (
+          <ProtectedRoute>
+            <CourseFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "courses/:id",
         element: (
           <ProtectedRoute>
             <CourseDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "courses/:id/edit",
+        element: (
+          <ProtectedRoute>
+            <CourseFormPage />
           </ProtectedRoute>
         ),
       },
