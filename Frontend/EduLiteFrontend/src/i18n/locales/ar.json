@@ -491,6 +491,17 @@
       "leaveSuccess": "تمت مغادرة الدورة بنجاح",
       "lastTeacherTooltip": "أنت المعلم الوحيد — لا يمكنك مغادرة هذه الدورة",
       "networkError": "فشل تحديث التسجيل. يرجى المحاولة مرة أخرى."
+    },
+    "profile": {
+      "emptyTitle": "لا توجد دورات بعد",
+      "emptyMessage": "لم تسجل في أي دورة بعد.",
+      "browseCourses": "تصفح الدورات",
+      "viewAll": "عرض جميع الدورات",
+      "memberCount": "{{count}} أعضاء",
+      "roleTeacher": "معلم",
+      "roleStudent": "طالب",
+      "roleAssistant": "مساعد",
+      "errorLoading": "فشل تحميل الدورات"
     }
   }
 }

@@ -490,6 +490,17 @@
       "leaveSuccess": "Successfully left the course",
       "lastTeacherTooltip": "You are the only teacher — you cannot leave this course",
       "networkError": "Failed to update enrollment. Please try again."
+    },
+    "profile": {
+      "emptyTitle": "No Courses Yet",
+      "emptyMessage": "You're not enrolled in any courses yet.",
+      "browseCourses": "Browse Courses",
+      "viewAll": "View All Courses",
+      "memberCount": "{{count}} members",
+      "roleTeacher": "Teacher",
+      "roleStudent": "Student",
+      "roleAssistant": "Assistant",
+      "errorLoading": "Failed to load courses"
     }
   }
 }
