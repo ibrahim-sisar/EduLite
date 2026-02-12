@@ -298,6 +298,7 @@
       "startDateColumn": "تاريخ البدء",
       "memberCount": "{{count}} عضو",
       "memberCount_plural": "{{count}} أعضاء",
+      "enrolled": "أنت مسجل",
       "showing": "عرض {{start}}-{{end}} من {{total}}",
       "pageOf": "صفحة {{current}} من {{total}}",
       "notStarted": "غير محدد",
@@ -456,6 +457,27 @@
         "adding": "جارٍ الإضافة...",
         "saving": "جارٍ الحفظ..."
       }
+    },
+    "enrollment": {
+      "joinButton": "الانضمام للدورة",
+      "requestJoinButton": "طلب الانضمام",
+      "joining": "جارٍ الانضمام...",
+      "joinSuccess": "تم الانضمام للدورة بنجاح",
+      "joinPending": "تم إرسال طلب الانضمام وهو بانتظار الموافقة",
+      "enrollmentClosed": "التسجيل مغلق",
+      "pendingBanner": "طلب انضمامك بانتظار موافقة المعلم",
+      "cancelRequest": "إلغاء الطلب",
+      "cancelRequestSuccess": "تم إلغاء طلب الانضمام",
+      "invitedBanner": "تمت دعوتك للانضمام لهذه الدورة كـ {{role}}",
+      "acceptInvite": "قبول",
+      "declineInvite": "رفض",
+      "inviteComingSoon": "قبول ورفض الدعوات قادم قريباً",
+      "leaveButton": "مغادرة الدورة",
+      "leaveConfirmTitle": "مغادرة الدورة",
+      "leaveConfirmMessage": "هل أنت متأكد من رغبتك في مغادرة \"{{title}}\"؟ ستفقد الوصول إلى محتوى الدورة.",
+      "leaveSuccess": "تمت مغادرة الدورة بنجاح",
+      "lastTeacherTooltip": "أنت المعلم الوحيد — لا يمكنك مغادرة هذه الدورة",
+      "networkError": "فشل تحديث التسجيل. يرجى المحاولة مرة أخرى."
     }
   }
 }

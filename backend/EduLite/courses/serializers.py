@@ -206,6 +206,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     """
 
     member_count = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -219,6 +220,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             "country",
             "is_active",
             "member_count",
+            "is_member",
             "start_date",
             "end_date",
         ]
@@ -229,6 +231,13 @@ class CourseListSerializer(serializers.ModelSerializer):
         if hasattr(obj, "member_count"):
             return obj.member_count
         return obj.memberships.count()
+
+    def get_is_member(self, obj):
+        """Return whether the requesting user is a member of this course."""
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        return obj.memberships.filter(user=request.user).exists()
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
@@ -244,6 +253,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     modules = CourseModuleSerializer(source="course_modules", many=True, read_only=True)
     member_count = serializers.SerializerMethodField()
     user_role = serializers.SerializerMethodField()
+    user_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -262,6 +272,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             "is_active",
             "member_count",
             "user_role",
+            "user_status",
             "members",
             "modules",
         ]
@@ -280,15 +291,22 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             return obj.member_count
         return obj.memberships.count()
 
-    def get_user_role(self, obj):
-        """Return the requesting user's role in the course, or null."""
+    def _get_user_membership(self, obj):
+        """Return the requesting user's membership in the course, or None."""
         request = self.context.get("request")
         if not request or not request.user or not request.user.is_authenticated:
             return None
-        membership = obj.memberships.filter(user=request.user).first()
-        if membership:
-            return membership.role
-        return None
+        return obj.memberships.filter(user=request.user).first()
+
+    def get_user_role(self, obj):
+        """Return the requesting user's role in the course, or null."""
+        membership = self._get_user_membership(obj)
+        return membership.role if membership else None
+
+    def get_user_status(self, obj):
+        """Return the requesting user's membership status in the course, or null."""
+        membership = self._get_user_membership(obj)
+        return membership.status if membership else None
 
 
 class CourseChatRoomSerializer(serializers.ModelSerializer):

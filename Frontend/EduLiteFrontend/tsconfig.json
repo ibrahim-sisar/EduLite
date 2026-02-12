@@ -19,7 +19,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@choices/*": ["../../project_choices_data/*"]
     },
     "types": ["vitest/globals"]
   },

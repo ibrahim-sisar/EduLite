@@ -81,8 +81,8 @@ class CourseMembershipManageAPITests(APITestCase):
         self.assertIn("count", response.data)
         self.assertEqual(response.data["count"], 3)
 
-    def test_list_members_as_non_member(self):
-        """Non-members are denied access."""
+    def test_list_members_as_non_member_private_course(self):
+        """Non-members are denied access to private course members."""
         self.client.force_authenticate(user=self.outsider)
         response = self.client.get(self._list_url())
 
@@ -93,6 +93,54 @@ class CourseMembershipManageAPITests(APITestCase):
         response = self.client.get(self._list_url())
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_members_as_non_member_public_course(self):
+        """Non-members can list members of a public course."""
+        public_course = Course.objects.create(
+            title="Public Course",
+            outline="Visible to all.",
+            language="en",
+            country="US",
+            subject="physics",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        CourseMembership.objects.create(
+            course=public_course,
+            user=self.teacher,
+            role="teacher",
+            status="enrolled",
+        )
+        self.client.force_authenticate(user=self.outsider)
+        url = reverse("course-membership-list-invite", kwargs={"pk": public_course.pk})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("results", response.data)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_list_members_as_non_member_restricted_course(self):
+        """Non-members can list members of a restricted course."""
+        restricted_course = Course.objects.create(
+            title="Restricted Course",
+            outline="Restricted visibility.",
+            language="en",
+            country="US",
+            subject="physics",
+            visibility="restricted",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.client.force_authenticate(user=self.outsider)
+        url = reverse(
+            "course-membership-list-invite", kwargs={"pk": restricted_course.pk}
+        )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # --- Invite (POST) ---
 

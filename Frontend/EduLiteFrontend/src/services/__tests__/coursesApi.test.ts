@@ -53,9 +53,7 @@ describe("coursesApi", () => {
         ],
       };
 
-      mock
-        .onGet("http://localhost:8000/api/courses/")
-        .reply(200, mockResponse);
+      mock.onGet("http://localhost:8000/api/courses/").reply(200, mockResponse);
 
       const result = await listCourses();
       expect(result).toEqual(mockResponse);
@@ -133,6 +131,7 @@ describe("coursesApi", () => {
         is_active: true,
         member_count: 2,
         user_role: "teacher",
+        user_status: "enrolled",
         members: [
           {
             id: 1,
@@ -157,9 +156,7 @@ describe("coursesApi", () => {
         ],
       };
 
-      mock
-        .onGet("http://localhost:8000/api/courses/1/")
-        .reply(200, mockCourse);
+      mock.onGet("http://localhost:8000/api/courses/1/").reply(200, mockCourse);
 
       const result = await getCourseDetail(1);
       expect(result).toEqual(mockCourse);
@@ -246,9 +243,7 @@ describe("coursesApi", () => {
         .onPatch("http://localhost:8000/api/courses/1/")
         .reply(403, { detail: "Only teachers can update courses." });
 
-      await expect(
-        updateCourse(1, { title: "Updated" })
-      ).rejects.toThrow();
+      await expect(updateCourse(1, { title: "Updated" })).rejects.toThrow();
     });
   });
 
@@ -327,11 +322,9 @@ describe("coursesApi", () => {
     });
 
     it("should handle 409 when last teacher", async () => {
-      mock
-        .onDelete("http://localhost:8000/api/courses/1/enroll/")
-        .reply(409, {
-          detail: "Cannot leave as the last teacher in the course.",
-        });
+      mock.onDelete("http://localhost:8000/api/courses/1/enroll/").reply(409, {
+        detail: "Cannot leave as the last teacher in the course.",
+      });
 
       await expect(leaveCourse(1)).rejects.toThrow();
     });
@@ -551,9 +544,7 @@ describe("coursesApi", () => {
         .onPost("http://localhost:8000/api/courses/1/members/")
         .reply(409, { detail: "User is already a member of this course." });
 
-      await expect(
-        inviteCourseMember(1, { user: 5 })
-      ).rejects.toThrow();
+      await expect(inviteCourseMember(1, { user: 5 })).rejects.toThrow();
     });
   });
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
   useParams,
   useNavigate,
@@ -22,8 +22,6 @@ import {
   HiLanguage,
   HiMapPin,
   HiBookOpen,
-  HiArrowRightOnRectangle,
-  HiArrowLeftOnRectangle,
   HiXMark,
 } from "react-icons/hi2";
 import {
@@ -42,6 +40,9 @@ import LazySelect from "../components/common/LazySelect";
 import HardLoadSelect from "../components/common/HardLoadSelect";
 import MembersTab from "../components/courses/MembersTab";
 import ModulesTab from "../components/courses/ModulesTab";
+import EnrollmentActions from "../components/courses/EnrollmentActions";
+import { useEnrollment } from "../hooks/useEnrollment";
+import { SUBJECTS, COUNTRIES, LANGUAGES } from "../utils/choicesLookup";
 
 interface CourseFormData {
   title: string;
@@ -65,44 +66,6 @@ const VISIBILITY_ICONS: Record<string, React.ReactNode> = {
   public: <HiGlobeAlt className="w-5 h-5" />,
   restricted: <HiShieldCheck className="w-5 h-5" />,
   private: <HiLockClosed className="w-5 h-5" />,
-};
-
-// Lookup maps for human-readable labels
-const SUBJECTS: Record<string, string> = {
-  math: "Mathematics",
-  physics: "Physics",
-  chemistry: "Chemistry",
-  biology: "Biology",
-  cs: "Computer Science",
-  literature: "Literature",
-  history: "History",
-  geography: "Geography",
-  art: "Art",
-  music: "Music",
-  pe: "Physical Education",
-  economics: "Economics",
-  philosophy: "Philosophy",
-  psychology: "Psychology",
-  engineering: "Engineering",
-  medicine: "Medicine",
-  law: "Law",
-  business: "Business",
-  other: "Other",
-};
-
-const LANGUAGES: Record<string, string> = {
-  en: "English",
-  ar: "Arabic",
-  fr: "French",
-  es: "Spanish",
-  de: "German",
-  zh: "Chinese",
-  ja: "Japanese",
-  ko: "Korean",
-  pt: "Portuguese",
-  ru: "Russian",
-  hi: "Hindi",
-  tr: "Turkish",
 };
 
 const CourseDetailPage = () => {
@@ -157,11 +120,8 @@ const CourseDetailPage = () => {
   // Modal state
   const [showNavigationModal, setShowNavigationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [joining, setJoining] = useState(false);
-  const [, setLeaving] = useState(false);
 
   // Refs
   const blockerRef = useRef<ReturnType<typeof useBlocker> | null>(null);
@@ -226,9 +186,15 @@ const CourseDetailPage = () => {
     }
   }, [course]);
 
+  // Enrollment hook — refetch course detail AND members after enrollment changes
+  const refetchAfterEnrollment = useCallback(() => {
+    refetchCourse();
+    refetchMembers();
+  }, [refetchCourse, refetchMembers]);
+  const enrollment = useEnrollment(courseId, course, refetchAfterEnrollment);
+
   // Derived state
   const isTeacher = course?.user_role === "teacher";
-  const isMember = course?.user_role !== null;
   const userRole = course?.user_role;
 
   const currentUserId = useMemo(() => {
@@ -322,41 +288,6 @@ const CourseDetailPage = () => {
     }
   };
 
-  const handleJoin = async () => {
-    if (!course) return;
-    setJoining(true);
-    try {
-      const membership = await coursesApi.enrollInCourse(course.id);
-      if (membership.status === "pending") {
-        toast.success(t("course.detail.joinPending"));
-      } else {
-        toast.success(t("course.detail.joinSuccess"));
-      }
-      refetchCourse();
-      refetchMembers();
-    } catch {
-      toast.error(t("course.detail.joinError"));
-    } finally {
-      setJoining(false);
-    }
-  };
-
-  const handleLeave = async () => {
-    if (!course) return;
-    setLeaving(true);
-    try {
-      await coursesApi.leaveCourse(course.id);
-      toast.success(t("course.detail.leaveSuccess"));
-      refetchCourse();
-      refetchMembers();
-    } catch {
-      toast.error(t("course.detail.leaveError"));
-    } finally {
-      setLeaving(false);
-      setShowLeaveModal(false);
-    }
-  };
-
   const setTab = (tab: string) => {
     setSearchParams({ tab });
   };
@@ -429,12 +360,6 @@ const CourseDetailPage = () => {
       </div>
     );
   }
-
-  // Determine join button visibility
-  const canJoin =
-    !isMember &&
-    (course.visibility === "public" ||
-      (course.visibility === "restricted" && course.allow_join_requests));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
@@ -606,7 +531,9 @@ const CourseDetailPage = () => {
                       {t("course.detail.country")}
                     </div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {course.country || t("course.detail.notSet")}
+                      {COUNTRIES[course.country || ""] ||
+                        course.country ||
+                        t("course.detail.notSet")}
                     </div>
                   </div>
                 </div>
@@ -879,29 +806,9 @@ const CourseDetailPage = () => {
                 </button>
               )}
 
-              {/* Join button */}
-              {canJoin && (
-                <button
-                  onClick={handleJoin}
-                  disabled={joining}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <HiArrowRightOnRectangle className="w-5 h-5" />
-                  {course.visibility === "restricted"
-                    ? t("course.detail.requestJoinButton")
-                    : t("course.detail.joinButton")}
-                </button>
-              )}
-
-              {/* Leave button (non-teacher members) */}
-              {isMember && !isTeacher && !isEditing && (
-                <button
-                  onClick={() => setShowLeaveModal(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 rounded-lg font-medium transition-all cursor-pointer"
-                >
-                  <HiArrowLeftOnRectangle className="w-5 h-5" />
-                  {t("course.detail.leaveButton")}
-                </button>
+              {/* Enrollment actions (join/leave/pending/invited) */}
+              {!isEditing && (
+                <EnrollmentActions course={course} enrollment={enrollment} />
               )}
             </div>
           </div>
@@ -985,19 +892,6 @@ const CourseDetailPage = () => {
             ? t("course.detail.deleting")
             : t("course.detail.deleteButton")
         }
-        cancelText={t("common.cancel")}
-        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
-      />
-
-      <ConfirmationModal
-        isOpen={showLeaveModal}
-        onClose={() => setShowLeaveModal(false)}
-        onConfirm={handleLeave}
-        title={t("course.detail.leaveConfirmTitle")}
-        message={t("course.detail.leaveConfirmMessage", {
-          title: course.title,
-        })}
-        confirmText={t("course.detail.leaveButton")}
         cancelText={t("common.cancel")}
         confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
       />

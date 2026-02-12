@@ -53,6 +53,7 @@ export interface CourseListItem {
   country: string | null;
   is_active: boolean;
   member_count: number;
+  is_member: boolean;
   start_date: string | null; // ISO date string
   end_date: string | null; // ISO date string
 }
@@ -103,6 +104,7 @@ export interface CourseDetail {
   is_active: boolean;
   member_count: number;
   user_role: CourseRole | null; // null if not a member
+  user_status: CourseMembershipStatus | null; // null if not a member
   members: CourseMembership[];
   modules: CourseModule[];
 }

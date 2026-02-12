@@ -77,13 +77,54 @@ class CourseDetailAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["user_role"], "student")
 
-    def test_non_member_cannot_retrieve_course(self):
-        """A non-member cannot retrieve course details."""
+    def test_non_member_cannot_retrieve_private_course(self):
+        """A non-member cannot retrieve private course details."""
         self.client.force_authenticate(user=self.outsider)
 
         response = self.client.get(self._detail_url(self.course))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_non_member_can_retrieve_public_course(self):
+        """A non-member can retrieve public course details (to see join button)."""
+        public_course = Course.objects.create(
+            title="Public Course",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        CourseMembership.objects.create(
+            course=public_course, user=self.teacher, role="teacher", status="enrolled"
+        )
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.get(self._detail_url(public_course))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Public Course")
+        self.assertIsNone(response.data["user_role"])
+
+    def test_non_member_can_retrieve_restricted_course(self):
+        """A non-member can retrieve restricted course details (to see request-to-join)."""
+        restricted_course = Course.objects.create(
+            title="Restricted Course",
+            visibility="restricted",
+            allow_join_requests=True,
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        CourseMembership.objects.create(
+            course=restricted_course,
+            user=self.teacher,
+            role="teacher",
+            status="enrolled",
+        )
+        self.client.force_authenticate(user=self.outsider)
+
+        response = self.client.get(self._detail_url(restricted_course))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Restricted Course")
 
     def test_unauthenticated_cannot_retrieve_course(self):
         """Unauthenticated users cannot retrieve course details."""

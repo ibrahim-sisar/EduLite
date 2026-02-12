@@ -231,7 +231,9 @@ class CourseListCreateView(CoursesAppBaseAPIView):
 class CourseDetailView(CoursesAppBaseAPIView):
     """Retrieve, update, or delete a single course."""
 
-    permission_classes = [IsCourseMember]
+    # GET handles visibility checks manually (public/restricted courses
+    # must be viewable by non-members so they can join).
+    # PATCH/DELETE already check IsCourseTeacher internally.
 
     def get_object(self, pk):
         return get_object_or_404(
@@ -260,6 +262,15 @@ class CourseDetailView(CoursesAppBaseAPIView):
     )
     def get(self, request, pk, *args, **kwargs):
         course = self.get_object(pk)
+
+        # Private courses require membership to view
+        if course.visibility == "private":
+            is_member = course.memberships.filter(user=request.user).exists()
+            if not is_member:
+                raise exceptions.PermissionDenied(
+                    "You don't have permission to view this course."
+                )
+
         serializer = CourseDetailSerializer(
             course, context=self.get_serializer_context()
         )
@@ -343,7 +354,9 @@ class CourseDetailView(CoursesAppBaseAPIView):
 class CourseModuleListCreateView(CoursesAppBaseAPIView):
     """List and create modules for a course."""
 
-    permission_classes = [IsCourseMember]
+    # GET handles visibility checks manually (public/restricted courses
+    # must be viewable by non-members so they can see course content).
+    # POST already checks IsCourseTeacher internally.
 
     def get_queryset(self, course_id):
         return (
@@ -370,7 +383,16 @@ class CourseModuleListCreateView(CoursesAppBaseAPIView):
         },
     )
     def get(self, request, pk, *args, **kwargs):
-        get_object_or_404(Course, pk=pk)
+        course = get_object_or_404(Course, pk=pk)
+
+        # Private courses require membership to view modules
+        if course.visibility == "private":
+            is_member = course.memberships.filter(user=request.user).exists()
+            if not is_member:
+                raise exceptions.PermissionDenied(
+                    "You don't have permission to view this course's modules."
+                )
+
         modules = self.get_queryset(pk)
         serializer = CourseModuleSerializer(
             modules, many=True, context=self.get_serializer_context()
@@ -454,7 +476,9 @@ class CourseModuleListCreateView(CoursesAppBaseAPIView):
 class CourseModuleDetailView(CoursesAppBaseAPIView):
     """Retrieve, update, or delete a single course module."""
 
-    permission_classes = [IsCourseMember]
+    # GET handles visibility checks manually (public/restricted courses
+    # must be viewable by non-members).
+    # PATCH/DELETE already check IsCourseTeacher internally.
 
     def get_object(self, pk, module_id):
         return get_object_or_404(
@@ -478,6 +502,15 @@ class CourseModuleDetailView(CoursesAppBaseAPIView):
     )
     def get(self, request, pk, module_id, *args, **kwargs):
         module = self.get_object(pk, module_id)
+
+        # Private courses require membership to view modules
+        if module.course.visibility == "private":
+            is_member = module.course.memberships.filter(user=request.user).exists()
+            if not is_member:
+                raise exceptions.PermissionDenied(
+                    "You don't have permission to view this course's modules."
+                )
+
         serializer = CourseModuleSerializer(
             module, context=self.get_serializer_context()
         )
@@ -559,7 +592,9 @@ class CourseModuleDetailView(CoursesAppBaseAPIView):
 class CourseMembershipListInviteView(CoursesAppBaseAPIView):
     """List course members and invite new users."""
 
-    permission_classes = [IsCourseMember]
+    # GET handles visibility checks manually (public/restricted courses
+    # must be viewable by non-members so they can see who's in the course).
+    # POST already checks IsCourseTeacher internally.
 
     @extend_schema(
         summary="List course members",
@@ -579,7 +614,16 @@ class CourseMembershipListInviteView(CoursesAppBaseAPIView):
         },
     )
     def get(self, request, pk, *args, **kwargs):
-        get_object_or_404(Course, pk=pk)
+        course = get_object_or_404(Course, pk=pk)
+
+        # Private courses require membership to view members
+        if course.visibility == "private":
+            is_member = course.memberships.filter(user=request.user).exists()
+            if not is_member:
+                raise exceptions.PermissionDenied(
+                    "You don't have permission to view this course's members."
+                )
+
         memberships = (
             CourseMembership.objects.filter(course_id=pk)
             .select_related("user", "course")
@@ -676,7 +720,7 @@ class CourseMembershipListInviteView(CoursesAppBaseAPIView):
 class CourseMembershipDetailView(CoursesAppBaseAPIView):
     """Approve, deny, change role, or remove a course membership."""
 
-    permission_classes = [IsCourseMember]
+    # PATCH/DELETE already check IsCourseTeacher internally.
 
     def get_object(self, pk, membership_id):
         return get_object_or_404(
