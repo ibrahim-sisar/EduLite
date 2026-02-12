@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -15,6 +15,8 @@ import {
   HiUser,
   HiFilter,
   HiX,
+  HiChevronDown,
+  HiCheck,
 } from "react-icons/hi";
 import { useCourses } from "../hooks/useCourses";
 import { enrollInCourse, leaveCourse } from "../services/coursesApi";
@@ -115,9 +117,7 @@ interface CourseListPageProps {
   view?: "me" | "public";
 }
 
-const CourseListPage: React.FC<CourseListPageProps> = ({
-  view: propView,
-}) => {
+const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -130,7 +130,33 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
   const [filterVisibility, setFilterVisibility] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
+  const visibilityDropdownRef = useRef<HTMLDivElement>(null);
   const pageSize = 20;
+
+  const visibilityOptions = [
+    { value: "", label: t("course.list.filterVisibility") },
+    { value: "public", label: t("course.list.visibilityPublic") },
+    { value: "restricted", label: t("course.list.visibilityRestricted") },
+    { value: "private", label: t("course.list.visibilityPrivate") },
+  ];
+
+  // Close visibility dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        visibilityDropdownRef.current &&
+        !visibilityDropdownRef.current.contains(event.target as Node)
+      ) {
+        setVisibilityDropdownOpen(false);
+      }
+    };
+    if (visibilityDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [visibilityDropdownOpen]);
 
   // Build params for the hook
   const params = useMemo<CourseListParams>(() => {
@@ -148,7 +174,14 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
     if (filterLanguage) p.language = filterLanguage;
     if (filterCountry) p.country = filterCountry;
     return p;
-  }, [currentView, currentPage, filterSubject, filterLanguage, filterCountry, filterVisibility]);
+  }, [
+    currentView,
+    currentPage,
+    filterSubject,
+    filterLanguage,
+    filterCountry,
+    filterVisibility,
+  ]);
 
   const { courses, loading, error, refetch } = useCourses(params);
 
@@ -159,13 +192,13 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
     y: 0,
   });
   const [selectedCourse, setSelectedCourse] = useState<CourseListItem | null>(
-    null
+    null,
   );
 
   // Leave confirmation modal state
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [courseToLeave, setCourseToLeave] = useState<CourseListItem | null>(
-    null
+    null,
   );
 
   // Redirect from /courses to /courses/me or /courses/public based on localStorage
@@ -187,9 +220,16 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
   // Reset page when filters or view change
   useEffect(() => {
     setCurrentPage(1);
-  }, [currentView, filterSubject, filterLanguage, filterCountry, filterVisibility]);
+  }, [
+    currentView,
+    filterSubject,
+    filterLanguage,
+    filterCountry,
+    filterVisibility,
+  ]);
 
-  const hasActiveFilters = filterSubject || filterLanguage || filterCountry || filterVisibility;
+  const hasActiveFilters =
+    filterSubject || filterLanguage || filterCountry || filterVisibility;
 
   const clearFilters = () => {
     setFilterSubject("");
@@ -199,7 +239,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
   };
 
   const handleFilterChange = (
-    setter: React.Dispatch<React.SetStateAction<string>>
+    setter: React.Dispatch<React.SetStateAction<string>>,
   ) => {
     return (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
       setter(e.target.value);
@@ -214,10 +254,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
     navigate("/courses/new");
   };
 
-  const handleContextMenu = (
-    e: React.MouseEvent,
-    course: CourseListItem
-  ) => {
+  const handleContextMenu = (e: React.MouseEvent, course: CourseListItem) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedCourse(course);
@@ -225,10 +262,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
     setContextMenuOpen(true);
   };
 
-  const handleDotsClick = (
-    e: React.MouseEvent,
-    course: CourseListItem
-  ) => {
+  const handleDotsClick = (e: React.MouseEvent, course: CourseListItem) => {
     e.stopPropagation();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setSelectedCourse(course);
@@ -415,7 +449,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mb-6 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-2xl p-4 sm:p-6">
+          <div className="mb-6 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-2xl p-4 sm:p-6 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <LazySelect
                 label={t("course.list.filterSubject")}
@@ -449,17 +483,60 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t("course.list.filterVisibility")}
                   </label>
-                  <select
-                    name="visibility"
-                    value={filterVisibility}
-                    onChange={(e) => setFilterVisibility(e.target.value)}
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 cursor-pointer"
-                  >
-                    <option value="">{t("course.list.filterVisibility")}</option>
-                    <option value="public">{t("course.list.visibilityPublic")}</option>
-                    <option value="restricted">{t("course.list.visibilityRestricted")}</option>
-                    <option value="private">{t("course.list.visibilityPrivate")}</option>
-                  </select>
+                  <div className="relative" ref={visibilityDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibilityDropdownOpen(!visibilityDropdownOpen)
+                      }
+                      className="w-full px-4 py-3 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 font-medium text-left"
+                    >
+                      <span
+                        className={
+                          filterVisibility
+                            ? ""
+                            : "text-gray-500 dark:text-gray-400"
+                        }
+                      >
+                        {visibilityOptions.find(
+                          (o) => o.value === filterVisibility,
+                        )?.label || t("course.list.filterVisibility")}
+                      </span>
+                      <HiChevronDown
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                          visibilityDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {visibilityDropdownOpen && (
+                      <div className="absolute z-50 mt-2 w-full">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                          {visibilityOptions.map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              onClick={() => {
+                                setFilterVisibility(option.value);
+                                setVisibilityDropdownOpen(false);
+                              }}
+                              className={`w-full px-4 py-3 text-left flex items-center justify-between transition-colors duration-150 text-gray-700 dark:text-gray-200 cursor-pointer ${
+                                filterVisibility === option.value
+                                  ? "bg-blue-500 text-white hover:bg-blue-600"
+                                  : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                              }`}
+                            >
+                              <span className="font-medium">
+                                {option.label}
+                              </span>
+                              {filterVisibility === option.value && (
+                                <HiCheck className="text-white text-lg" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -469,7 +546,9 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
         {/* Error State */}
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-2xl p-6 text-center mb-6">
-            <p className="text-red-600 dark:text-red-400">{t("course.list.errorLoading")}</p>
+            <p className="text-red-600 dark:text-red-400">
+              {t("course.list.errorLoading")}
+            </p>
           </div>
         )}
 
@@ -580,8 +659,8 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
                             course.visibility === "public"
                               ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700/50"
                               : course.visibility === "restricted"
-                              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700/50"
-                              : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700/50"
+                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700/50"
+                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700/50"
                           }`}
                         >
                           {getVisibilityLabel(course.visibility)}
@@ -637,8 +716,8 @@ const CourseListPage: React.FC<CourseListPageProps> = ({
                             course.visibility === "public"
                               ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700/50"
                               : course.visibility === "restricted"
-                              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700/50"
-                              : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700/50"
+                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700/50"
+                                : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700/50"
                           }`}
                         >
                           {getVisibilityLabel(course.visibility)}
