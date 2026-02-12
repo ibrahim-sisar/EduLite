@@ -455,6 +455,27 @@
         "adding": "Adding...",
         "saving": "Saving..."
       }
+    },
+    "enrollment": {
+      "joinButton": "Join Course",
+      "requestJoinButton": "Request to Join",
+      "joining": "Joining...",
+      "joinSuccess": "Successfully joined the course",
+      "joinPending": "Your join request has been submitted and is pending approval",
+      "enrollmentClosed": "Enrollment Closed",
+      "pendingBanner": "Your join request is pending approval by a teacher",
+      "cancelRequest": "Cancel Request",
+      "cancelRequestSuccess": "Join request cancelled",
+      "invitedBanner": "You've been invited to join this course as {{role}}",
+      "acceptInvite": "Accept",
+      "declineInvite": "Decline",
+      "inviteComingSoon": "Accepting and declining invitations is coming soon",
+      "leaveButton": "Leave Course",
+      "leaveConfirmTitle": "Leave Course",
+      "leaveConfirmMessage": "Are you sure you want to leave \"{{title}}\"? You will lose access to course content.",
+      "leaveSuccess": "Successfully left the course",
+      "lastTeacherTooltip": "You are the only teacher — you cannot leave this course",
+      "networkError": "Failed to update enrollment. Please try again."
     }
   }
 }

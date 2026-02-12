@@ -120,6 +120,7 @@ const mockCourseDetail: CourseDetail = {
   is_active: true,
   member_count: 25,
   user_role: "teacher",
+  user_status: "enrolled" as const,
   members: [mockMember1, mockMember2, mockMember3],
   modules: [mockModule1, mockModule2],
 };
@@ -127,11 +128,13 @@ const mockCourseDetail: CourseDetail = {
 const mockCourseAsStudent: CourseDetail = {
   ...mockCourseDetail,
   user_role: "student",
+  user_status: "enrolled",
 };
 
 const mockCourseNotEnrolled: CourseDetail = {
   ...mockCourseDetail,
   user_role: null,
+  user_status: null,
 };
 
 const mockMembersResponse: CoursePaginatedResponse<CourseMembership> = {

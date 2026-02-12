@@ -22,6 +22,7 @@ describe("useCourseDetail", () => {
     is_active: true,
     member_count: 2,
     user_role: "teacher",
+    user_status: "enrolled",
     members: [
       {
         id: 1,
@@ -137,10 +138,9 @@ describe("useCourseDetail", () => {
       .mockResolvedValueOnce(mockCourse)
       .mockResolvedValueOnce(course2);
 
-    const { result, rerender } = renderHook(
-      ({ id }) => useCourseDetail(id),
-      { initialProps: { id: 1 } },
-    );
+    const { result, rerender } = renderHook(({ id }) => useCourseDetail(id), {
+      initialProps: { id: 1 },
+    });
 
     await waitFor(() => {
       expect(result.current.course?.title).toBe("Test Course");

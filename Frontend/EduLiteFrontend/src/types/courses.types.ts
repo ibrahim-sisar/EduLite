@@ -103,6 +103,7 @@ export interface CourseDetail {
   is_active: boolean;
   member_count: number;
   user_role: CourseRole | null; // null if not a member
+  user_status: CourseMembershipStatus | null; // null if not a member
   members: CourseMembership[];
   modules: CourseModule[];
 }

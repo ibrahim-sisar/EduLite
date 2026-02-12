@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from chat.models import ChatRoom
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 
-from chat.models import ChatRoom
 from ...models import Course, CourseMembership, CourseModule
 from ...serializers import CourseDetailSerializer
 
@@ -85,6 +85,7 @@ class CourseDetailSerializerTest(TestCase):
             "is_active",
             "member_count",
             "user_role",
+            "user_status",
             "members",
             "modules",
         }
@@ -153,3 +154,48 @@ class CourseDetailSerializerTest(TestCase):
         """Test that user_role returns null for an anonymous user."""
         serializer = CourseDetailSerializer(self.course, context=self._get_context())
         self.assertIsNone(serializer.data["user_role"])
+
+    def test_detail_serializer_user_status_enrolled(self):
+        """Test that user_status returns 'enrolled' for an enrolled member."""
+        serializer = CourseDetailSerializer(
+            self.course, context=self._get_context(self.teacher)
+        )
+        self.assertEqual(serializer.data["user_status"], "enrolled")
+
+    def test_detail_serializer_user_status_pending(self):
+        """Test that user_status returns 'pending' for a pending member."""
+        pending_user = User.objects.create_user(
+            username="pending1", password="pass12345", email="pending1@example.com"
+        )
+        CourseMembership.objects.create(
+            user=pending_user, course=self.course, role="student", status="pending"
+        )
+        serializer = CourseDetailSerializer(
+            self.course, context=self._get_context(pending_user)
+        )
+        self.assertEqual(serializer.data["user_status"], "pending")
+
+    def test_detail_serializer_user_status_invited(self):
+        """Test that user_status returns 'invited' for an invited member."""
+        invited_user = User.objects.create_user(
+            username="invited1", password="pass12345", email="invited1@example.com"
+        )
+        CourseMembership.objects.create(
+            user=invited_user, course=self.course, role="student", status="invited"
+        )
+        serializer = CourseDetailSerializer(
+            self.course, context=self._get_context(invited_user)
+        )
+        self.assertEqual(serializer.data["user_status"], "invited")
+
+    def test_detail_serializer_user_status_null_for_non_member(self):
+        """Test that user_status returns null for a user not in the course."""
+        serializer = CourseDetailSerializer(
+            self.course, context=self._get_context(self.outsider)
+        )
+        self.assertIsNone(serializer.data["user_status"])
+
+    def test_detail_serializer_user_status_null_for_anonymous(self):
+        """Test that user_status returns null for an anonymous user."""
+        serializer = CourseDetailSerializer(self.course, context=self._get_context())
+        self.assertIsNone(serializer.data["user_status"])
