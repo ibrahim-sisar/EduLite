@@ -298,6 +298,7 @@
       "startDateColumn": "تاريخ البدء",
       "memberCount": "{{count}} عضو",
       "memberCount_plural": "{{count}} أعضاء",
+      "enrolled": "أنت مسجل",
       "showing": "عرض {{start}}-{{end}} من {{total}}",
       "pageOf": "صفحة {{current}} من {{total}}",
       "notStarted": "غير محدد",

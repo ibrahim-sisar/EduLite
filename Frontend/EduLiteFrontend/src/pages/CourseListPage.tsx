@@ -17,6 +17,7 @@ import {
   HiX,
   HiChevronDown,
   HiCheck,
+  HiStar,
 } from "react-icons/hi";
 import { useCourses } from "../hooks/useCourses";
 import { enrollInCourse, leaveCourse } from "../services/coursesApi";
@@ -558,6 +559,10 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         index !== courseList.length - 1
                           ? "border-b border-gray-200/30 dark:border-gray-700/20"
                           : ""
+                      } ${
+                        course.is_member
+                          ? "border-l-3 border-l-green-500 dark:border-l-green-400"
+                          : ""
                       }`}
                     >
                       <td className="px-6 py-4">
@@ -592,9 +597,17 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                        {t("course.list.memberCount", {
-                          count: course.member_count,
-                        })}
+                        <span className="inline-flex items-center gap-1.5">
+                          {t("course.list.memberCount", {
+                            count: course.member_count,
+                          })}
+                          {course.is_member && (
+                            <HiStar
+                              className="text-yellow-500 text-sm"
+                              title={t("course.list.enrolled")}
+                            />
+                          )}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
                         {formatDate(course.start_date)}
@@ -623,6 +636,10 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                   onContextMenu={(e) => handleContextMenu(e, course)}
                   className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 ${
                     !course.is_active ? "opacity-50" : ""
+                  } ${
+                    course.is_member
+                      ? "border-l-3 border-l-green-500 dark:border-l-green-400"
+                      : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -650,10 +667,16 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {getSubjectName(course.subject)}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 inline-flex items-center gap-1">
                           {t("course.list.memberCount", {
                             count: course.member_count,
                           })}
+                          {course.is_member && (
+                            <HiStar
+                              className="text-yellow-500"
+                              title={t("course.list.enrolled")}
+                            />
+                          )}
                         </span>
                       </div>
                     </div>

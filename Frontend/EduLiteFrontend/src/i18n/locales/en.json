@@ -297,6 +297,7 @@
       "startDateColumn": "Start Date",
       "memberCount": "{{count}} member",
       "memberCount_plural": "{{count}} members",
+      "enrolled": "You are enrolled",
       "showing": "Showing {{start}}-{{end}} of {{total}}",
       "pageOf": "Page {{current}} of {{total}}",
       "notStarted": "Not set",
