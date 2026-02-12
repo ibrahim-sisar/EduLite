@@ -17,7 +17,6 @@ import {
   HiX,
   HiChevronDown,
   HiCheck,
-  HiStar,
   HiCheckCircle,
   HiBan,
 } from "react-icons/hi";
@@ -722,12 +721,6 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                             {t("course.list.memberCount", {
                               count: course.member_count,
                             })}
-                            {course.is_member && (
-                              <HiStar
-                                className="text-yellow-500 text-sm"
-                                title={t("course.list.enrolled")}
-                              />
-                            )}
                           </span>
                           {getStatusBadge(course)}
                         </div>
@@ -794,12 +787,6 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                           {t("course.list.memberCount", {
                             count: course.member_count,
                           })}
-                          {course.is_member && (
-                            <HiStar
-                              className="text-yellow-500"
-                              title={t("course.list.enrolled")}
-                            />
-                          )}
                         </span>
                         {getStatusBadge(course)}
                       </div>
