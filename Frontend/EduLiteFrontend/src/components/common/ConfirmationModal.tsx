@@ -1,6 +1,7 @@
-import React from 'react';
-import { HiX } from 'react-icons/hi';
-import { HiExclamationTriangle } from 'react-icons/hi2';
+import React from "react";
+import { createPortal } from "react-dom";
+import { HiX } from "react-icons/hi";
+import { HiExclamationTriangle } from "react-icons/hi2";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -23,11 +24,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   confirmButtonClass = "bg-red-600 hover:bg-red-700 text-white",
-  icon = <HiExclamationTriangle className="w-12 h-12 text-red-600 dark:text-red-400" />
+  icon = (
+    <HiExclamationTriangle className="w-12 h-12 text-red-600 dark:text-red-400" />
+  ),
 }) => {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
@@ -49,9 +52,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {/* Content */}
         <div className="p-6">
           {/* Icon */}
-          <div className="flex justify-center mb-4">
-            {icon}
-          </div>
+          <div className="flex justify-center mb-4">{icon}</div>
 
           {/* Title */}
           <h3 className="text-xl font-semibold text-center text-gray-900 dark:text-gray-100 mb-2">
@@ -83,7 +84,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
