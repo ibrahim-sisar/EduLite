@@ -3,6 +3,8 @@ from django.urls import path
 from .views import (
     CourseDetailView,
     CourseEnrollView,
+    CourseInvitationAcceptView,
+    CourseInvitationDeclineView,
     CourseListCreateView,
     CourseMembershipDetailView,
     CourseMembershipListInviteView,
@@ -37,5 +39,15 @@ urlpatterns = [
         "courses/<int:pk>/enroll/",
         CourseEnrollView.as_view(),
         name="course-enroll",
+    ),
+    path(
+        "courses/<int:pk>/enroll/accept/",
+        CourseInvitationAcceptView.as_view(),
+        name="course-enroll-accept",
+    ),
+    path(
+        "courses/<int:pk>/enroll/decline/",
+        CourseInvitationDeclineView.as_view(),
+        name="course-enroll-decline",
     ),
 ]
