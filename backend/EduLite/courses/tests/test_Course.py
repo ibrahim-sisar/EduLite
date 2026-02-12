@@ -2,16 +2,18 @@
 # Unit tests for the Course model
 
 from datetime import datetime, timedelta
-from django.test import TestCase
-from django.core.exceptions import ValidationError
 
-from ..models import Course
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+
 from ..model_choices import (
+    COUNTRY_CHOICES,
     COURSE_VISIBILITY_CHOICES,
     LANGUAGE_CHOICES,
-    COUNTRY_CHOICES,
     SUBJECT_CHOICES,
 )
+from ..models import Course, CourseMembership
 
 
 class CourseModelTest(TestCase):
@@ -150,3 +152,96 @@ class CourseModelTest(TestCase):
         self.assertEqual(self.course1.language, LANGUAGE_CHOICES[0][0])
         self.assertEqual(self.course1.country, COUNTRY_CHOICES[0][0])
         self.assertEqual(self.course1.subject, SUBJECT_CHOICES[0][0])
+
+
+User = get_user_model()
+
+
+class CourseIsLastTeacherTest(TestCase):
+    """Test the Course.is_last_teacher() method."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher1 = User.objects.create_user(username="teacher1", password="pass")
+        cls.teacher2 = User.objects.create_user(username="teacher2", password="pass")
+        cls.student = User.objects.create_user(username="student1", password="pass")
+        cls.course = Course.objects.create(
+            title="Test Course",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+
+    def test_is_last_teacher_true(self):
+        """A sole enrolled teacher is the last teacher."""
+        CourseMembership.objects.create(
+            course=self.course, user=self.teacher1, role="teacher", status="enrolled"
+        )
+        self.assertTrue(self.course.is_last_teacher(self.teacher1))
+        CourseMembership.objects.filter(course=self.course).delete()
+
+    def test_is_last_teacher_false_with_multiple(self):
+        """With two enrolled teachers, neither is the last teacher."""
+        CourseMembership.objects.create(
+            course=self.course, user=self.teacher1, role="teacher", status="enrolled"
+        )
+        CourseMembership.objects.create(
+            course=self.course, user=self.teacher2, role="teacher", status="enrolled"
+        )
+        self.assertFalse(self.course.is_last_teacher(self.teacher1))
+        self.assertFalse(self.course.is_last_teacher(self.teacher2))
+        CourseMembership.objects.filter(course=self.course).delete()
+
+    def test_is_last_teacher_false_for_non_teacher(self):
+        """A student is never the last teacher."""
+        CourseMembership.objects.create(
+            course=self.course, user=self.student, role="student", status="enrolled"
+        )
+        self.assertFalse(self.course.is_last_teacher(self.student))
+        CourseMembership.objects.filter(course=self.course).delete()
+
+
+class CourseGetEnrollmentStatusTest(TestCase):
+    """Test the Course.get_enrollment_status() method."""
+
+    def test_public_returns_enrolled(self):
+        """A public course returns 'enrolled'."""
+        course = Course.objects.create(
+            title="Public",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.assertEqual(course.get_enrollment_status(), "enrolled")
+
+    def test_restricted_open_returns_pending(self):
+        """A restricted course with allow_join_requests returns 'pending'."""
+        course = Course.objects.create(
+            title="Restricted Open",
+            visibility="restricted",
+            allow_join_requests=True,
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.assertEqual(course.get_enrollment_status(), "pending")
+
+    def test_restricted_closed_returns_none(self):
+        """A restricted course without allow_join_requests returns None."""
+        course = Course.objects.create(
+            title="Restricted Closed",
+            visibility="restricted",
+            allow_join_requests=False,
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.assertIsNone(course.get_enrollment_status())
+
+    def test_private_returns_none(self):
+        """A private course returns None."""
+        course = Course.objects.create(
+            title="Private",
+            visibility="private",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.assertIsNone(course.get_enrollment_status())

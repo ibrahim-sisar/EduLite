@@ -16,6 +16,7 @@ from rest_framework import exceptions, permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .model_choices import COURSE_ROLE_CHOICES
 from .models import Course, CourseMembership, CourseModule
 from .pagination import CoursePagination
 from .permissions import CanCreateCourse, IsCourseMember, IsCourseTeacher
@@ -646,6 +647,13 @@ class CourseMembershipListInviteView(CoursesAppBaseAPIView):
             )
 
         role = request.data.get("role", "student")
+        valid_roles = [choice[0] for choice in COURSE_ROLE_CHOICES]
+        if role not in valid_roles:
+            return Response(
+                {"role": [f"Invalid role. Must be one of: {', '.join(valid_roles)}"]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         membership = CourseMembership.objects.create(
             course=course,
             user=user,
@@ -675,18 +683,6 @@ class CourseMembershipDetailView(CoursesAppBaseAPIView):
             CourseMembership.objects.select_related("user", "course"),
             pk=membership_id,
             course_id=pk,
-        )
-
-    def _is_last_teacher(self, membership):
-        """Check if this membership is the only enrolled teacher in the course."""
-        if membership.role != "teacher":
-            return False
-        return (
-            not CourseMembership.objects.filter(
-                course=membership.course, role="teacher", status="enrolled"
-            )
-            .exclude(pk=membership.pk)
-            .exists()
         )
 
     @extend_schema(
@@ -751,7 +747,7 @@ class CourseMembershipDetailView(CoursesAppBaseAPIView):
             new_role
             and new_role != "teacher"
             and membership.role == "teacher"
-            and self._is_last_teacher(membership)
+            and membership.course.is_last_teacher(membership.user)
         ):
             return Response(
                 {"detail": "Cannot demote the last teacher in the course."},
@@ -798,7 +794,7 @@ class CourseMembershipDetailView(CoursesAppBaseAPIView):
 
         membership = self.get_object(pk, membership_id)
 
-        if self._is_last_teacher(membership):
+        if membership.course.is_last_teacher(membership.user):
             return Response(
                 {"detail": "Cannot remove the last teacher in the course."},
                 status=status.HTTP_409_CONFLICT,
@@ -851,11 +847,8 @@ class CourseEnrollView(CoursesAppBaseAPIView):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        if course.visibility == "public":
-            membership_status = "enrolled"
-        elif course.visibility == "restricted" and course.allow_join_requests:
-            membership_status = "pending"
-        else:
+        membership_status = course.get_enrollment_status()
+        if membership_status is None:
             return Response(
                 {"detail": "This course does not allow joining."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -907,14 +900,7 @@ class CourseEnrollView(CoursesAppBaseAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if (
-            membership.role == "teacher"
-            and not CourseMembership.objects.filter(
-                course_id=pk, role="teacher", status="enrolled"
-            )
-            .exclude(pk=membership.pk)
-            .exists()
-        ):
+        if membership.course.is_last_teacher(request.user):
             return Response(
                 {"detail": "Cannot leave as the last teacher in the course."},
                 status=status.HTTP_409_CONFLICT,

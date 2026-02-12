@@ -2,20 +2,21 @@
 # Contains course models, course modules, course membership models, course chatrooms
 
 from datetime import datetime
-from django.db import models
+
+from chat.models import ChatRoom
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.db import models
 
-from chat.models import ChatRoom
 from .model_choices import (
     COUNTRY_CHOICES,
+    COURSE_MEMBERSHIP_STATUS,
+    COURSE_ROLE_CHOICES,
+    COURSE_VISIBILITY_CHOICES,
     LANGUAGE_CHOICES,
     SUBJECT_CHOICES,
-    COURSE_VISIBILITY_CHOICES,
-    COURSE_ROLE_CHOICES,
-    COURSE_MEMBERSHIP_STATUS,
 )
 
 User = get_user_model()
@@ -78,6 +79,28 @@ class Course(models.Model):
         # Title should not be all spaces
         if not self.title.strip():
             raise ValidationError("Title cannot be all spaces")
+
+    def is_last_teacher(self, user):
+        """Check if user is the only enrolled teacher in this course."""
+        if not CourseMembership.objects.filter(
+            course=self, user=user, role="teacher", status="enrolled"
+        ).exists():
+            return False
+        return not (
+            CourseMembership.objects.filter(
+                course=self, role="teacher", status="enrolled"
+            )
+            .exclude(user=user)
+            .exists()
+        )
+
+    def get_enrollment_status(self):
+        """Return the membership status a new joiner would get, or None if not allowed."""
+        if self.visibility == "public":
+            return "enrolled"
+        if self.visibility == "restricted" and self.allow_join_requests:
+            return "pending"
+        return None
 
     def __str__(self) -> str:
         return self.title

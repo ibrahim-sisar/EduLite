@@ -131,6 +131,16 @@ class CourseMembershipManageAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_invite_invalid_role(self):
+        """Inviting with an invalid role returns 400."""
+        self.client.force_authenticate(user=self.teacher)
+        payload = {"user": self.invite_target.pk, "role": "admin"}
+
+        response = self.client.post(self._list_url(), payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("role", response.data)
+
     # --- Approve (PATCH) ---
 
     def test_approve_pending_member(self):
