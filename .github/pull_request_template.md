@@ -10,7 +10,7 @@ Closes #
 
 **PRs that don't complete this checklist will be sent back. We value consistency for accessibility and rapid review times.**
 
-- [ ] I have read and followed the [CODING_STANDARDS.md](https://github.com/ibrahim-sisar/EduLite/blob/main/backend/CODING_STANDARDS.md) (backend) or frontend conventions
+- [ ] I have read and followed the [CONTRIBUTING.md](https://github.com/ibrahim-sisar/EduLite/blob/main/CONTRIBUTING.md) (backend) or frontend conventions
 - [ ] I have linked the related issue above
 - [ ] My branch is up to date with `main`
 - [ ] I have tested my changes locally

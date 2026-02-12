@@ -149,7 +149,7 @@ Always check if `_temp/` has existing files — the user may have prior context 
 
 When the user is ready to submit a PR, remind them of the mandatory checklist from `.github/pull_request_template.md`:
 
-- Followed CODING_STANDARDS.md / frontend conventions
+- Followed CONTRIBUTING.md
 - Linked the related issue
 - Branch is up to date with `main`
 - Tested locally
