@@ -33,6 +33,8 @@ const mockCourse1: CourseListItem = {
   is_active: true,
   member_count: 25,
   is_member: true,
+  user_role: "teacher",
+  user_status: "enrolled",
   start_date: "2024-09-01T08:00:00Z",
   end_date: "2024-12-15T20:00:00Z",
 };
@@ -48,6 +50,8 @@ const mockCourse2: CourseListItem = {
   is_active: true,
   member_count: 10,
   is_member: true,
+  user_role: "student",
+  user_status: "enrolled",
   start_date: null,
   end_date: null,
 };
@@ -63,6 +67,8 @@ const mockCourse3: CourseListItem = {
   is_active: false,
   member_count: 0,
   is_member: false,
+  user_role: null,
+  user_status: null,
   start_date: "2025-01-15T08:00:00Z",
   end_date: null,
 };
