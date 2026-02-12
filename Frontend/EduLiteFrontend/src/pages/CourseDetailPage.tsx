@@ -42,6 +42,7 @@ import MembersTab from "../components/courses/MembersTab";
 import ModulesTab from "../components/courses/ModulesTab";
 import EnrollmentActions from "../components/courses/EnrollmentActions";
 import { useEnrollment } from "../hooks/useEnrollment";
+import { SUBJECTS, COUNTRIES, LANGUAGES } from "../utils/choicesLookup";
 
 interface CourseFormData {
   title: string;
@@ -65,44 +66,6 @@ const VISIBILITY_ICONS: Record<string, React.ReactNode> = {
   public: <HiGlobeAlt className="w-5 h-5" />,
   restricted: <HiShieldCheck className="w-5 h-5" />,
   private: <HiLockClosed className="w-5 h-5" />,
-};
-
-// Lookup maps for human-readable labels
-const SUBJECTS: Record<string, string> = {
-  math: "Mathematics",
-  physics: "Physics",
-  chemistry: "Chemistry",
-  biology: "Biology",
-  cs: "Computer Science",
-  literature: "Literature",
-  history: "History",
-  geography: "Geography",
-  art: "Art",
-  music: "Music",
-  pe: "Physical Education",
-  economics: "Economics",
-  philosophy: "Philosophy",
-  psychology: "Psychology",
-  engineering: "Engineering",
-  medicine: "Medicine",
-  law: "Law",
-  business: "Business",
-  other: "Other",
-};
-
-const LANGUAGES: Record<string, string> = {
-  en: "English",
-  ar: "Arabic",
-  fr: "French",
-  es: "Spanish",
-  de: "German",
-  zh: "Chinese",
-  ja: "Japanese",
-  ko: "Korean",
-  pt: "Portuguese",
-  ru: "Russian",
-  hi: "Hindi",
-  tr: "Turkish",
 };
 
 const CourseDetailPage = () => {
@@ -564,7 +527,9 @@ const CourseDetailPage = () => {
                       {t("course.detail.country")}
                     </div>
                     <div className="font-medium text-gray-900 dark:text-white">
-                      {course.country || t("course.detail.notSet")}
+                      {COUNTRIES[course.country || ""] ||
+                        course.country ||
+                        t("course.detail.notSet")}
                     </div>
                   </div>
                 </div>

@@ -102,8 +102,8 @@ class CourseModuleAPITests(APITestCase):
         self.assertEqual(response.data[0]["title"], "Module A")
         self.assertEqual(response.data[1]["title"], "Module B")
 
-    def test_list_modules_as_non_member(self):
-        """Non-members are denied access to module listing."""
+    def test_list_modules_as_non_member_private_course(self):
+        """Non-members are denied access to private course module listing."""
         self.client.force_authenticate(user=self.outsider)
         response = self.client.get(self._list_url())
 
@@ -114,6 +114,83 @@ class CourseModuleAPITests(APITestCase):
         response = self.client.get(self._list_url())
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_modules_as_non_member_public_course(self):
+        """Non-members can list modules of a public course."""
+        public_course = Course.objects.create(
+            title="Public Course",
+            outline="Visible to all.",
+            language="en",
+            country="US",
+            subject="physics",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        CourseModule.objects.create(
+            course=public_course,
+            title="Public Module",
+            order=1,
+            content_type=self.chatroom_ct,
+            object_id=self.chatroom.id,
+        )
+        self.client.force_authenticate(user=self.outsider)
+        url = reverse("course-module-list-create", kwargs={"pk": public_course.pk})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Public Module")
+
+    def test_list_modules_as_non_member_restricted_course(self):
+        """Non-members can list modules of a restricted course."""
+        restricted_course = Course.objects.create(
+            title="Restricted Course",
+            outline="Restricted visibility.",
+            language="en",
+            country="US",
+            subject="physics",
+            visibility="restricted",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        self.client.force_authenticate(user=self.outsider)
+        url = reverse("course-module-list-create", kwargs={"pk": restricted_course.pk})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_retrieve_module_as_non_member_public_course(self):
+        """Non-members can retrieve a module from a public course."""
+        public_course = Course.objects.create(
+            title="Public Course 2",
+            outline="Visible to all.",
+            language="en",
+            country="US",
+            subject="physics",
+            visibility="public",
+            start_date=datetime(2025, 1, 1),
+            end_date=datetime(2025, 12, 31),
+        )
+        module = CourseModule.objects.create(
+            course=public_course,
+            title="Public Module",
+            order=1,
+            content_type=self.chatroom_ct,
+            object_id=self.chatroom.id,
+        )
+        self.client.force_authenticate(user=self.outsider)
+        url = reverse(
+            "course-module-detail",
+            kwargs={"pk": public_course.pk, "module_id": module.pk},
+        )
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Public Module")
 
     # --- Create (POST) ---
 
@@ -177,8 +254,8 @@ class CourseModuleAPITests(APITestCase):
         self.assertEqual(response.data["title"], "Module A")
         self.assertEqual(response.data["id"], self.module1.pk)
 
-    def test_retrieve_module_as_non_member(self):
-        """Non-members cannot retrieve a module."""
+    def test_retrieve_module_as_non_member_private_course(self):
+        """Non-members cannot retrieve a module from a private course."""
         self.client.force_authenticate(user=self.outsider)
         response = self.client.get(self._detail_url(self.module1.pk))
 
