@@ -8,7 +8,9 @@ You are working on **EduLite**, a lightweight open-source education platform bui
 
 ### 1. Read the Living Documentation
 
-Our wiki is the single source of truth and changes more often than these files. You MUST curl these pages at the start of every session:
+**STOP. Do not proceed to step 2, do not read source code, do not explore the codebase until this step is fully complete.**
+
+Our wiki is the single source of truth and changes more often than these files. You MUST read these local files AND curl the wiki pages at the start of every session — before doing anything else:
 
 Read these local files:
 - `README.md` (project overview, tech stack, setup)
@@ -16,7 +18,29 @@ Read these local files:
 
 These local files link to many WIKI pages. Use `curl` to fetch the updated Wiki as our organic living single source of truth.
 
+**Always curl these core pages every session:**
+```bash
+# Wiki home page and vision (always)
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Home.md"
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Vision-Mission.md"
+```
+
+**Then curl the pages relevant to the task:**
+```bash
+# Frontend work
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Development-Coding-Standards-Frontend.md"
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Frontend-Testing-Standards.md"
+
+# Backend work
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Development-Coding-Standards-Backend.md"
+curl -s "https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/Backend-Testing-Standards.md"
+```
+
+**Wiki URL pattern:** `https://raw.githubusercontent.com/wiki/ibrahim-sisar/EduLite/<Page-Slug>.md` — the slug matches the wiki page URL path on GitHub (e.g. `https://github.com/ibrahim-sisar/EduLite/wiki/Vision-Mission` → slug is `Vision-Mission`). If a curl 404s, the page name may be different — check `CONTRIBUTING.md` or the wiki sidebar for the correct slug.
+
 If a `curl` fails, tell the user and ask them to paste the current wiki content. Do NOT guess at standards.
+
+**Only after you have read the local files AND successfully curled the relevant wiki pages may you continue to step 2.**
 
 ### 2. Verify the User Is Working on an Issue
 
