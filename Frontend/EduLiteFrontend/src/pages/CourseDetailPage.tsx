@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   useParams,
   useNavigate,
@@ -24,6 +24,7 @@ import {
   HiBookOpen,
   HiArrowRightOnRectangle,
   HiArrowLeftOnRectangle,
+  HiXMark,
 } from "react-icons/hi2";
 import {
   useUnsavedChanges,
@@ -33,6 +34,7 @@ import { useCourseDetail } from "../hooks/useCourseDetail";
 import { useCourseMembers } from "../hooks/useCourseMembers";
 import { useCourseModules } from "../hooks/useCourseModules";
 import * as coursesApi from "../services/coursesApi";
+import { getStoredTokens } from "../services/tokenService";
 import type { CourseVisibility, CourseRole } from "../types/courses.types";
 import UnsavedChangesModal from "../components/common/UnsavedChangesModal";
 import ConfirmationModal from "../components/common/ConfirmationModal";
@@ -227,6 +229,17 @@ const CourseDetailPage = () => {
   const isTeacher = course?.user_role === "teacher";
   const isMember = course?.user_role !== null;
   const userRole = course?.user_role;
+
+  const currentUserId = useMemo(() => {
+    try {
+      const { access } = getStoredTokens();
+      if (!access) return null;
+      const payload = JSON.parse(atob(access.split(".")[1]));
+      return payload.user_id as number;
+    } catch {
+      return null;
+    }
+  }, []);
 
   // Handlers
   const handleFieldChange = (
@@ -648,7 +661,7 @@ const CourseDetailPage = () => {
                       handleFieldChange("start_date", e.target.value)
                     }
                     onBlur={() => handleBlur("start_date")}
-                    className={`w-full px-4 py-3 bg-white dark:bg-gray-800 border ${getFieldBorderClass("start_date")} rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+                    className={`w-full px-4 py-3 bg-white dark:bg-gray-800 border ${getFieldBorderClass("start_date")} rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
               ) : (
@@ -671,15 +684,46 @@ const CourseDetailPage = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("course.detail.endDate")}
                   </label>
-                  <input
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) =>
-                      handleFieldChange("end_date", e.target.value)
-                    }
-                    onBlur={() => handleBlur("end_date")}
-                    className={`w-full px-4 py-3 bg-white dark:bg-gray-800 border ${getFieldBorderClass("end_date")} rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-                  />
+                  {formData.end_date ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={formData.end_date}
+                        onChange={(e) =>
+                          handleFieldChange("end_date", e.target.value)
+                        }
+                        onBlur={() => handleBlur("end_date")}
+                        className={`flex-1 px-4 py-3 bg-white dark:bg-gray-800 border ${getFieldBorderClass("end_date")} rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleFieldChange("end_date", "")}
+                        title={t("course.detail.noEndDate")}
+                        className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <HiXMark className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleFieldChange(
+                          "end_date",
+                          new Date().toISOString().split("T")[0],
+                        )
+                      }
+                      className={`w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border ${getFieldBorderClass("end_date")} rounded-xl shadow-sm transition-all cursor-pointer hover:border-gray-400 dark:hover:border-gray-500`}
+                    >
+                      <span className="text-gray-400 dark:text-gray-500 italic">
+                        {t("course.detail.noEndDate")}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 font-medium">
+                        <HiCalendar className="w-4 h-4" />
+                        {t("course.detail.setEndDate")}
+                      </span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
@@ -713,22 +757,41 @@ const CourseDetailPage = () => {
               {/* Allow Join Requests (edit mode only) */}
               {isEditing && (
                 <div className="flex items-center gap-3 col-span-1 md:col-span-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.allow_join_requests}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          "allow_join_requests",
-                          e.target.checked,
-                        )
-                      }
-                      className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.allow_join_requests}
+                    onClick={() =>
+                      handleFieldChange(
+                        "allow_join_requests",
+                        !formData.allow_join_requests,
+                      )
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 cursor-pointer ${
+                      formData.allow_join_requests
+                        ? "bg-blue-600"
+                        : "bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        formData.allow_join_requests
+                          ? "translate-x-6"
+                          : "translate-x-1"
+                      }`}
                     />
-                    <span className="text-gray-700 dark:text-gray-300 font-medium">
-                      {t("course.detail.allowJoinRequests")}
-                    </span>
-                  </label>
+                  </button>
+                  <span
+                    className="text-gray-700 dark:text-gray-300 font-medium cursor-pointer"
+                    onClick={() =>
+                      handleFieldChange(
+                        "allow_join_requests",
+                        !formData.allow_join_requests,
+                      )
+                    }
+                  >
+                    {t("course.detail.allowJoinRequests")}
+                  </span>
                 </div>
               )}
             </div>
@@ -873,6 +936,7 @@ const CourseDetailPage = () => {
                 loading={membersLoading}
                 error={membersError}
                 isTeacher={isTeacher}
+                currentUserId={currentUserId}
                 refetch={refetchMembers}
               />
             ) : (

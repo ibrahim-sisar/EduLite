@@ -24,6 +24,7 @@ interface MembersTabProps {
   loading: boolean;
   error: string | null;
   isTeacher: boolean;
+  currentUserId: number | null;
   refetch: () => void;
 }
 
@@ -39,6 +40,7 @@ const MembersTab: React.FC<MembersTabProps> = ({
   loading,
   error,
   isTeacher,
+  currentUserId,
   refetch,
 }) => {
   const { t } = useTranslation();
@@ -229,20 +231,22 @@ const MembersTab: React.FC<MembersTabProps> = ({
                     </td>
                     <td className="py-3 px-4">
                       {isTeacher && member.status === "enrolled" ? (
-                        <HardLoadSelect
-                          name={`role-${member.id}`}
-                          value={member.role}
-                          onChange={(e) =>
-                            handleRoleChange(
-                              member,
-                              e.target.value as CourseRole,
-                            )
-                          }
-                          choices={ROLE_CHOICES}
-                          showLabel={false}
-                          disabled={changingRole === member.id}
-                          className="!py-1 !px-2 text-sm max-w-[140px]"
-                        />
+                        <div className="max-w-[140px]">
+                          <HardLoadSelect
+                            name={`role-${member.id}`}
+                            value={member.role}
+                            onChange={(e) =>
+                              handleRoleChange(
+                                member,
+                                e.target.value as CourseRole,
+                              )
+                            }
+                            choices={ROLE_CHOICES}
+                            showLabel={false}
+                            disabled={changingRole === member.id}
+                            className="!py-1 !pl-2 !pr-8 text-sm"
+                          />
+                        </div>
                       ) : (
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClasses(member.role)}`}
@@ -283,14 +287,16 @@ const MembersTab: React.FC<MembersTabProps> = ({
                               </button>
                             </>
                           )}
-                          <button
-                            onClick={() => setRemoveMember(member)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
-                            aria-label={t("course.detail.members.remove")}
-                            title={t("course.detail.members.remove")}
-                          >
-                            <HiTrash className="w-4 h-4" />
-                          </button>
+                          {member.user !== currentUserId && (
+                            <button
+                              onClick={() => setRemoveMember(member)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                              aria-label={t("course.detail.members.remove")}
+                              title={t("course.detail.members.remove")}
+                            >
+                              <HiTrash className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     )}
@@ -322,17 +328,19 @@ const MembersTab: React.FC<MembersTabProps> = ({
 
                 <div className="flex items-center justify-between">
                   {isTeacher && member.status === "enrolled" ? (
-                    <HardLoadSelect
-                      name={`role-mobile-${member.id}`}
-                      value={member.role}
-                      onChange={(e) =>
-                        handleRoleChange(member, e.target.value as CourseRole)
-                      }
-                      choices={ROLE_CHOICES}
-                      showLabel={false}
-                      disabled={changingRole === member.id}
-                      className="!py-1 !px-2 text-sm max-w-[140px]"
-                    />
+                    <div className="max-w-[140px]">
+                      <HardLoadSelect
+                        name={`role-mobile-${member.id}`}
+                        value={member.role}
+                        onChange={(e) =>
+                          handleRoleChange(member, e.target.value as CourseRole)
+                        }
+                        choices={ROLE_CHOICES}
+                        showLabel={false}
+                        disabled={changingRole === member.id}
+                        className="!py-1 !pl-2 !pr-8 text-sm"
+                      />
+                    </div>
                   ) : (
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClasses(member.role)}`}
@@ -361,13 +369,15 @@ const MembersTab: React.FC<MembersTabProps> = ({
                           </button>
                         </>
                       )}
-                      <button
-                        onClick={() => setRemoveMember(member)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
-                        aria-label={t("course.detail.members.remove")}
-                      >
-                        <HiTrash className="w-4 h-4" />
-                      </button>
+                      {member.user !== currentUserId && (
+                        <button
+                          onClick={() => setRemoveMember(member)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                          aria-label={t("course.detail.members.remove")}
+                        >
+                          <HiTrash className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
