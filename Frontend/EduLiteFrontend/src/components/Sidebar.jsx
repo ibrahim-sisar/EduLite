@@ -13,7 +13,10 @@ import {
   HiCog,
 } from "react-icons/hi";
 import { FaSignOutAlt } from "react-icons/fa";
-import { HiArrowRightOnRectangle, HiPresentationChartBar } from "react-icons/hi2";
+import {
+  HiArrowRightOnRectangle,
+  HiPresentationChartBar,
+} from "react-icons/hi2";
 
 export default function SidebarMenu({ open, onClose }) {
   const { t, i18n } = useTranslation();
@@ -35,8 +38,12 @@ export default function SidebarMenu({ open, onClose }) {
     { to: "/", label: t("nav.home"), icon: HiHome },
     { to: "/about", label: t("nav.about"), icon: HiInformationCircle },
     { to: "/conversations", label: t("nav.conversations"), icon: HiChatAlt2 },
-    { to: "/chapters", label: t("nav.chapters"), icon: HiBookOpen },
-    { to: "/slideshows", label: t("nav.slideshows"), icon: HiPresentationChartBar },
+    { to: "/courses", label: t("nav.courses"), icon: HiBookOpen },
+    {
+      to: "/slideshows",
+      label: t("nav.slideshows"),
+      icon: HiPresentationChartBar,
+    },
     { to: "/settings", label: t("nav.settings"), icon: HiCog },
   ];
 
@@ -151,7 +158,9 @@ export default function SidebarMenu({ open, onClose }) {
         confirmText="Logout"
         cancelText="Cancel"
         confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
-        icon={<HiArrowRightOnRectangle className="w-12 h-12 text-red-600 dark:text-red-400" />}
+        icon={
+          <HiArrowRightOnRectangle className="w-12 h-12 text-red-600 dark:text-red-400" />
+        }
       />
     </>
   );
