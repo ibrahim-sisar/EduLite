@@ -9,3 +9,5 @@ The wiki is updated often by the community, visit these pages for contribuing gu
 [Getting Started, Frontend](https://github.com/ibrahim-sisar/EduLite/wiki/Getting-Started-Frontend)
 
 [Getting Started, Backend](https://github.com/ibrahim-sisar/EduLite/wiki/Getting-Started-Backend)
+
+View our [Backend Standards](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Coding-Standards-Backend) and [Frontend Standards](https://github.com/ibrahim-sisar/EduLite/wiki/Development-Coding-Standards-Frontend).
