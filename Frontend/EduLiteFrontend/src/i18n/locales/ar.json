@@ -299,6 +299,13 @@
       "memberCount": "{{count}} عضو",
       "memberCount_plural": "{{count}} أعضاء",
       "enrolled": "أنت مسجل",
+      "statusInvited": "مدعو",
+      "statusPending": "قيد الانتظار",
+      "roleTeacher": "معلم",
+      "roleStudent": "طالب",
+      "roleAssistant": "مساعد",
+      "acceptInvite": "قبول",
+      "declineInvite": "رفض",
       "showing": "عرض {{start}}-{{end}} من {{total}}",
       "pageOf": "صفحة {{current}} من {{total}}",
       "notStarted": "غير محدد",
@@ -323,7 +330,13 @@
       "leaveError": "فشلت مغادرة الدورة",
       "leaveConfirmTitle": "مغادرة الدورة",
       "leaveConfirmMessage": "هل أنت متأكد من رغبتك في مغادرة \"{{title}}\"؟",
-      "leaveConfirmButton": "مغادرة"
+      "leaveConfirmButton": "مغادرة",
+      "acceptSuccess": "تم قبول الدعوة بنجاح",
+      "acceptError": "فشل قبول الدعوة",
+      "declineSuccess": "تم رفض الدعوة بنجاح",
+      "declineError": "فشل رفض الدعوة",
+      "cancelRequest": "إلغاء الطلب",
+      "cancelRequestSuccess": "تم إلغاء طلب الانضمام"
     },
     "detail": {
       "backToCourses": "العودة إلى الدورات",

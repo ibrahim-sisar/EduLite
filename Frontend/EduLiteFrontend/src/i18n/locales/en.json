@@ -298,6 +298,13 @@
       "memberCount": "{{count}} member",
       "memberCount_plural": "{{count}} members",
       "enrolled": "You are enrolled",
+      "statusInvited": "Invited",
+      "statusPending": "Pending",
+      "roleTeacher": "Teacher",
+      "roleStudent": "Student",
+      "roleAssistant": "Assistant",
+      "acceptInvite": "Accept",
+      "declineInvite": "Decline",
       "showing": "Showing {{start}}-{{end}} of {{total}}",
       "pageOf": "Page {{current}} of {{total}}",
       "notStarted": "Not set",
@@ -322,7 +329,13 @@
       "leaveError": "Failed to leave course",
       "leaveConfirmTitle": "Leave Course",
       "leaveConfirmMessage": "Are you sure you want to leave \"{{title}}\"?",
-      "leaveConfirmButton": "Leave"
+      "leaveConfirmButton": "Leave",
+      "acceptSuccess": "Successfully accepted invitation",
+      "acceptError": "Failed to accept invitation",
+      "declineSuccess": "Successfully declined invitation",
+      "declineError": "Failed to decline invitation",
+      "cancelRequest": "Cancel Request",
+      "cancelRequestSuccess": "Join request cancelled"
     },
     "detail": {
       "backToCourses": "Back to Courses",

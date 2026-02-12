@@ -30,7 +30,7 @@ const API_BASE_URL = "http://localhost:8000/api";
  * @returns Paginated list of courses
  */
 export const listCourses = async (
-  params?: CourseListParams
+  params?: CourseListParams,
 ): Promise<CoursePaginatedResponse<CourseListItem>> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/courses/`, {
@@ -68,7 +68,7 @@ export const getCourseDetail = async (id: number): Promise<CourseDetail> => {
  * @returns Created course
  */
 export const createCourse = async (
-  data: CourseCreateRequest
+  data: CourseCreateRequest,
 ): Promise<Course> => {
   try {
     const response = await axios.post(`${API_BASE_URL}/courses/`, data, {
@@ -90,14 +90,12 @@ export const createCourse = async (
  */
 export const updateCourse = async (
   id: number,
-  data: CourseUpdateRequest
+  data: CourseUpdateRequest,
 ): Promise<Course> => {
   try {
-    const response = await axios.patch(
-      `${API_BASE_URL}/courses/${id}/`,
-      data,
-      { timeout: 15000 }
-    );
+    const response = await axios.patch(`${API_BASE_URL}/courses/${id}/`, data, {
+      timeout: 15000,
+    });
     return response.data;
   } catch (error) {
     throw new Error(getSafeErrorMessage(error, "Failed to update course"));
@@ -130,14 +128,12 @@ export const deleteCourse = async (id: number): Promise<void> => {
  * @param id - Course ID
  * @returns Created membership
  */
-export const enrollInCourse = async (
-  id: number
-): Promise<CourseMembership> => {
+export const enrollInCourse = async (id: number): Promise<CourseMembership> => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/courses/${id}/enroll/`,
       {},
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
     return response.data;
   } catch (error) {
@@ -161,6 +157,50 @@ export const leaveCourse = async (id: number): Promise<void> => {
   }
 };
 
+/**
+ * Accept a course invitation
+ * Changes the user's membership status from "invited" to "enrolled"
+ *
+ * @param id - Course ID
+ * @returns Updated membership
+ */
+export const acceptCourseInvitation = async (
+  id: number,
+): Promise<CourseMembership> => {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/courses/${id}/enroll/accept/`,
+      {},
+      { timeout: 10000 },
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getSafeErrorMessage(error, "Failed to accept course invitation"),
+    );
+  }
+};
+
+/**
+ * Decline a course invitation
+ * Deletes the user's "invited" membership
+ *
+ * @param id - Course ID
+ */
+export const declineCourseInvitation = async (id: number): Promise<void> => {
+  try {
+    await axios.post(
+      `${API_BASE_URL}/courses/${id}/enroll/decline/`,
+      {},
+      { timeout: 10000 },
+    );
+  } catch (error) {
+    throw new Error(
+      getSafeErrorMessage(error, "Failed to decline course invitation"),
+    );
+  }
+};
+
 // --- Course Modules ---
 
 /**
@@ -171,17 +211,17 @@ export const leaveCourse = async (id: number): Promise<void> => {
  * @returns Array of course modules
  */
 export const listCourseModules = async (
-  courseId: number
+  courseId: number,
 ): Promise<CourseModule[]> => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/courses/${courseId}/modules/`,
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to load course modules")
+      getSafeErrorMessage(error, "Failed to load course modules"),
     );
   }
 };
@@ -196,18 +236,18 @@ export const listCourseModules = async (
  */
 export const createCourseModule = async (
   courseId: number,
-  data: CourseModuleCreateRequest
+  data: CourseModuleCreateRequest,
 ): Promise<CourseModule> => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/courses/${courseId}/modules/`,
       data,
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to create course module")
+      getSafeErrorMessage(error, "Failed to create course module"),
     );
   }
 };
@@ -221,18 +261,16 @@ export const createCourseModule = async (
  */
 export const getCourseModule = async (
   courseId: number,
-  moduleId: number
+  moduleId: number,
 ): Promise<CourseModule> => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/courses/${courseId}/modules/${moduleId}/`,
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
     return response.data;
   } catch (error) {
-    throw new Error(
-      getSafeErrorMessage(error, "Failed to load course module")
-    );
+    throw new Error(getSafeErrorMessage(error, "Failed to load course module"));
   }
 };
 
@@ -247,18 +285,18 @@ export const getCourseModule = async (
 export const updateCourseModule = async (
   courseId: number,
   moduleId: number,
-  data: CourseModuleUpdateRequest
+  data: CourseModuleUpdateRequest,
 ): Promise<CourseModule> => {
   try {
     const response = await axios.patch(
       `${API_BASE_URL}/courses/${courseId}/modules/${moduleId}/`,
       data,
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to update course module")
+      getSafeErrorMessage(error, "Failed to update course module"),
     );
   }
 };
@@ -271,16 +309,16 @@ export const updateCourseModule = async (
  */
 export const deleteCourseModule = async (
   courseId: number,
-  moduleId: number
+  moduleId: number,
 ): Promise<void> => {
   try {
     await axios.delete(
       `${API_BASE_URL}/courses/${courseId}/modules/${moduleId}/`,
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to delete course module")
+      getSafeErrorMessage(error, "Failed to delete course module"),
     );
   }
 };
@@ -294,17 +332,17 @@ export const deleteCourseModule = async (
  * @returns Paginated list of memberships
  */
 export const listCourseMembers = async (
-  courseId: number
+  courseId: number,
 ): Promise<CoursePaginatedResponse<CourseMembership>> => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/courses/${courseId}/members/`,
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to load course members")
+      getSafeErrorMessage(error, "Failed to load course members"),
     );
   }
 };
@@ -319,18 +357,18 @@ export const listCourseMembers = async (
  */
 export const inviteCourseMember = async (
   courseId: number,
-  data: CourseMemberInviteRequest
+  data: CourseMemberInviteRequest,
 ): Promise<CourseMembership> => {
   try {
     const response = await axios.post(
       `${API_BASE_URL}/courses/${courseId}/members/`,
       data,
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to invite course member")
+      getSafeErrorMessage(error, "Failed to invite course member"),
     );
   }
 };
@@ -347,18 +385,18 @@ export const inviteCourseMember = async (
 export const updateCourseMembership = async (
   courseId: number,
   membershipId: number,
-  data: CourseMembershipUpdateRequest
+  data: CourseMembershipUpdateRequest,
 ): Promise<CourseMembership> => {
   try {
     const response = await axios.patch(
       `${API_BASE_URL}/courses/${courseId}/members/${membershipId}/`,
       data,
-      { timeout: 15000 }
+      { timeout: 15000 },
     );
     return response.data;
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to update course membership")
+      getSafeErrorMessage(error, "Failed to update course membership"),
     );
   }
 };
@@ -372,16 +410,16 @@ export const updateCourseMembership = async (
  */
 export const removeCourseMember = async (
   courseId: number,
-  membershipId: number
+  membershipId: number,
 ): Promise<void> => {
   try {
     await axios.delete(
       `${API_BASE_URL}/courses/${courseId}/members/${membershipId}/`,
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
   } catch (error) {
     throw new Error(
-      getSafeErrorMessage(error, "Failed to remove course member")
+      getSafeErrorMessage(error, "Failed to remove course member"),
     );
   }
 };

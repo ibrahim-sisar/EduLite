@@ -18,9 +18,16 @@ import {
   HiChevronDown,
   HiCheck,
   HiStar,
+  HiCheckCircle,
+  HiBan,
 } from "react-icons/hi";
 import { useCourses } from "../hooks/useCourses";
-import { enrollInCourse, leaveCourse } from "../services/coursesApi";
+import {
+  enrollInCourse,
+  leaveCourse,
+  acceptCourseInvitation,
+  declineCourseInvitation,
+} from "../services/coursesApi";
 import type {
   CourseListItem,
   CourseListParams,
@@ -241,39 +248,110 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
     }
   };
 
-  const contextMenuItems: ContextMenuItem[] = [
-    {
-      id: "view",
-      label: t("course.contextMenu.view"),
-      icon: <HiEye />,
-      onClick: handleViewClick,
-    },
-    ...(selectedCourse && !selectedCourse.is_member
-      ? [
-          {
-            id: "enroll",
-            label: t("course.contextMenu.enroll"),
-            icon: <HiLogin />,
-            onClick: handleEnrollClick,
-          },
-        ]
-      : []),
-    ...(selectedCourse?.is_member
-      ? [
-          {
-            id: "separator" as const,
-            separator: true as const,
-          },
-          {
-            id: "leave",
-            label: t("course.contextMenu.leave"),
-            icon: <HiLogout />,
-            onClick: handleLeaveClick,
-            danger: true,
-          },
-        ]
-      : []),
-  ];
+  const handleAcceptInvitation = async () => {
+    if (!selectedCourse) return;
+    setContextMenuOpen(false);
+
+    try {
+      await acceptCourseInvitation(selectedCourse.id);
+      toast.success(t("course.contextMenu.acceptSuccess"));
+      refetch();
+    } catch {
+      toast.error(t("course.contextMenu.acceptError"));
+    }
+  };
+
+  const handleDeclineInvitation = async () => {
+    if (!selectedCourse) return;
+    setContextMenuOpen(false);
+
+    try {
+      await declineCourseInvitation(selectedCourse.id);
+      toast.success(t("course.contextMenu.declineSuccess"));
+      refetch();
+    } catch {
+      toast.error(t("course.contextMenu.declineError"));
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!selectedCourse) return;
+    setContextMenuOpen(false);
+
+    try {
+      await leaveCourse(selectedCourse.id);
+      toast.success(t("course.contextMenu.cancelRequestSuccess"));
+      refetch();
+    } catch {
+      toast.error(t("course.contextMenu.leaveError"));
+    }
+  };
+
+  const getContextMenuItems = (): ContextMenuItem[] => {
+    const items: ContextMenuItem[] = [
+      {
+        id: "view",
+        label: t("course.contextMenu.view"),
+        icon: <HiEye />,
+        onClick: handleViewClick,
+      },
+    ];
+
+    if (!selectedCourse) return items;
+
+    const { user_status } = selectedCourse;
+
+    if (user_status === "invited") {
+      items.push(
+        { id: "separator-1", separator: true as const },
+        {
+          id: "accept",
+          label: t("course.list.acceptInvite"),
+          icon: <HiCheckCircle />,
+          onClick: handleAcceptInvitation,
+        },
+        {
+          id: "decline",
+          label: t("course.list.declineInvite"),
+          icon: <HiBan />,
+          onClick: handleDeclineInvitation,
+          danger: true,
+        },
+      );
+    } else if (user_status === "pending") {
+      items.push(
+        { id: "separator-1", separator: true as const },
+        {
+          id: "cancel-request",
+          label: t("course.contextMenu.cancelRequest"),
+          icon: <HiX />,
+          onClick: handleCancelRequest,
+          danger: true,
+        },
+      );
+    } else if (user_status === "enrolled") {
+      items.push(
+        { id: "separator-1", separator: true as const },
+        {
+          id: "leave",
+          label: t("course.contextMenu.leave"),
+          icon: <HiLogout />,
+          onClick: handleLeaveClick,
+          danger: true,
+        },
+      );
+    } else {
+      // Not a member — show enroll option
+      items.push({
+        id: "enroll",
+        label: t("course.contextMenu.enroll"),
+        icon: <HiLogin />,
+        onClick: handleEnrollClick,
+      });
+    }
+
+    return items;
+  };
 
   const getSubjectName = (code: string | null) => {
     if (!code) return "-";
@@ -292,6 +370,48 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return t("course.list.notStarted");
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getStatusBadge = (course: CourseListItem) => {
+    if (!course.user_status) return null;
+
+    const badgeStyles: Record<string, string> = {
+      enrolled:
+        "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700/50",
+      pending:
+        "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 border-amber-300 dark:border-amber-700/50",
+      invited:
+        "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 border-blue-300 dark:border-blue-700/50",
+    };
+
+    const labelKeys: Record<string, string> = {
+      enrolled: "course.list.enrolled",
+      pending: "course.list.statusPending",
+      invited: "course.list.statusInvited",
+    };
+
+    const style = badgeStyles[course.user_status] || "";
+    const label = t(labelKeys[course.user_status] || "");
+
+    const roleLabelKeys: Record<string, string> = {
+      teacher: "course.list.roleTeacher",
+      student: "course.list.roleStudent",
+      assistant: "course.list.roleAssistant",
+    };
+    const roleLabel = course.user_role
+      ? t(roleLabelKeys[course.user_role] || "")
+      : null;
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${style}`}
+      >
+        {label}
+        {roleLabel && course.user_status === "enrolled" && (
+          <span className="opacity-70">· {roleLabel}</span>
+        )}
+      </span>
+    );
   };
 
   const courseList = courses?.results || [];
@@ -597,17 +717,20 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
-                        <span className="inline-flex items-center gap-1.5">
-                          {t("course.list.memberCount", {
-                            count: course.member_count,
-                          })}
-                          {course.is_member && (
-                            <HiStar
-                              className="text-yellow-500 text-sm"
-                              title={t("course.list.enrolled")}
-                            />
-                          )}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center gap-1.5">
+                            {t("course.list.memberCount", {
+                              count: course.member_count,
+                            })}
+                            {course.is_member && (
+                              <HiStar
+                                className="text-yellow-500 text-sm"
+                                title={t("course.list.enrolled")}
+                              />
+                            )}
+                          </span>
+                          {getStatusBadge(course)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
                         {formatDate(course.start_date)}
@@ -678,6 +801,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                             />
                           )}
                         </span>
+                        {getStatusBadge(course)}
                       </div>
                     </div>
                     <button
@@ -742,7 +866,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
           setSelectedCourse(null);
         }}
         position={contextMenuPosition}
-        items={contextMenuItems}
+        items={getContextMenuItems()}
       />
 
       {/* Leave Confirmation Modal */}

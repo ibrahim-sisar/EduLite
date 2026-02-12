@@ -1,4 +1,5 @@
 from datetime import datetime
+from unittest.mock import MagicMock
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -20,6 +21,9 @@ class CourseListSerializerTest(TestCase):
         cls.user2 = User.objects.create_user(
             username="student1", password="pass12345", email="student1@example.com"
         )
+        cls.outsider = User.objects.create_user(
+            username="outsider", password="pass12345", email="outsider@example.com"
+        )
         cls.course = Course.objects.create(
             title="Test Course",
             outline="A test course outline",
@@ -38,9 +42,20 @@ class CourseListSerializerTest(TestCase):
             user=cls.user2, course=cls.course, role="student", status="enrolled"
         )
 
+    def _get_context(self, user=None):
+        """Build a serializer context with a mock request for the given user."""
+        request = MagicMock()
+        if user:
+            request.user = user
+        else:
+            request.user = MagicMock(is_authenticated=False)
+        return {"request": request}
+
     def test_list_serializer_contains_expected_fields(self):
         """Test that list serializer includes exactly the expected fields."""
-        serializer = CourseListSerializer(self.course)
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user1)
+        )
         expected_fields = {
             "id",
             "title",
@@ -51,6 +66,9 @@ class CourseListSerializerTest(TestCase):
             "country",
             "is_active",
             "member_count",
+            "is_member",
+            "user_role",
+            "user_status",
             "start_date",
             "end_date",
         }
@@ -71,11 +89,12 @@ class CourseListSerializerTest(TestCase):
         self.assertEqual(serializer.data["member_count"], 2)
 
     def test_list_serializer_does_not_include_nested_data(self):
-        """Test that list serializer does not include members, modules, or user_role."""
-        serializer = CourseListSerializer(self.course)
+        """Test that list serializer does not include members or modules."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user1)
+        )
         self.assertNotIn("members", serializer.data)
         self.assertNotIn("modules", serializer.data)
-        self.assertNotIn("user_role", serializer.data)
         self.assertNotIn("duration_time", serializer.data)
         self.assertNotIn("allow_join_requests", serializer.data)
 
@@ -90,3 +109,94 @@ class CourseListSerializerTest(TestCase):
         self.assertEqual(data["language"], "en")
         self.assertEqual(data["country"], "US")
         self.assertTrue(data["is_active"])
+
+    # --- user_role tests ---
+
+    def test_list_serializer_user_role_for_teacher(self):
+        """Test that user_role returns 'teacher' for a teacher member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user1)
+        )
+        self.assertEqual(serializer.data["user_role"], "teacher")
+
+    def test_list_serializer_user_role_for_student(self):
+        """Test that user_role returns 'student' for a student member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user2)
+        )
+        self.assertEqual(serializer.data["user_role"], "student")
+
+    def test_list_serializer_user_role_for_non_member(self):
+        """Test that user_role returns null for a non-member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.outsider)
+        )
+        self.assertIsNone(serializer.data["user_role"])
+
+    def test_list_serializer_user_role_unauthenticated(self):
+        """Test that user_role returns null for an unauthenticated request."""
+        serializer = CourseListSerializer(self.course, context=self._get_context())
+        self.assertIsNone(serializer.data["user_role"])
+
+    # --- user_status tests ---
+
+    def test_list_serializer_user_status_for_enrolled(self):
+        """Test that user_status returns 'enrolled' for an enrolled member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user1)
+        )
+        self.assertEqual(serializer.data["user_status"], "enrolled")
+
+    def test_list_serializer_user_status_for_invited(self):
+        """Test that user_status returns 'invited' for an invited user."""
+        invited_user = User.objects.create_user(
+            username="invited_user", password="pass12345", email="invited@example.com"
+        )
+        CourseMembership.objects.create(
+            user=invited_user, course=self.course, role="student", status="invited"
+        )
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(invited_user)
+        )
+        self.assertEqual(serializer.data["user_status"], "invited")
+
+    def test_list_serializer_user_status_for_pending(self):
+        """Test that user_status returns 'pending' for a pending user."""
+        pending_user = User.objects.create_user(
+            username="pending_user", password="pass12345", email="pending@example.com"
+        )
+        CourseMembership.objects.create(
+            user=pending_user, course=self.course, role="student", status="pending"
+        )
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(pending_user)
+        )
+        self.assertEqual(serializer.data["user_status"], "pending")
+
+    def test_list_serializer_user_status_for_non_member(self):
+        """Test that user_status returns null for a non-member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.outsider)
+        )
+        self.assertIsNone(serializer.data["user_status"])
+
+    # --- is_member tests ---
+
+    def test_list_serializer_is_member_true(self):
+        """Test that is_member returns True for a course member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.user1)
+        )
+        self.assertTrue(serializer.data["is_member"])
+
+    def test_list_serializer_is_member_false(self):
+        """Test that is_member returns False for a non-member."""
+        serializer = CourseListSerializer(
+            self.course, context=self._get_context(self.outsider)
+        )
+        self.assertFalse(serializer.data["is_member"])
+
+    def test_list_serializer_is_member_unauthenticated(self):
+        """Test that is_member returns False for an unauthenticated request."""
+        serializer = CourseListSerializer(self.course, context=self._get_context())
+        self.assertFalse(serializer.data["is_member"])

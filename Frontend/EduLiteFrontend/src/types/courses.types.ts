@@ -54,6 +54,8 @@ export interface CourseListItem {
   is_active: boolean;
   member_count: number;
   is_member: boolean;
+  user_role: CourseRole | null; // null if not a member
+  user_status: CourseMembershipStatus | null; // null if not a member
   start_date: string | null; // ISO date string
   end_date: string | null; // ISO date string
 }
