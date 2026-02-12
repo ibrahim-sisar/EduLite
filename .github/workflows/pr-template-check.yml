@@ -1,0 +1,157 @@
+name: PR Template Check
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  issues: read
+
+jobs:
+  check-pr-template:
+    name: Validate PR Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR against template
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const headBranch = pr.head.ref;
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            const errors = [];
+            const warnings = [];
+
+            // 1. Branch check — reject PRs from main, master, or develop
+            const forbiddenBranches = ['main', 'master', 'develop'];
+            if (forbiddenBranches.includes(headBranch)) {
+              errors.push(`PR is from the \`${headBranch}\` branch. Create a feature branch instead.`);
+            }
+
+            // 2. Required sections
+            const requiredSections = [
+              '## Description',
+              '## Mandatory Checklist',
+              '## What Changed',
+              '## How to Test',
+            ];
+            for (const section of requiredSections) {
+              if (!body.includes(section)) {
+                errors.push(`Missing required section: \`${section}\``);
+              }
+            }
+
+            // 3. Checklist completeness — all 8 items must be present and checked
+            const checkedBoxes = (body.match(/- \[x\]/gi) || []).length;
+            const uncheckedBoxes = (body.match(/- \[ \]/g) || []).length;
+            const totalBoxes = checkedBoxes + uncheckedBoxes;
+
+            if (totalBoxes < 8) {
+              errors.push(`Found ${totalBoxes} checklist items, expected 8. Do not remove items from the template.`);
+            } else if (uncheckedBoxes > 0) {
+              errors.push(`${uncheckedBoxes} checklist item(s) not checked. All items must be completed before merging.`);
+            }
+
+            // 4. Non-empty sections — must have real content, not just placeholders
+            function getSectionContent(md, header) {
+              const escaped = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(`${escaped}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`);
+              const match = md.match(regex);
+              if (!match) return '';
+              // Strip placeholder italics, HTML comments, and whitespace
+              return match[1]
+                .replace(/<!--[\s\S]*?-->/g, '')
+                .replace(/\*[^*]+\*/g, '')
+                .trim();
+            }
+
+            const contentSections = ['## Description', '## What Changed', '## How to Test'];
+            for (const section of contentSections) {
+              const content = getSectionContent(body, section);
+              if (!content) {
+                errors.push(`\`${section}\` is empty or only contains placeholder text. Add real content.`);
+              }
+            }
+
+            // 5. Issue link validation
+            const issueMatch = body.match(/(?:Closes|Fixes|Resolves)\s+#(\d+)/i);
+            if (!issueMatch) {
+              errors.push('No issue linked. Add `Closes #<number>` to the PR description.');
+            } else {
+              try {
+                const issue = await github.rest.issues.get({
+                  ...repo,
+                  issue_number: parseInt(issueMatch[1]),
+                });
+                if (issue.data.pull_request) {
+                  errors.push(`Linked #${issueMatch[1]} is a pull request, not an issue.`);
+                }
+                if (issue.data.state === 'closed') {
+                  warnings.push(`Linked issue #${issueMatch[1]} is already closed.`);
+                }
+              } catch (e) {
+                if (e.status === 404) {
+                  errors.push(`Linked issue #${issueMatch[1]} does not exist.`);
+                } else {
+                  warnings.push(`Could not verify issue #${issueMatch[1]}: ${e.message}`);
+                }
+              }
+            }
+
+            // Build the comment body
+            let commentBody = '## PR Template Check\n\n';
+
+            if (errors.length === 0 && warnings.length === 0) {
+              commentBody += 'All checks passed.\n';
+            } else {
+              if (errors.length > 0) {
+                commentBody += '### Errors (must fix before merging)\n\n';
+                for (const err of errors) {
+                  commentBody += `- ${err}\n`;
+                }
+                commentBody += '\n';
+              }
+              if (warnings.length > 0) {
+                commentBody += '### Warnings\n\n';
+                for (const warn of warnings) {
+                  commentBody += `- ${warn}\n`;
+                }
+                commentBody += '\n';
+              }
+            }
+
+            // Post or update the bot comment
+            const { data: comments } = await github.rest.issues.listComments({
+              ...repo,
+              issue_number: pr.number,
+            });
+
+            const botComment = comments.find(
+              c => c.user.id === 41898282 && c.body.includes('## PR Template Check')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                ...repo,
+                comment_id: botComment.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...repo,
+                issue_number: pr.number,
+                body: commentBody,
+              });
+            }
+
+            // Fail the check if there are errors
+            if (errors.length > 0) {
+              core.setFailed(`PR template check failed with ${errors.length} error(s). See the bot comment for details.`);
+            }
+
+            for (const warn of warnings) {
+              core.warning(warn);
+            }
