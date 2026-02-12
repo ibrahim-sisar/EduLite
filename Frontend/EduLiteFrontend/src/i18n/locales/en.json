@@ -274,5 +274,54 @@
       "keyboardShortcuts": "Keyboard Shortcuts",
       "footer": "Press ? to open this help menu anytime"
     }
+  },
+  "course": {
+    "list": {
+      "myTitle": "My Courses",
+      "publicTitle": "Public Courses",
+      "mySubtitle": "Manage and access your enrolled courses",
+      "publicSubtitle": "Discover and enroll in public courses",
+      "viewPublic": "View Public",
+      "viewMine": "View Mine",
+      "createButton": "Create Course",
+      "emptyTitle": "No courses yet",
+      "myEmptyMessage": "You're not enrolled in any courses yet. Browse public courses to get started.",
+      "publicEmptyMessage": "No public courses available.",
+      "loading": "Loading courses...",
+      "errorLoading": "Failed to load courses",
+      "titleColumn": "Title",
+      "subjectColumn": "Subject",
+      "languageColumn": "Language",
+      "visibilityColumn": "Visibility",
+      "membersColumn": "Members",
+      "startDateColumn": "Start Date",
+      "memberCount": "{{count}} member",
+      "memberCount_plural": "{{count}} members",
+      "showing": "Showing {{start}}-{{end}} of {{total}}",
+      "pageOf": "Page {{current}} of {{total}}",
+      "notStarted": "Not set",
+      "filterSubject": "Subject",
+      "filterLanguage": "Language",
+      "filterCountry": "Country",
+      "filterVisibility": "Visibility",
+      "clearFilters": "Clear filters",
+      "visibilityPublic": "Public",
+      "visibilityRestricted": "Restricted",
+      "visibilityPrivate": "Private"
+    },
+    "contextMenu": {
+      "actions": "Actions",
+      "view": "View Details",
+      "enroll": "Enroll",
+      "leave": "Leave Course",
+      "enrollSuccess": "Successfully enrolled in course",
+      "enrollPending": "Enrollment request submitted, awaiting approval",
+      "enrollError": "Failed to enroll in course",
+      "leaveSuccess": "Successfully left course",
+      "leaveError": "Failed to leave course",
+      "leaveConfirmTitle": "Leave Course",
+      "leaveConfirmMessage": "Are you sure you want to leave \"{{title}}\"?",
+      "leaveConfirmButton": "Leave"
+    }
   }
 }

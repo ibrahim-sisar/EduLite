@@ -17,6 +17,7 @@ import InputComponentDoc from "./components/common/InputComponentDoc";
 import SignUpPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import SlideshowListPage from "./pages/SlideshowListPage";
+import CourseListPage from "./pages/CourseListPage";
 import SlideshowDetailPage from "./pages/SlideshowDetailPage";
 import SlideshowViewPage from "./pages/SlideshowViewPage";
 import SlideshowEditorPage from "./pages/SlideshowEditorPage";
@@ -107,6 +108,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "courses",
+        element: (
+          <ProtectedRoute>
+            <CourseListPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "courses/me",
+        element: (
+          <ProtectedRoute>
+            <CourseListPage view="me" />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "courses/public",
+        element: (
+          <ProtectedRoute>
+            <CourseListPage view="public" />
           </ProtectedRoute>
         ),
       },
