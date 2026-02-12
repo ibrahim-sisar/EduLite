@@ -1,11 +1,13 @@
 """URL patterns for the slideshows app."""
 
 from django.urls import path
+
 from .views import (
-    SlideshowListCreateView,
-    SlideshowRetrieveUpdateDestroyView,
     SlideCreateView,
     SlideRetrieveUpdateDestroyView,
+    SlideshowListCreateView,
+    SlideshowRetrieveUpdateDestroyView,
+    SlideshowSearchView,
     preview_markdown,
 )
 
@@ -14,6 +16,8 @@ app_name = "slideshows"
 urlpatterns = [
     # Slideshow list and create
     path("", SlideshowListCreateView.as_view(), name="slideshow-list-create"),
+    # Slideshow search
+    path("search/", SlideshowSearchView.as_view(), name="slideshow-search"),
     # Slideshow detail, update, delete
     path(
         "<int:pk>/",
