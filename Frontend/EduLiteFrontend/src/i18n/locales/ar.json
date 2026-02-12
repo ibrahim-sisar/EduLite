@@ -275,5 +275,54 @@
       "keyboardShortcuts": "اختصارات لوحة المفاتيح",
       "footer": "اضغط ؟ لفتح قائمة المساعدة في أي وقت"
     }
+  },
+  "course": {
+    "list": {
+      "myTitle": "دوراتي",
+      "publicTitle": "الدورات العامة",
+      "mySubtitle": "إدارة والوصول إلى الدورات المسجل فيها",
+      "publicSubtitle": "اكتشف وانضم إلى الدورات العامة",
+      "viewPublic": "عرض العامة",
+      "viewMine": "عرض الخاصة بي",
+      "createButton": "إنشاء دورة",
+      "emptyTitle": "لا توجد دورات بعد",
+      "myEmptyMessage": "لم تسجل في أي دورة بعد. تصفح الدورات العامة للبدء.",
+      "publicEmptyMessage": "لا توجد دورات عامة متاحة.",
+      "loading": "جارٍ تحميل الدورات...",
+      "errorLoading": "فشل تحميل الدورات",
+      "titleColumn": "العنوان",
+      "subjectColumn": "الموضوع",
+      "languageColumn": "اللغة",
+      "visibilityColumn": "الظهور",
+      "membersColumn": "الأعضاء",
+      "startDateColumn": "تاريخ البدء",
+      "memberCount": "{{count}} عضو",
+      "memberCount_plural": "{{count}} أعضاء",
+      "showing": "عرض {{start}}-{{end}} من {{total}}",
+      "pageOf": "صفحة {{current}} من {{total}}",
+      "notStarted": "غير محدد",
+      "filterSubject": "الموضوع",
+      "filterLanguage": "اللغة",
+      "filterCountry": "البلد",
+      "filterVisibility": "الظهور",
+      "clearFilters": "مسح الفلاتر",
+      "visibilityPublic": "عامة",
+      "visibilityRestricted": "مقيدة",
+      "visibilityPrivate": "خاصة"
+    },
+    "contextMenu": {
+      "actions": "إجراءات",
+      "view": "عرض التفاصيل",
+      "enroll": "التسجيل",
+      "leave": "مغادرة الدورة",
+      "enrollSuccess": "تم التسجيل في الدورة بنجاح",
+      "enrollPending": "تم تقديم طلب التسجيل، في انتظار الموافقة",
+      "enrollError": "فشل التسجيل في الدورة",
+      "leaveSuccess": "تمت مغادرة الدورة بنجاح",
+      "leaveError": "فشلت مغادرة الدورة",
+      "leaveConfirmTitle": "مغادرة الدورة",
+      "leaveConfirmMessage": "هل أنت متأكد من رغبتك في مغادرة \"{{title}}\"؟",
+      "leaveConfirmButton": "مغادرة"
+    }
   }
 }
