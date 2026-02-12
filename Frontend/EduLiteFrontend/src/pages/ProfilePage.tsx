@@ -16,6 +16,7 @@ import {
   FaFilm,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../hooks/useAuth";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import Input from "../components/common/Input";
@@ -42,6 +43,8 @@ import {
   listMySlideshows,
   type SlideshowListItem,
 } from "../services/slideshowApi";
+import { listCourses } from "../services/coursesApi";
+import type { CourseListItem } from "../types/courses.types";
 
 const ProfilePage: React.FC = () => {
   // State management following existing patterns from LoginPage/SignupPage
@@ -79,6 +82,9 @@ const ProfilePage: React.FC = () => {
   const [slideshows, setSlideshows] = useState<SlideshowListItem[]>([]);
   const [slideshowsLoading, setSlideshowsLoading] = useState(false);
   const slideshowsFetched = useRef(false);
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const coursesFetched = useRef(false);
 
   // Refs for file upload
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +93,7 @@ const ProfilePage: React.FC = () => {
   // Hooks
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { t } = useTranslation();
 
   // Track form dirty state
   const isDirty = useFormDirtyState(formData, originalFormData);
@@ -208,6 +215,25 @@ const ProfilePage: React.FC = () => {
       }
     };
     fetchSlideshows();
+  }, [activeTab]);
+
+  // Lazy-load courses when tab is selected
+  useEffect(() => {
+    if (activeTab !== "courses" || coursesFetched.current) return;
+    const fetchCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const response = await listCourses({ mine: true, page_size: 10 });
+        setCourses(response.results);
+        coursesFetched.current = true;
+      } catch (error) {
+        console.error("Failed to load courses:", error);
+        toast.error(t("course.profile.errorLoading"));
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+    fetchCourses();
   }, [activeTab]);
 
   // Handle field blur to track touched fields
@@ -865,6 +891,71 @@ const ProfilePage: React.FC = () => {
                       </button>
                     </div>
                   )
+                ) : activeTab === "courses" ? (
+                  coursesLoading ? (
+                    <div className="flex items-center justify-center p-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : courses.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center text-center p-8">
+                      <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        {t("course.profile.emptyTitle")}
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 mb-4">
+                        {t("course.profile.emptyMessage")}
+                      </p>
+                      <button
+                        onClick={() => navigate("/courses")}
+                        className="px-4 py-2 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30 transition-all duration-200 font-medium cursor-pointer"
+                      >
+                        {t("course.profile.browseCourses")}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {courses.map((course) => (
+                        <button
+                          key={course.id}
+                          onClick={() => navigate(`/courses/${course.id}`)}
+                          className="w-full text-left p-4 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-100/70 dark:hover:bg-gray-800/50 transition-all duration-200 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                              {course.title}
+                            </h4>
+                            {course.user_role && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
+                                  course.user_role === "teacher"
+                                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200"
+                                    : course.user_role === "assistant"
+                                      ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200"
+                                      : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"
+                                }`}
+                              >
+                                {t(
+                                  `course.profile.role${course.user_role.charAt(0).toUpperCase() + course.user_role.slice(1)}`,
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {course.subject && `${course.subject} · `}
+                            {t("course.profile.memberCount", {
+                              count: course.member_count,
+                            })}
+                          </p>
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => navigate("/courses")}
+                        className="w-full text-center p-3 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 transition-all duration-200 font-medium text-sm cursor-pointer"
+                      >
+                        {t("course.profile.viewAll")}
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center p-8">
                     <div className="mb-4">
@@ -876,9 +967,6 @@ const ProfilePage: React.FC = () => {
                       )}
                       {activeTab === "chats" && (
                         <FaComments className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />
-                      )}
-                      {activeTab === "courses" && (
-                        <FaGraduationCap className="text-5xl text-gray-300 dark:text-gray-600 mx-auto" />
                       )}
                     </div>
 
