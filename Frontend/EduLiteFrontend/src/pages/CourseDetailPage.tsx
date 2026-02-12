@@ -158,6 +158,7 @@ const CourseDetailPage = () => {
   const [showNavigationModal, setShowNavigationModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [joining, setJoining] = useState(false);
   const [, setLeaving] = useState(false);
@@ -259,11 +260,21 @@ const CourseDetailPage = () => {
   };
 
   const handleCancelEditing = () => {
+    if (isDirty) {
+      setShowCancelModal(true);
+      return;
+    }
+    setTouchedFields(new Set());
+    setIsEditing(false);
+  };
+
+  const handleConfirmCancel = () => {
     if (originalFormData) {
       setFormData(originalFormData);
     }
     setTouchedFields(new Set());
     setIsEditing(false);
+    setShowCancelModal(false);
   };
 
   const handleSave = async () => {
@@ -988,6 +999,17 @@ const CourseDetailPage = () => {
         })}
         confirmText={t("course.detail.leaveButton")}
         cancelText={t("common.cancel")}
+        confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
+      />
+
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleConfirmCancel}
+        title={t("course.detail.cancelConfirmTitle")}
+        message={t("course.detail.cancelConfirmMessage")}
+        confirmText={t("course.detail.discardChanges")}
+        cancelText={t("course.detail.keepEditing")}
         confirmButtonClass="bg-red-600 hover:bg-red-700 text-white"
       />
     </div>

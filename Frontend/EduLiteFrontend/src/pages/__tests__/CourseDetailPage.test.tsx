@@ -533,6 +533,11 @@ describe("CourseDetailPage", () => {
       });
       await user.click(cancelButtons[0]);
 
+      // Confirmation modal should appear — click discard
+      await user.click(
+        screen.getByRole("button", { name: /discard changes/i }),
+      );
+
       // Should exit edit mode, title goes back to original
       expect(screen.getByText("Intro to Physics")).toBeInTheDocument();
       expect(
