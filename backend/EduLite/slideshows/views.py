@@ -3,6 +3,7 @@
 import logging
 
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import (
     OpenApiExample,
     OpenApiParameter,
@@ -11,7 +12,8 @@ from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,
 )
-from rest_framework import generics, permissions, serializers
+from rest_framework import permissions, serializers, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -37,7 +39,7 @@ class SlideshowsAppBaseAPIView(APIView):
         return {"request": self.request}
 
 
-class SlideshowListCreateView(generics.ListCreateAPIView):
+class SlideshowListCreateView(SlideshowsAppBaseAPIView):
     """
     List and create slideshows.
 
@@ -52,29 +54,15 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
           - Supports nested slide creation
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = SlideshowPagination
-
-    def get_serializer_class(self):
-        """Use list serializer for GET, detail serializer for POST."""
-        if self.request.method == "POST":
-            return SlideshowDetailSerializer
-        return SlideshowListSerializer
-
-    def get_queryset(self):
+    def get_queryset(self, request):
         """
         Return slideshows visible to the user.
         - User's own slideshows (all)
         - Public published slideshows from others
         """
-        from django.contrib.auth import get_user_model
         from django.db.models import Q
 
-        User = get_user_model()
-        user = self.request.user
-
-        # Type assertion: user is authenticated due to IsAuthenticated permission
-        assert isinstance(user, User)
+        user = request.user
 
         # Base queryset: user's own slideshows + public published ones
         queryset = Slideshow.objects.filter(
@@ -82,24 +70,24 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
         ).select_related("created_by")
 
         # Apply filters from query parameters
-        visibility = self.request.query_params.get("visibility")
+        visibility = request.query_params.get("visibility")
         if visibility:
             queryset = queryset.filter(visibility=visibility)
 
-        subject = self.request.query_params.get("subject")
+        subject = request.query_params.get("subject")
         if subject:
             queryset = queryset.filter(subject=subject)
 
-        language = self.request.query_params.get("language")
+        language = request.query_params.get("language")
         if language:
             queryset = queryset.filter(language=language)
 
-        country = self.request.query_params.get("country")
+        country = request.query_params.get("country")
         if country:
             queryset = queryset.filter(country=country)
 
         # Filter for only user's own slideshows
-        mine_only = self.request.query_params.get("mine")
+        mine_only = request.query_params.get("mine")
         if mine_only and mine_only.lower() == "true":
             queryset = queryset.filter(created_by=user)
 
@@ -165,7 +153,16 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         """List slideshows."""
         logger.debug("Listing slideshows for user %s", request.user)
-        return super().get(request, *args, **kwargs)
+
+        queryset = self.get_queryset(request)
+
+        paginator = SlideshowPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+
+        serializer = SlideshowListSerializer(
+            page, many=True, context=self.get_serializer_context()
+        )
+        return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
         summary="Create a slideshow",
@@ -212,10 +209,15 @@ class SlideshowListCreateView(generics.ListCreateAPIView):
             request.data.get("title"),
             request.user,
         )
-        return super().post(request, *args, **kwargs)
+        serializer = SlideshowDetailSerializer(
+            data=request.data, context=self.get_serializer_context()
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SlideshowRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class SlideshowRetrieveUpdateDestroyView(SlideshowsAppBaseAPIView):
     """
     Retrieve, update, or delete a slideshow.
 
@@ -231,9 +233,13 @@ class SlideshowRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     DELETE: Delete slideshow (owner only)
     """
 
-    queryset = Slideshow.objects.all().prefetch_related("slides")
-    serializer_class = SlideshowDetailSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_object(self, pk):
+        """Retrieve slideshow or raise 404, with object-level permission check."""
+        obj = get_object_or_404(Slideshow.objects.prefetch_related("slides"), pk=pk)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     @extend_schema(
         summary="Get slideshow detail",
@@ -257,12 +263,14 @@ class SlideshowRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         },
         tags=["Slideshows"],
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request, pk, *args, **kwargs):
         """Get slideshow detail."""
-        logger.debug(
-            "Retrieving slideshow %s for user %s", kwargs.get("pk"), request.user
+        logger.debug("Retrieving slideshow %s for user %s", pk, request.user)
+        slideshow = self.get_object(pk)
+        serializer = SlideshowDetailSerializer(
+            slideshow, context=self.get_serializer_context()
         )
-        return super().get(request, *args, **kwargs)
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Update slideshow",
@@ -294,10 +302,19 @@ class SlideshowRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         tags=["Slideshows"],
     )
     @transaction.atomic
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request, pk, *args, **kwargs):
         """Update slideshow."""
-        logger.info("Updating slideshow %s by user %s", kwargs.get("pk"), request.user)
-        return super().patch(request, *args, **kwargs)
+        logger.info("Updating slideshow %s by user %s", pk, request.user)
+        slideshow = self.get_object(pk)
+        serializer = SlideshowDetailSerializer(
+            slideshow,
+            data=request.data,
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Delete slideshow",
@@ -310,13 +327,15 @@ class SlideshowRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         tags=["Slideshows"],
     )
     @transaction.atomic
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, pk, *args, **kwargs):
         """Delete slideshow."""
-        logger.info("Deleting slideshow %s by user %s", kwargs.get("pk"), request.user)
-        return super().delete(request, *args, **kwargs)
+        logger.info("Deleting slideshow %s by user %s", pk, request.user)
+        slideshow = self.get_object(pk)
+        slideshow.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SlideCreateView(generics.CreateAPIView):
+class SlideCreateView(SlideshowsAppBaseAPIView):
     """
     Create a new slide in an existing slideshow.
 
@@ -326,9 +345,6 @@ class SlideCreateView(generics.CreateAPIView):
           - Increments slideshow version
           - Only the slideshow owner can create slides
     """
-
-    serializer_class = SlideSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         summary="Create a new slide",
@@ -364,27 +380,25 @@ class SlideCreateView(generics.CreateAPIView):
         tags=["Slideshows"],
     )
     @transaction.atomic
-    def post(self, request, *args, **kwargs):
+    def post(self, request, pk, *args, **kwargs):
         """Create a new slide."""
         logger.info(
             "Creating slide for slideshow %s by user %s",
-            kwargs.get("pk"),
+            pk,
             request.user,
         )
-        return super().post(request, *args, **kwargs)
-
-    def perform_create(self, serializer):
-        """Associate slide with slideshow and increment version."""
-        from django.shortcuts import get_object_or_404
-        from rest_framework.exceptions import PermissionDenied
 
         # Get parent slideshow from URL
-        slideshow_id = self.kwargs.get("pk")
-        slideshow = get_object_or_404(Slideshow, pk=slideshow_id)
+        slideshow = get_object_or_404(Slideshow, pk=pk)
 
         # Verify user is the owner of the slideshow
-        if slideshow.created_by != self.request.user:
+        if slideshow.created_by != request.user:
             raise PermissionDenied("Only the slideshow owner can add slides")
+
+        serializer = SlideSerializer(
+            data=request.data, context=self.get_serializer_context()
+        )
+        serializer.is_valid(raise_exception=True)
 
         # Save slide with slideshow relationship
         slide = serializer.save(slideshow=slideshow)
@@ -399,9 +413,10 @@ class SlideCreateView(generics.CreateAPIView):
             slideshow.id,
             slideshow.version,
         )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class SlideRetrieveUpdateDestroyView(SlideshowsAppBaseAPIView):
     """
     Retrieve, update, or delete an individual slide.
 
@@ -412,10 +427,15 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     Same permission rules as parent slideshow apply.
     """
 
-    queryset = Slide.objects.all().select_related("slideshow__created_by")
-    serializer_class = SlideSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
-    lookup_url_kwarg = "slide_id"
+
+    def get_object(self, slide_id):
+        """Retrieve slide or raise 404, with object-level permission check."""
+        obj = get_object_or_404(
+            Slide.objects.select_related("slideshow__created_by"), pk=slide_id
+        )
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     @extend_schema(
         summary="Get individual slide",
@@ -431,15 +451,17 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         },
         tags=["Slideshows"],
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request, pk, slide_id, *args, **kwargs):
         """Get individual slide."""
         logger.debug(
             "Retrieving slide %s for slideshow %s by user %s",
-            kwargs.get("slide_id"),
-            kwargs.get("pk"),
+            slide_id,
+            pk,
             request.user,
         )
-        return super().get(request, *args, **kwargs)
+        slide = self.get_object(slide_id)
+        serializer = SlideSerializer(slide, context=self.get_serializer_context())
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Update slide",
@@ -458,12 +480,31 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         tags=["Slideshows"],
     )
     @transaction.atomic
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request, pk, slide_id, *args, **kwargs):
         """Update slide."""
-        logger.info(
-            "Updating slide %s by user %s", kwargs.get("slide_id"), request.user
+        logger.info("Updating slide %s by user %s", slide_id, request.user)
+        slide = self.get_object(slide_id)
+        serializer = SlideSerializer(
+            slide,
+            data=request.data,
+            partial=True,
+            context=self.get_serializer_context(),
         )
-        return super().patch(request, *args, **kwargs)
+        serializer.is_valid(raise_exception=True)
+        slide = serializer.save()
+
+        # Increment parent slideshow version
+        slideshow = slide.slideshow
+        slideshow.version += 1
+        slideshow.save()
+
+        logger.debug(
+            "Slide %s updated in slideshow %s (new version: %s)",
+            slide.id,
+            slideshow.id,
+            slideshow.version,
+        )
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Delete slide",
@@ -480,36 +521,15 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         tags=["Slideshows"],
     )
     @transaction.atomic
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, pk, slide_id, *args, **kwargs):
         """Delete slide."""
-        logger.info(
-            "Deleting slide %s by user %s", kwargs.get("slide_id"), request.user
-        )
-        return super().delete(request, *args, **kwargs)
-
-    def perform_update(self, serializer):
-        """Update slide and increment parent slideshow version."""
-        slide = serializer.save()
-
-        # Increment parent slideshow version
+        logger.info("Deleting slide %s by user %s", slide_id, request.user)
+        slide = self.get_object(slide_id)
         slideshow = slide.slideshow
-        slideshow.version += 1
-        slideshow.save()
-
-        logger.debug(
-            "Slide %s updated in slideshow %s (new version: %s)",
-            slide.id,
-            slideshow.id,
-            slideshow.version,
-        )
-
-    def perform_destroy(self, instance):
-        """Delete slide and increment parent slideshow version."""
-        slideshow = instance.slideshow
-        slide_id = instance.id
+        slide_id_val = slide.id
 
         # Delete the slide
-        instance.delete()
+        slide.delete()
 
         # Increment slideshow version
         slideshow.version += 1
@@ -517,10 +537,11 @@ class SlideRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
         logger.debug(
             "Slide %s deleted from slideshow %s (new version: %s)",
-            slide_id,
+            slide_id_val,
             slideshow.id,
             slideshow.version,
         )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ========== Search Endpoint ==========
@@ -671,9 +692,7 @@ class SlideshowSearchView(SlideshowsAppBaseAPIView):
 
 # ========== Preview Endpoint ==========
 
-from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 
