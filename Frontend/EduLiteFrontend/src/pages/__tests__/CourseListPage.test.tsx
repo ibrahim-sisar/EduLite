@@ -595,14 +595,7 @@ describe("CourseListPage", () => {
         screen.queryByText("Subject", { selector: "label" }),
       ).not.toBeInTheDocument();
 
-      // Click the filter button (has HiFilter icon)
-      const filterButtons = screen.getAllByRole("button");
-      const filterButton = filterButtons.find(
-        (btn) =>
-          btn.querySelector("svg")?.classList.contains("text-lg") &&
-          !btn.textContent?.includes("Create"),
-      );
-      // Use a more reliable selector - the filter button is the second button in actions bar
+      // Click the filter button — find the button with no text content (icon-only)
       const actionsButtons = screen.getAllByRole("button");
       const filterBtn = actionsButtons.find(
         (btn) => !btn.textContent?.trim() || btn.textContent?.trim() === "",
