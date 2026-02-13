@@ -599,25 +599,19 @@ describe("CourseListPage", () => {
         expect(screen.queryByText(/loading courses/i)).not.toBeInTheDocument();
       });
 
-      // Filter labels should not be visible initially
-      expect(
-        screen.queryByText("Subject", { selector: "label" }),
-      ).not.toBeInTheDocument();
+      // Filter panel should be hidden initially (collapsed via max-h-0)
+      const filterPanel = screen
+        .getByText("Subject", { selector: "label" })
+        .closest('[class*="max-h-"]');
+      expect(filterPanel).toHaveClass("max-h-0");
 
-      // Click the filter button — find the button with no text content (icon-only)
-      const actionsButtons = screen.getAllByRole("button");
-      const filterBtn = actionsButtons.find(
-        (btn) => !btn.textContent?.trim() || btn.textContent?.trim() === "",
-      );
-      if (filterBtn) {
-        await user.click(filterBtn);
-      }
+      // Click the filter button
+      const filterBtn = screen.getByText("Filters").closest("button")!;
+      await user.click(filterBtn);
 
-      // Now filter labels should be visible
+      // Now filter panel should be expanded
       await waitFor(() => {
-        expect(
-          screen.getByText("Subject", { selector: "label" }),
-        ).toBeInTheDocument();
+        expect(filterPanel).not.toHaveClass("max-h-0");
       });
     });
 
@@ -635,11 +629,8 @@ describe("CourseListPage", () => {
       });
 
       // Open filters
-      const buttons = screen.getAllByRole("button");
-      const filterBtn = buttons.find(
-        (btn) => !btn.textContent?.trim() || btn.textContent?.trim() === "",
-      );
-      if (filterBtn) await user.click(filterBtn);
+      const filterBtn = screen.getByText("Filters").closest("button")!;
+      await user.click(filterBtn);
 
       await waitFor(() => {
         expect(
@@ -660,11 +651,8 @@ describe("CourseListPage", () => {
       });
 
       // Open filters
-      const buttons2 = screen.getAllByRole("button");
-      const filterBtn2 = buttons2.find(
-        (btn) => !btn.textContent?.trim() || btn.textContent?.trim() === "",
-      );
-      if (filterBtn2) await user.click(filterBtn2);
+      const filterBtn2 = screen.getByText("Filters").closest("button")!;
+      await user.click(filterBtn2);
 
       await waitFor(() => {
         expect(
