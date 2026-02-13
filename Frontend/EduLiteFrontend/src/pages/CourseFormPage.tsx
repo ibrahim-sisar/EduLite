@@ -246,7 +246,7 @@ const CourseFormPage: React.FC = () => {
   };
 
   const isFieldDirty = (field: keyof CourseFormData): boolean => {
-    if (!originalFormData) return false;
+    if (isNewCourse || !originalFormData) return false;
     return (
       touchedFields.has(field) && formData[field] !== originalFormData[field]
     );
@@ -307,6 +307,8 @@ const CourseFormPage: React.FC = () => {
       if (isNewCourse) {
         const newCourse = await createCourse(buildPayload());
         clearDraft();
+        // Reset dirty state before navigating so useBlocker doesn't fire
+        setOriginalFormData(formData);
         toast.success(t("course.form.createSuccess"));
         navigate(`/courses/${newCourse.id}`, { replace: true });
       } else {

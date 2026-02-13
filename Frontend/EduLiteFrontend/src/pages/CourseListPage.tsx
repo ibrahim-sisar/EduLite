@@ -673,7 +673,9 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                       onClick={() => handleCourseClick(course)}
                       onContextMenu={(e) => handleContextMenu(e, course)}
                       className={`cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 ${
-                        !course.is_active ? "opacity-50" : ""
+                        !course.is_active && !course.is_member
+                          ? "opacity-50"
+                          : ""
                       } ${
                         index !== courseList.length - 1
                           ? "border-b border-gray-200/30 dark:border-gray-700/20"
@@ -751,7 +753,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                   onClick={() => handleCourseClick(course)}
                   onContextMenu={(e) => handleContextMenu(e, course)}
                   className={`p-4 cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 ${
-                    !course.is_active ? "opacity-50" : ""
+                    !course.is_active && !course.is_member ? "opacity-50" : ""
                   } ${
                     course.is_member
                       ? "border-l-3 border-l-green-500 dark:border-l-green-400"
