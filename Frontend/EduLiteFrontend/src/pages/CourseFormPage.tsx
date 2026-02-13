@@ -278,10 +278,8 @@ const CourseFormPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Core submit logic (used by both form submit and mobile sticky bar)
+  const doSubmit = async () => {
     if (!validateForm()) {
       toast.error(t("course.form.fixErrors"));
       return;
@@ -383,7 +381,13 @@ const CourseFormPage: React.FC = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              doSubmit();
+            }}
+            className="space-y-6"
+          >
             {/* Basic Info Section */}
             <div className="space-y-4">
               <Input
@@ -571,8 +575,8 @@ const CourseFormPage: React.FC = () => {
               />
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-4">
+            {/* Submit Button — desktop inline */}
+            <div className="pt-4 hidden sm:block">
               <button
                 type="submit"
                 disabled={saving || (!isNewCourse && !isDirty)}
@@ -607,6 +611,9 @@ const CourseFormPage: React.FC = () => {
                 )}
               </button>
             </div>
+
+            {/* Spacer for sticky bottom bar on mobile */}
+            <div className="h-20 sm:hidden" />
           </form>
         </div>
       </div>
@@ -618,6 +625,53 @@ const CourseFormPage: React.FC = () => {
         onCancel={handleCancelNavigation}
         message={t("course.form.unsavedChangesMessage")}
       />
+
+      {/* Sticky bottom bar — mobile only */}
+      <div className="fixed bottom-0 inset-x-0 sm:hidden bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 p-4 pb-6 z-40">
+        <div className="flex gap-3 max-w-3xl mx-auto">
+          <button
+            type="button"
+            onClick={() =>
+              navigate(isNewCourse ? "/courses" : `/courses/${courseId}`)
+            }
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={doSubmit}
+            disabled={saving || (!isNewCourse && !isDirty)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-xl font-medium transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>
+                  {t(
+                    isNewCourse ? "course.form.creating" : "course.form.saving",
+                  )}
+                </span>
+              </>
+            ) : (
+              <>
+                {isNewCourse ? (
+                  <FaPlus className="text-sm" />
+                ) : (
+                  <FaSave className="text-sm" />
+                )}
+                <span>
+                  {t(
+                    isNewCourse
+                      ? "course.form.createButton"
+                      : "course.form.saveButton",
+                  )}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

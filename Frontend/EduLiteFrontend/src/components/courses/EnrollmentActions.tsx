@@ -30,8 +30,15 @@ export default function EnrollmentActions({
   const { t } = useTranslation();
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
-  const { status, role, isLoading, isLastTeacher, enroll, leave, cancelRequest } =
-    enrollment;
+  const {
+    status,
+    role,
+    isLoading,
+    isLastTeacher,
+    enroll,
+    leave,
+    cancelRequest,
+  } = enrollment;
 
   const handleLeaveConfirm = async () => {
     await leave();
@@ -47,7 +54,7 @@ export default function EnrollmentActions({
           <button
             onClick={enroll}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer w-full sm:w-auto"
           >
             <HiArrowRightOnRectangle className="w-5 h-5" />
             {isLoading
@@ -65,7 +72,7 @@ export default function EnrollmentActions({
           <button
             onClick={enroll}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer w-full sm:w-auto"
           >
             <HiArrowRightOnRectangle className="w-5 h-5" />
             {isLoading
@@ -124,7 +131,9 @@ export default function EnrollmentActions({
           <div className="flex items-center gap-2 flex-1">
             <HiEnvelope className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
             <p className="text-blue-800 dark:text-blue-200 text-sm font-medium">
-              {t("course.enrollment.invitedBanner", { role: role || "student" })}
+              {t("course.enrollment.invitedBanner", {
+                role: role || "student",
+              })}
             </p>
           </div>
           <div className="flex gap-2">
@@ -157,7 +166,7 @@ export default function EnrollmentActions({
           <button
             disabled
             title={t("course.enrollment.lastTeacherTooltip")}
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 rounded-lg font-medium opacity-50 cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 rounded-lg font-medium opacity-50 cursor-not-allowed w-full sm:w-auto"
           >
             <HiArrowLeftOnRectangle className="w-5 h-5" />
             {t("course.enrollment.leaveButton")}
@@ -173,7 +182,7 @@ export default function EnrollmentActions({
           <button
             onClick={() => setShowLeaveModal(true)}
             disabled={isLoading}
-            className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 rounded-lg font-medium transition-all disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 rounded-lg font-medium transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto"
           >
             <HiArrowLeftOnRectangle className="w-5 h-5" />
             {t("course.enrollment.leaveButton")}

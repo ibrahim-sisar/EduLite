@@ -314,6 +314,7 @@
       "filterCountry": "البلد",
       "filterVisibility": "الظهور",
       "clearFilters": "مسح الفلاتر",
+      "filtersLabel": "فلاتر",
       "visibilityPublic": "عامة",
       "visibilityRestricted": "مقيدة",
       "visibilityPrivate": "خاصة"

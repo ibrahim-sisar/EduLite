@@ -313,6 +313,7 @@
       "filterCountry": "Country",
       "filterVisibility": "Visibility",
       "clearFilters": "Clear filters",
+      "filtersLabel": "Filters",
       "visibilityPublic": "Public",
       "visibilityRestricted": "Restricted",
       "visibilityPrivate": "Private"

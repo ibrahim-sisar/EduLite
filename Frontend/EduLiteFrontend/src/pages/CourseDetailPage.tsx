@@ -738,9 +738,9 @@ const CourseDetailPage = () => {
           {/* ===== SAVE CHANGES BANNER ===== */}
           {isEditing && isDirty && (
             <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse flex-shrink-0"></div>
                   <p className="text-amber-800 dark:text-amber-200 font-medium">
                     {t("course.detail.unsavedChanges")}
                   </p>
@@ -748,14 +748,14 @@ const CourseDetailPage = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={handleCancelEditing}
-                    className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium cursor-pointer"
+                    className="flex-1 sm:flex-none px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium cursor-pointer"
                   >
                     {t("course.detail.cancelButton")}
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -775,21 +775,21 @@ const CourseDetailPage = () => {
           )}
 
           {/* ===== ACTION BUTTONS ===== */}
-          <div className="p-8 border-b border-gray-200/50 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-900/20">
-            <div className="flex flex-wrap gap-4">
+          <div className="p-4 sm:p-8 border-b border-gray-200/50 dark:border-gray-700/30 bg-gray-50/50 dark:bg-gray-900/20">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
               {/* Teacher actions */}
               {isTeacher && !isEditing && (
                 <>
                   <button
                     onClick={handleStartEditing}
-                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg font-medium transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg font-medium transition-all cursor-pointer w-full sm:w-auto"
                   >
                     <HiPencil className="w-5 h-5" />
                     {t("course.detail.editButton")}
                   </button>
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 rounded-lg font-medium transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 hover:border-red-500 dark:hover:border-red-400 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 rounded-lg font-medium transition-all cursor-pointer w-full sm:w-auto"
                   >
                     <HiTrash className="w-5 h-5" />
                     {t("course.detail.deleteButton")}
@@ -800,7 +800,7 @@ const CourseDetailPage = () => {
               {isEditing && (
                 <button
                   onClick={handleCancelEditing}
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-all hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition-all hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer w-full sm:w-auto"
                 >
                   {t("course.detail.cancelButton")}
                 </button>
@@ -808,7 +808,11 @@ const CourseDetailPage = () => {
 
               {/* Enrollment actions (join/leave/pending/invited) */}
               {!isEditing && (
-                <EnrollmentActions course={course} enrollment={enrollment} />
+                <EnrollmentActions
+                  course={course}
+                  enrollment={enrollment}
+                  className="w-full sm:w-auto"
+                />
               )}
             </div>
           </div>
