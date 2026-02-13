@@ -632,8 +632,13 @@ describe("CourseDetailPage", () => {
         expect(
           screen.getByRole("heading", { name: "Invite Member" }),
         ).toBeInTheDocument();
-        // Modal shows coming soon placeholder
-        expect(screen.getByText(/coming soon/i)).toBeInTheDocument();
+        // Modal shows search input and Send Invite button
+        expect(
+          screen.getByPlaceholderText("Type a username or name..."),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: /send invite/i }),
+        ).toBeInTheDocument();
       });
     });
   });

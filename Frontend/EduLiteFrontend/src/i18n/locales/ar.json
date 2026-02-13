@@ -447,14 +447,20 @@
       },
       "inviteModal": {
         "title": "دعوة عضو",
-        "comingSoon": "البحث عن المستخدمين ودعوتهم قادم قريباً. ستتمكن من البحث عن المستخدمين بالاسم ودعوتهم إلى دورتك.",
-        "userIdLabel": "رقم المستخدم",
-        "userIdPlaceholder": "أدخل رقم المستخدم",
+        "searchLabel": "البحث عن مستخدم",
+        "searchPlaceholder": "اكتب اسم المستخدم أو الاسم...",
+        "searchResults": "نتائج البحث",
+        "noResults": "لم يتم العثور على مستخدمين",
+        "searchMinChars": "اكتب حرفين على الأقل للبحث",
+        "searchError": "فشل البحث عن المستخدمين",
+        "selectedUser": "المستخدم المحدد",
+        "clearSelection": "مسح التحديد",
         "roleLabel": "الدور",
         "submitButton": "إرسال الدعوة",
         "sending": "جارٍ الإرسال...",
         "success": "تم إرسال الدعوة بنجاح",
-        "error": "فشل إرسال الدعوة"
+        "error": "فشل إرسال الدعوة",
+        "cancel": "إلغاء"
       },
       "addModuleModal": {
         "title": "إضافة وحدة",

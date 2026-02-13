@@ -446,14 +446,20 @@
       },
       "inviteModal": {
         "title": "Invite Member",
-        "comingSoon": "User search and invite is coming soon. You'll be able to search for users by name and invite them to your course.",
-        "userIdLabel": "User ID",
-        "userIdPlaceholder": "Enter user ID",
+        "searchLabel": "Search for a user",
+        "searchPlaceholder": "Type a username or name...",
+        "searchResults": "Search results",
+        "noResults": "No users found",
+        "searchMinChars": "Type at least 2 characters to search",
+        "searchError": "Failed to search users",
+        "selectedUser": "Selected user",
+        "clearSelection": "Clear selection",
         "roleLabel": "Role",
         "submitButton": "Send Invite",
         "sending": "Sending...",
         "success": "Invitation sent successfully",
-        "error": "Failed to send invitation"
+        "error": "Failed to send invitation",
+        "cancel": "Cancel"
       },
       "addModuleModal": {
         "title": "Add Module",
