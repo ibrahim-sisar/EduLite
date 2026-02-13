@@ -2,9 +2,10 @@
 # Tests for the CourseMembership model
 
 from datetime import datetime, timedelta
-from django.test import TestCase
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from ..models import Course, CourseMembership
 
@@ -181,3 +182,50 @@ class CourseMembershipTest(TestCase):
         membership_id = course_membership.id
         self.course1.delete()
         self.assertFalse(CourseMembership.objects.filter(pk=membership_id).exists())
+
+    def test_clean_with_unsaved_course_does_not_crash(self) -> None:
+        """
+        Test that clean() does not crash when the course is unsaved (no PK).
+        This happens when creating a course with an inline membership in admin.
+        """
+        unsaved_course = Course(title="Unsaved Course")
+        membership = CourseMembership(
+            user=self.user1,
+            course=unsaved_course,
+            role="teacher",
+            status="enrolled",
+        )
+        # Should not raise ValueError about unsaved model instances
+        membership.clean()
+
+    def test_clean_with_unsaved_user_does_not_crash(self) -> None:
+        """
+        Test that clean() does not crash when the user is unsaved (no PK).
+        """
+        unsaved_user = User(username="unsaved", email="unsaved@example.com")
+        membership = CourseMembership(
+            user=unsaved_user,
+            course=self.course1,
+            role="student",
+            status="enrolled",
+        )
+        # Should not raise ValueError about unsaved model instances
+        membership.clean()
+
+    def test_clean_still_catches_duplicates_when_saved(self) -> None:
+        """
+        Test that clean() still catches duplicate memberships when both
+        user and course are saved (have PKs).
+        """
+        CourseMembership.objects.create(
+            user=self.user1,
+            course=self.course1,
+            role="student",
+        )
+        duplicate = CourseMembership(
+            user=self.user1,
+            course=self.course1,
+            role="teacher",
+        )
+        with self.assertRaises(ValidationError):
+            duplicate.clean()
