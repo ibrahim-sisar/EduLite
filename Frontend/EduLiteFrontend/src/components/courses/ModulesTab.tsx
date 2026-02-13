@@ -246,6 +246,7 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddModule}
+        existingModules={modules || []}
       />
 
       {/* Edit Module Modal */}
@@ -254,6 +255,7 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
         onClose={() => setEditModule(null)}
         onSubmit={handleEditModule}
         editModule={editModule}
+        existingModules={modules || []}
       />
 
       {/* Delete Confirmation */}

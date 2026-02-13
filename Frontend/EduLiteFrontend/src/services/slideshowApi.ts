@@ -26,7 +26,7 @@ const API_BASE_URL = "http://localhost:8000/api";
  * @returns Paginated list of slideshows
  */
 export const listSlideshows = async (
-  params?: SlideshowListParams
+  params?: SlideshowListParams,
 ): Promise<PaginatedResponse<SlideshowListItem>> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/slideshows/`, {
@@ -47,9 +47,33 @@ export const listSlideshows = async (
  * @returns Paginated list of user's slideshows
  */
 export const listMySlideshows = async (
-  params?: Omit<SlideshowListParams, "mine">
+  params?: Omit<SlideshowListParams, "mine">,
 ): Promise<PaginatedResponse<SlideshowListItem>> => {
   return listSlideshows({ ...params, mine: true });
+};
+
+/**
+ * Search slideshows by title and description
+ * Uses the dedicated search endpoint with text matching
+ *
+ * @param params - Search parameters (q required, min 2 chars, plus optional filters)
+ * @returns Paginated list of matching slideshows
+ */
+export const searchSlideshows = async (params: {
+  q: string;
+  mine?: boolean;
+  page?: number;
+  page_size?: number;
+}): Promise<PaginatedResponse<SlideshowListItem>> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/slideshows/search/`, {
+      params,
+      timeout: 10000,
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getSafeErrorMessage(error, "Failed to search slideshows"));
+  }
 };
 
 /**
@@ -62,7 +86,7 @@ export const listMySlideshows = async (
  */
 export const getSlideshowDetail = async (
   id: number,
-  initialSlideCount?: number
+  initialSlideCount?: number,
 ): Promise<SlideshowDetail> => {
   try {
     const params = initialSlideCount ? { initial: initialSlideCount } : {};
@@ -86,14 +110,14 @@ export const getSlideshowDetail = async (
  */
 export const getSlide = async (
   slideshowId: number,
-  slideId: number
+  slideId: number,
 ): Promise<Slide | SlideViewOnly> => {
   try {
     const response = await axios.get(
       `${API_BASE_URL}/slideshows/${slideshowId}/slides/${slideId}/`,
       {
         timeout: 10000,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -109,7 +133,7 @@ export const getSlide = async (
  * @returns Created slideshow detail
  */
 export const createSlideshow = async (
-  data: SlideshowCreateRequest
+  data: SlideshowCreateRequest,
 ): Promise<SlideshowDetail> => {
   try {
     const response = await axios.post(`${API_BASE_URL}/slideshows/`, data, {
@@ -132,7 +156,7 @@ export const createSlideshow = async (
  */
 export const updateSlideshow = async (
   id: number,
-  data: SlideshowUpdateRequest
+  data: SlideshowUpdateRequest,
 ): Promise<SlideshowDetail> => {
   try {
     const response = await axios.patch(
@@ -140,7 +164,7 @@ export const updateSlideshow = async (
       data,
       {
         timeout: 15000,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -189,7 +213,7 @@ export const deleteSlideshow = async (id: number): Promise<void> => {
  * @returns True if error is a version conflict
  */
 export const isVersionConflictError = (
-  error: any
+  error: any,
 ): error is VersionConflictError & { isVersionConflict: true } => {
   return (
     error?.isVersionConflict === true ||
@@ -207,7 +231,7 @@ export const isVersionConflictError = (
  * @returns Conflict details or null
  */
 export const getVersionConflictDetails = (
-  error: any
+  error: any,
 ): VersionConflictError | null => {
   if (isVersionConflictError(error)) {
     return {
@@ -229,7 +253,7 @@ export const getVersionConflictDetails = (
  */
 export const createSlide = async (
   slideshowId: number,
-  data: SlideCreateData
+  data: SlideCreateData,
 ): Promise<Slide> => {
   try {
     const response = await axios.post(
@@ -237,7 +261,7 @@ export const createSlide = async (
       data,
       {
         timeout: 10000,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -256,7 +280,7 @@ export const createSlide = async (
 export const updateSlide = async (
   slideshowId: number,
   slideId: number,
-  data: Partial<SlideCreateData>
+  data: Partial<SlideCreateData>,
 ): Promise<Slide> => {
   try {
     const response = await axios.patch(
@@ -264,7 +288,7 @@ export const updateSlide = async (
       data,
       {
         timeout: 10000,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -280,14 +304,14 @@ export const updateSlide = async (
  */
 export const deleteSlide = async (
   slideshowId: number,
-  slideId: number
+  slideId: number,
 ): Promise<void> => {
   try {
     await axios.delete(
       `${API_BASE_URL}/slideshows/${slideshowId}/slides/${slideId}/`,
       {
         timeout: 10000,
-      }
+      },
     );
   } catch (error) {
     throw new Error(getSafeErrorMessage(error, "Failed to delete slide"));
@@ -302,11 +326,14 @@ export const deleteSlide = async (
  * @param signal - Optional AbortSignal to cancel the request
  * @returns Rendered HTML string
  */
-export const previewMarkdown = async (content: string, signal?: AbortSignal): Promise<string> => {
+export const previewMarkdown = async (
+  content: string,
+  signal?: AbortSignal,
+): Promise<string> => {
   const response = await axios.post(
     `${API_BASE_URL}/slideshows/preview/`,
     { content },
-    { timeout: 5000, signal }
+    { timeout: 5000, signal },
   );
   return response.data.rendered_content;
 };
