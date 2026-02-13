@@ -192,47 +192,47 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
 
               {/* Teacher actions */}
               {isTeacher && (
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                   {/* Reorder */}
                   <button
                     onClick={() => handleReorder(mod, "up")}
                     disabled={idx === 0 || reordering !== null}
-                    className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600/30 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="p-2.5 sm:p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600/30 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                     aria-label={t("course.detail.modules.moveUp")}
                     title={t("course.detail.modules.moveUp")}
                   >
-                    <HiChevronUp className="w-4 h-4" />
+                    <HiChevronUp className="w-5 h-5 sm:w-4 sm:h-4" />
                   </button>
                   <button
                     onClick={() => handleReorder(mod, "down")}
                     disabled={
                       idx === moduleList.length - 1 || reordering !== null
                     }
-                    className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600/30 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="p-2.5 sm:p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600/30 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                     aria-label={t("course.detail.modules.moveDown")}
                     title={t("course.detail.modules.moveDown")}
                   >
-                    <HiChevronDown className="w-4 h-4" />
+                    <HiChevronDown className="w-5 h-5 sm:w-4 sm:h-4" />
                   </button>
 
                   {/* Edit */}
                   <button
                     onClick={() => setEditModule(mod)}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors cursor-pointer"
+                    className="p-2.5 sm:p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors cursor-pointer"
                     aria-label={t("course.detail.modules.edit")}
                     title={t("course.detail.modules.edit")}
                   >
-                    <HiPencil className="w-4 h-4" />
+                    <HiPencil className="w-5 h-5 sm:w-4 sm:h-4" />
                   </button>
 
                   {/* Delete */}
                   <button
                     onClick={() => setDeleteModule(mod)}
-                    className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                    className="p-2.5 sm:p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                     aria-label={t("course.detail.modules.delete")}
                     title={t("course.detail.modules.delete")}
                   >
-                    <HiTrash className="w-4 h-4" />
+                    <HiTrash className="w-5 h-5 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               )}

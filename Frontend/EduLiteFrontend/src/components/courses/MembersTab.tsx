@@ -244,7 +244,7 @@ const MembersTab: React.FC<MembersTabProps> = ({
                             choices={ROLE_CHOICES}
                             showLabel={false}
                             disabled={changingRole === member.id}
-                            className="!py-1 !pl-2 !pr-8 text-sm"
+                            className="!py-1 !ps-2 !pe-8 text-sm"
                           />
                         </div>
                       ) : (
@@ -338,7 +338,7 @@ const MembersTab: React.FC<MembersTabProps> = ({
                         choices={ROLE_CHOICES}
                         showLabel={false}
                         disabled={changingRole === member.id}
-                        className="!py-1 !pl-2 !pr-8 text-sm"
+                        className="!py-1 !ps-2 !pe-8 text-sm"
                       />
                     </div>
                   ) : (
@@ -350,32 +350,32 @@ const MembersTab: React.FC<MembersTabProps> = ({
                   )}
 
                   {isTeacher && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {member.status === "pending" && (
                         <>
                           <button
                             onClick={() => handleApprove(member)}
-                            className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors cursor-pointer"
+                            className="p-2.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors cursor-pointer"
                             aria-label={t("course.detail.members.approve")}
                           >
-                            <HiCheck className="w-4 h-4" />
+                            <HiCheck className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDeny(member)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                            className="p-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                             aria-label={t("course.detail.members.deny")}
                           >
-                            <HiXMark className="w-4 h-4" />
+                            <HiXMark className="w-5 h-5" />
                           </button>
                         </>
                       )}
                       {member.user !== currentUserId && (
                         <button
                           onClick={() => setRemoveMember(member)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
+                          className="p-2.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                           aria-label={t("course.detail.members.remove")}
                         >
-                          <HiTrash className="w-4 h-4" />
+                          <HiTrash className="w-5 h-5" />
                         </button>
                       )}
                     </div>

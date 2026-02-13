@@ -160,8 +160,13 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
     filterVisibility,
   ]);
 
-  const hasActiveFilters =
-    filterSubject || filterLanguage || filterCountry || filterVisibility;
+  const activeFilterCount = [
+    filterSubject,
+    filterLanguage,
+    filterCountry,
+    filterVisibility,
+  ].filter(Boolean).length;
+  const hasActiveFilters = activeFilterCount > 0;
 
   const clearFilters = () => {
     setFilterSubject("");
@@ -477,8 +482,13 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
             }`}
           >
             <HiFilter className="text-lg" />
+            <span className="hidden sm:inline">
+              {t("course.list.filtersLabel")}
+            </span>
             {hasActiveFilters && (
-              <span className="w-2 h-2 bg-blue-500 rounded-full" />
+              <span className="min-w-5 h-5 px-1 flex items-center justify-center bg-blue-500 text-white text-xs font-bold rounded-full">
+                {activeFilterCount}
+              </span>
             )}
           </button>
           {hasActiveFilters && (
@@ -493,8 +503,12 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
         </div>
 
         {/* Filters Panel */}
-        {showFilters && (
-          <div className="mb-6 bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-2xl p-4 sm:p-6 relative z-10">
+        <div
+          className={`mb-6 overflow-hidden transition-all duration-300 ease-in-out ${
+            showFilters ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="bg-white/80 dark:bg-gray-800/40 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/30 rounded-2xl p-4 sm:p-6 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <LazySelect
                 label={t("course.list.filterSubject")}
@@ -534,7 +548,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                       onClick={() =>
                         setVisibilityDropdownOpen(!visibilityDropdownOpen)
                       }
-                      className="w-full px-4 py-3 pr-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 font-medium text-left"
+                      className="w-full px-4 py-3 pe-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 font-medium text-start"
                     >
                       <span
                         className={
@@ -548,7 +562,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         )?.label || t("course.list.filterVisibility")}
                       </span>
                       <HiChevronDown
-                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                        className={`absolute end-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
                           visibilityDropdownOpen ? "rotate-180" : ""
                         }`}
                       />
@@ -564,7 +578,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                                 setFilterVisibility(option.value);
                                 setVisibilityDropdownOpen(false);
                               }}
-                              className={`w-full px-4 py-3 text-left flex items-center justify-between transition-colors duration-150 text-gray-700 dark:text-gray-200 cursor-pointer ${
+                              className={`w-full px-4 py-3 text-start flex items-center justify-between transition-colors duration-150 text-gray-700 dark:text-gray-200 cursor-pointer ${
                                 filterVisibility === option.value
                                   ? "bg-blue-500 text-white hover:bg-blue-600"
                                   : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -586,7 +600,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
               )}
             </div>
           </div>
-        )}
+        </div>
 
         {/* Error State */}
         {error && (
@@ -643,25 +657,25 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200/50 dark:border-gray-700/30">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.titleColumn")}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.subjectColumn")}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.languageColumn")}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.visibilityColumn")}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.membersColumn")}
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-start text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {t("course.list.startDateColumn")}
                     </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <th className="px-6 py-4 text-end text-sm font-semibold text-gray-700 dark:text-gray-300">
                       {/* Actions column */}
                     </th>
                   </tr>
@@ -682,7 +696,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                           : ""
                       } ${
                         course.is_member
-                          ? "border-l-3 border-l-green-500 dark:border-l-green-400"
+                          ? "border-s-3 border-s-green-500 dark:border-s-green-400"
                           : ""
                       }`}
                     >
@@ -730,7 +744,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                       <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">
                         {formatDate(course.start_date)}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-end">
                         <button
                           onClick={(e) => handleDotsClick(e, course)}
                           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer"
@@ -756,7 +770,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                     !course.is_active && !course.is_member ? "opacity-50" : ""
                   } ${
                     course.is_member
-                      ? "border-l-3 border-l-green-500 dark:border-l-green-400"
+                      ? "border-s-3 border-s-green-500 dark:border-s-green-400"
                       : ""
                   }`}
                 >
@@ -784,6 +798,9 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           {getSubjectName(course.subject)}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {getLanguageName(course.language)}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400 inline-flex items-center gap-1">
                           {t("course.list.memberCount", {
@@ -822,7 +839,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     aria-label="Previous page"
                   >
-                    <HiChevronLeft className="text-xl text-gray-600 dark:text-gray-300" />
+                    <HiChevronLeft className="text-xl text-gray-600 dark:text-gray-300 rtl:rotate-180" />
                   </button>
                   <span className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {t("course.list.pageOf", {
@@ -838,7 +855,7 @@ const CourseListPage: React.FC<CourseListPageProps> = ({ view: propView }) => {
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     aria-label="Next page"
                   >
-                    <HiChevronRight className="text-xl text-gray-600 dark:text-gray-300" />
+                    <HiChevronRight className="text-xl text-gray-600 dark:text-gray-300 rtl:rotate-180" />
                   </button>
                 </div>
               </div>
