@@ -211,13 +211,15 @@ class CourseMembership(models.Model):
     def clean(self) -> None:
         super().clean()
 
-        # Checking if the user is already a member of the course
-        if (
-            CourseMembership.objects.filter(user=self.user, course=self.course)
-            .exclude(pk=self.pk)
-            .exists()
-        ):
-            raise ValidationError("User is already a member of the course")
+        # Skip duplicate check if either instance is unsaved (no PK yet).
+        # The UniqueConstraint on ["user", "course"] handles this at the DB level.
+        if self.user_id and self.course_id:
+            if (
+                CourseMembership.objects.filter(user=self.user, course=self.course)
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                raise ValidationError("User is already a member of the course")
 
         # Checking state match the role
         if self.role != "student" and self.status == "pending":
